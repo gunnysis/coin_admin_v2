@@ -79,15 +79,9 @@ export default ({ config }) => {
       favicon: "./src/assets/images/favicon.png",
     },
     plugins: [
-      "expo-router",
+      "expo-sqlite",
     ],
-    experiments: {
-      typedRoutes: true,
-    },
     extra: {
-      router: {
-        origin: false,
-      },
       eas: {
         projectId: "c645ec24-aecb-460a-b87b-0b7651e1f18d",
       },
