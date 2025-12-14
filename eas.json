@@ -1,0 +1,48 @@
+{
+  "cli": {
+    "version": ">= 16.3.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "preview"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "developmentClient": false,
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6746847373",
+        "ascApiKeyId": "7Z74AUMBV9",
+        "ascApiKeyIssuerId": "b1767416-268f-4e33-a669-fec8e9932646",
+        "ascApiKeyPath": ".key/AuthKey_7Z74AUMBV9.p8"
+      },
+      "android": {
+        "serviceAccountKeyPath": ".key/apps-2182e-4cfe31bef56b.json",
+        "track": "production"
+      }
+    }
+  }
+}

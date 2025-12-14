@@ -1,5 +1,21 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+# scripts memo
+dev.md
+
+# os key files
+credentials/android/keystores/
+credentials/ios/
+
+# store access key
+.key/
+
+# firebase private setting
+src/utils/firebase.config.ts
+
+# backup
+backup/
+
 # dependencies
 node_modules/
 
@@ -10,7 +26,6 @@ web-build/
 expo-env.d.ts
 
 # Native
-.kotlin/
 *.orig.*
 *.jks
 *.p8
@@ -36,6 +51,4 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+
