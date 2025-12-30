@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
+import { Typography } from '../components/ui/Typography';
+import { COLORS, SPACING } from '../constants/theme';
 import {
   useInitDatabase,
   useExpensesPaginated,
@@ -95,22 +97,25 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar style="dark" />
 
       {/* 헤더 */}
-      <View className="pt-6 pb-6 items-center bg-gray-50">
-        <Text className="text-2xl font-bold text-gray-800">월 고정비 관리</Text>
+      <View style={styles.header}>
+        <Typography variant="h2" color="textPrimary" align="center">
+          월 고정비 관리
+        </Typography>
       </View>
 
-      {/* 월 고정비 현황 카드 */}
+      {/* 이번 달 고정비 총액 카드 */}
       <TotalAmountCard
         totalAmount={totalAmount}
         isExpanded={isExpanded}
         onToggleExpand={() => setIsExpanded(!isExpanded)}
+        expenses={expenses}
       />
 
-      {/* 월 고정비 정보 섹션 */}
+      {/* 월 고정비 항목 목록 */}
       <ExpenseList
         expenses={expenses}
         isLoading={isLoading}
@@ -143,3 +148,16 @@ export default function App() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.xl,
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+});

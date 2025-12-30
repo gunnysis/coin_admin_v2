@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Animated } from 'react-native';
+import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import { FixedMonthCost } from '../types';
 import { formatCurrency } from '../utils/format';
 import { getNextPaymentDate } from '../utils/date';
+import { Card } from './ui/Card';
+import { Typography } from './ui/Typography';
+import { COLORS, SPACING, RADIUS, SHADOWS, ICON_SIZES } from '../constants/theme';
 
 interface ExpenseItemProps {
   item: FixedMonthCost;
@@ -39,64 +42,124 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
 
   return (
     <Animated.View
-      style={{
-        transform: [{ scale: scaleAnim }],
-      }}
-      className="bg-white rounded-2xl p-4 mb-3 shadow-sm mx-4 border border-gray-100"
+      style={[
+        styles.container,
+        {
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
     >
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1 mr-3">
-          <Text className="text-base font-semibold text-gray-800 mb-1">{item.name}</Text>
-          <Text className="text-lg font-bold text-blue-600 mb-1">
-            {formatCurrency(item.amount)}
-          </Text>
-          <View className="flex-row items-center mt-1">
-            <Text className="text-xs text-gray-400 mr-1">📅</Text>
-            <Text className="text-xs text-gray-400">
-              다음 결제일: {getNextPaymentDate(item.start_date)}
-            </Text>
+      <Card variant="elevated" padding="base" style={styles.card}>
+        <View style={styles.content}>
+          <View style={styles.info}>
+            <Typography variant="h3" color="textPrimary" weight="semibold" style={styles.name}>
+              {item.name}
+            </Typography>
+            <Typography variant="h2" color="primary" weight="bold" style={styles.amount}>
+              {formatCurrency(item.amount)}
+            </Typography>
+            <View style={styles.dateContainer}>
+              <Typography variant="caption" color="textTertiary" style={styles.dateIcon}>
+                📅
+              </Typography>
+              <Typography variant="caption" color="textSecondary">
+                결제일: {getNextPaymentDate(item.start_date)}
+              </Typography>
+            </View>
           </View>
-        </View>
-        <View className="flex-row gap-2">
-          {onEdit && (
+          
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity
+                onPress={() => onEdit(item)}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                activeOpacity={0.8}
+                style={[styles.actionButton, styles.editButton]}
+                accessibilityLabel="수정"
+                accessibilityRole="button"
+              >
+                <Typography variant="body" color="textPrimary">✏️</Typography>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
-              onPress={() => onEdit(item)}
+              onPress={() => onDelete(item.id)}
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
+              disabled={isDeleting}
               activeOpacity={0.8}
-              className="bg-yellow-400 rounded-xl p-3 shadow-sm"
-              style={{
-                shadowColor: '#fbbf24',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 3,
-                elevation: 3,
-              }}
+              style={[
+                styles.actionButton,
+                styles.deleteButton,
+                isDeleting && styles.deleteButtonDisabled,
+              ]}
+              accessibilityLabel="삭제"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isDeleting }}
             >
-              <Text className="text-gray-800 text-lg">✏️</Text>
+              <Typography variant="body" color="textInverse" weight="semibold">
+                ✕
+              </Typography>
             </TouchableOpacity>
-          )}
-          <TouchableOpacity
-            onPress={() => onDelete(item.id)}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            disabled={isDeleting}
-            activeOpacity={0.8}
-            className={`rounded-xl p-3 shadow-sm ${
-              isDeleting ? 'bg-gray-300' : 'bg-red-500'
-            }`}
-            style={{
-              shadowColor: isDeleting ? '#9ca3af' : '#ef4444',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 3,
-              elevation: 3,
-            }}
-          >
-            <Text className="text-white text-lg font-semibold">✕</Text>
-          </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </Card>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: SPACING.base,
+    marginBottom: SPACING.md,
+  },
+  card: {
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  info: {
+    flex: 1,
+    marginRight: SPACING.md,
+  },
+  name: {
+    marginBottom: SPACING.xs,
+  },
+  amount: {
+    marginBottom: SPACING.xs,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  dateIcon: {
+    marginRight: SPACING.xs,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  actionButton: {
+    width: ICON_SIZES.base + SPACING.base,
+    height: ICON_SIZES.base + SPACING.base,
+    borderRadius: RADIUS.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.base,
+  },
+  editButton: {
+    backgroundColor: COLORS.warningLight,
+  },
+  deleteButton: {
+    backgroundColor: COLORS.danger,
+  },
+  deleteButtonDisabled: {
+    backgroundColor: COLORS.gray300,
+    opacity: 0.6,
+  },
+});

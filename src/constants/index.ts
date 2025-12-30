@@ -1,7 +1,5 @@
 export const PAGE_SIZE = 10;
 
-export const INCREASE_RATE = 5.2;
-
 export const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export const DATE_FORMAT_PLACEHOLDER = 'YYYY-MM-DD';

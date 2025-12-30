@@ -3,72 +3,119 @@
 const MARKETING_VERSION = "2.0.0"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
 // =========================================================================
 
-export default ({ config }) => {
-  // EAS Build에서 설정한 환경 변수를 읽어옵니다.
-  // 기본값은 'production'으로 설정하여, 환경 변수가 없을 경우 배포용으로 간주합니다.
-  const appEnv = process.env.APP_ENV || "production";
+// 상수 정의
+const APP_CONSTANTS = {
+  BASE_BUNDLE_ID: "com.gunny.coinadmin",
+  APP_SLUG: "coin-admin",
+  APP_SCHEME: "coinadmin",
+  APP_NAME_BASE: "코인관리자",
+  OWNER: "parkgunny",
+  EAS_PROJECT_ID: "c645ec24-aecb-460a-b87b-0b7651e1f18d",
+} as const;
 
-  // --- 환경별 동적 설정 값들 ---
-  // 기본 번들 ID 및 패키지 이름의 기초가 되는 문자열입니다.
-  const baseBundleId = "com.gunny.coinadmin";
-  const baseIosBundleId = `${baseBundleId}.ios`; // 앱스토어 용 iOS 번들 ID
-  const baseAndroidPackageName = `${baseBundleId}.android`; // Android용 ID
+const ASSET_PATHS = {
+  ICON_APP: "./src/assets/images/icon_app.png",
+  FAVICON: "./src/assets/images/favicon.png",
+  LOCALE_KO: "./src/locales/ko.json",
+} as const;
 
-  const appSpecificConfig = {
+const UI_CONSTANTS = {
+  STATUS_BAR_BACKGROUND: "#ffffff",
+  ADAPTIVE_ICON_BACKGROUND: "#ffffff",
+} as const;
+
+// 환경 타입 정의
+type AppEnvironment = "development" | "preview" | "production";
+
+// 환경별 설정 타입
+interface EnvironmentConfig {
+  appName: string;
+  bundleIdentifier: string;
+  packageName: string;
+  icon: string;
+}
+
+// 환경별 설정 생성 함수
+const createEnvironmentConfig = (env: AppEnvironment): EnvironmentConfig => {
+  const baseIosBundleId = `${APP_CONSTANTS.BASE_BUNDLE_ID}.ios`;
+  const baseAndroidPackageName = `${APP_CONSTANTS.BASE_BUNDLE_ID}.android`;
+
+  const configs: Record<AppEnvironment, Omit<EnvironmentConfig, "icon">> = {
     development: {
-      appName: `코인관리자 (Dev)`,
+      appName: `${APP_CONSTANTS.APP_NAME_BASE} (Dev)`,
       bundleIdentifier: `${baseIosBundleId}.dev`,
       packageName: `${baseAndroidPackageName}.dev`,
-      icon: "./src/assets/images/icon_app.png",
     },
     preview: {
-      appName: `코인관리자 (Prev)`,
+      appName: `${APP_CONSTANTS.APP_NAME_BASE} (Prev)`,
       bundleIdentifier: `${baseIosBundleId}.preview`,
       packageName: `${baseAndroidPackageName}.preview`,
-      icon: "./src/assets/images/icon_app.png",
     },
     production: {
-      appName: `코인관리자`,
+      appName: APP_CONSTANTS.APP_NAME_BASE,
       bundleIdentifier: baseIosBundleId,
       packageName: baseAndroidPackageName,
-      icon: "./src/assets/images/icon_app.png", // 기본 아이콘
     },
   };
 
-  const currentEnvConfig = appSpecificConfig[appEnv];
+  return {
+    ...configs[env],
+    icon: ASSET_PATHS.ICON_APP,
+  };
+};
+
+// 안전한 환경 변수 파싱
+const getAppEnvironment = (): AppEnvironment => {
+  const env = process.env.APP_ENV || "production";
+  const validEnvs: AppEnvironment[] = ["development", "preview", "production"];
+  return validEnvs.includes(env as AppEnvironment)
+    ? (env as AppEnvironment)
+    : "production";
+};
+
+export default () => {
+  const appEnv = getAppEnvironment();
+  const envConfig = createEnvironmentConfig(appEnv);
 
   return {
     // Expo 프로젝트의 기본 설정들
-    name: currentEnvConfig.appName,
-    slug: "coin-admin",
-    version: MARKETING_VERSION, // 마케팅 버전을 명시적으로 설정합니다.
+    name: envConfig.appName,
+    slug: APP_CONSTANTS.APP_SLUG,
+    version: MARKETING_VERSION,
     orientation: "portrait",
-    icon: currentEnvConfig.icon || "./src/assets/images/icon_app.png", // 환경별 아이콘 또는 기본 아이콘
-    scheme: "coinadmin",
+    icon: envConfig.icon,
+    scheme: APP_CONSTANTS.APP_SCHEME,
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
+    // EAS Update 설정
+    updates: {
+      url: `https://u.expo.dev/${APP_CONSTANTS.EAS_PROJECT_ID}`,
+    },
     // 언어 설정
     locales: {
-      ko: "./src/locales/ko.json",
+      ko: ASSET_PATHS.LOCALE_KO,
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: currentEnvConfig.bundleIdentifier,
+      bundleIdentifier: envConfig.bundleIdentifier,
+      runtimeVersion: {
+        policy: "appVersion",
+      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
-      icon: currentEnvConfig.icon || "./src/assets/images/icon_app.png", // 환경별 아이콘 또는 기본 아이콘
+      icon: envConfig.icon,
       adaptiveIcon: {
-        foregroundImage:
-          currentEnvConfig.icon || "./src/assets/images/icon_app.png", // 환경별 아이콘 또는 기본 아이콘
-        backgroundColor: "#ffffff",
+        foregroundImage: envConfig.icon,
+        backgroundColor: UI_CONSTANTS.ADAPTIVE_ICON_BACKGROUND,
       },
-      package: currentEnvConfig.packageName,
+      package: envConfig.packageName,
+      runtimeVersion: "1.0.0",
       softwareKeyboardLayoutMode: "pan",
       statusBar: {
-        backgroundColor: "#ffffff",
+        backgroundColor: UI_CONSTANTS.STATUS_BAR_BACKGROUND,
         barStyle: "dark-content",
         translucent: false,
       },
@@ -76,16 +123,14 @@ export default ({ config }) => {
     web: {
       bundler: "metro",
       output: "static",
-      favicon: "./src/assets/images/favicon.png",
+      favicon: ASSET_PATHS.FAVICON,
     },
-    plugins: [
-      "expo-sqlite",
-    ],
+    plugins: ["expo-sqlite"],
     extra: {
       eas: {
-        projectId: "c645ec24-aecb-460a-b87b-0b7651e1f18d",
+        projectId: APP_CONSTANTS.EAS_PROJECT_ID,
       },
     },
-    owner: "parkgunny",
+    owner: APP_CONSTANTS.OWNER,
   };
 };

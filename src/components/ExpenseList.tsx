@@ -2,13 +2,17 @@ import React from 'react';
 import {
   FlatList,
   View,
-  Text,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import { FixedMonthCost } from '../types';
 import { ExpenseItem } from './ExpenseItem';
+import { Typography } from './ui/Typography';
+import { EmptyState } from './ui/EmptyState';
+import { Button } from './ui/Button';
+import { COLORS, SPACING } from '../constants/theme';
 
 interface ExpenseListProps {
   expenses: FixedMonthCost[];
@@ -49,30 +53,35 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const renderFooter = () => {
     if (isFetchingNextPage) {
       return (
-        <View className="py-4 items-center">
-          <ActivityIndicator size="small" color="#666" />
+        <View style={styles.footer}>
+          <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       );
     }
 
     if (hasNextPage && onLoadMore) {
       return (
-        <View className="py-4 items-center">
-          <TouchableOpacity
+        <View style={styles.footer}>
+          <Button
+            variant="primary"
+            size="md"
             onPress={onLoadMore}
-            className="bg-blue-500 rounded-lg px-6 py-3 active:bg-blue-600"
             disabled={isFetchingNextPage}
+            loading={isFetchingNextPage}
+            accessibilityLabel="더 보기"
           >
-            <Text className="text-white font-semibold text-base">더 보기</Text>
-          </TouchableOpacity>
+            더 보기
+          </Button>
         </View>
       );
     }
 
     if (expenses.length > 0) {
       return (
-        <View className="py-4 items-center">
-          <Text className="text-gray-400 text-sm">모든 데이터를 불러왔습니다</Text>
+        <View style={styles.footer}>
+          <Typography variant="body2" color="textTertiary">
+            모든 데이터를 불러왔습니다
+          </Typography>
         </View>
       );
     }
@@ -83,22 +92,27 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   const renderEmpty = () => {
     if (isLoading || isInitLoading) {
       return (
-        <View className="py-20 items-center">
-          <ActivityIndicator size="large" color="#666" />
-          <Text className="text-gray-500 mt-4">데이터를 불러오는 중...</Text>
-        </View>
+        <EmptyState
+          icon="⏳"
+          title="데이터를 불러오는 중..."
+          description="잠시만 기다려주세요"
+        />
       );
     }
     return (
-      <View className="py-20 items-center">
-        <Text className="text-gray-500">데이터가 없습니다.</Text>
-      </View>
+      <EmptyState
+        icon="📋"
+        title="등록된 고정비가 없습니다"
+        description="하단의 + 버튼을 눌러 월 고정비를 추가해보세요"
+      />
     );
   };
 
   return (
-    <View className="flex-1">
-      <Text className="text-lg font-semibold text-gray-800 mb-4 mx-4">월 고정비 정보</Text>
+    <View style={styles.container}>
+      <Typography variant="h3" color="textPrimary" style={styles.title}>
+        월 고정비 항목
+      </Typography>
 
       <FlatList
         data={expenses}
@@ -106,11 +120,16 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         keyExtractor={(item) => item.id.toString()}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={true}
         refreshControl={
           onRefresh ? (
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#666" />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.primary}
+              colors={[COLORS.primary]}
+            />
           ) : undefined
         }
         removeClippedSubviews={true}
@@ -122,3 +141,20 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  title: {
+    marginBottom: SPACING.base,
+    marginHorizontal: SPACING.base,
+  },
+  listContent: {
+    paddingBottom: 100,
+  },
+  footer: {
+    paddingVertical: SPACING.base,
+    alignItems: 'center',
+  },
+});

@@ -33,11 +33,11 @@ export const validateAmount = (amount: string): ValidationResult => {
 };
 
 /**
- * 시작일 유효성 검사
+ * 결제일 유효성 검사
  */
 export const validateStartDate = (startDate: string): ValidationResult => {
   if (!startDate.trim()) {
-    return { isValid: false, errorMessage: '시작일을 입력해주세요. (YYYY-MM-DD 형식)' };
+    return { isValid: false, errorMessage: '결제일을 입력해주세요. (YYYY-MM-DD 형식)' };
   }
   
   if (!isValidDateFormat(startDate)) {

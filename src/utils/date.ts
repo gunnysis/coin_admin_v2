@@ -1,5 +1,6 @@
 /**
- * 다음 결제일 계산 (start_date 기준으로 매월 같은 날)
+ * 결제일 계산 (start_date 기준으로 매월 같은 날)
+ * 한 달 내 고정비 관리 앱에서 각 항목의 결제일을 표시
  */
 export const getNextPaymentDate = (startDate: string): string => {
   const today = new Date();
