@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Animated, LayoutAnimation, StyleSheet } from 'react-native';
 import { formatCurrency } from '../utils/format';
-import { ExpenseChart } from './ExpenseChart';
+import { ExpenseVisualization } from './ExpenseVisualization';
 import { FixedMonthCost } from '../types';
 import { Card } from './ui/Card';
 import { Typography } from './ui/Typography';
@@ -119,7 +119,7 @@ export const TotalAmountCard: React.FC<TotalAmountCardProps> = ({
             ]}
           >
             <View style={styles.chartWrapper}>
-              <ExpenseChart expenses={expenses} />
+              <ExpenseVisualization expenses={expenses} totalAmount={totalAmount} />
             </View>
           </Animated.View>
         )}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { Typography } from '../components/ui/Typography';
 import { COLORS, SPACING } from '../constants/theme';
@@ -21,6 +21,7 @@ import { AddExpenseFormData, FixedMonthCost } from '../types';
 import { QUERY_KEYS } from '../constants';
 
 export default function App() {
+  const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -97,7 +98,7 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       {/* 헤더 */}
@@ -128,12 +129,14 @@ export default function App() {
         isFetchingNextPage={isFetchingNextPage}
         onLoadMore={() => fetchNextPage()}
         isDeleting={deleteExpense.isPending}
+        bottomInset={insets.bottom}
       />
 
       {/* 하단 추가 버튼 */}
       <AddButton
         onPress={handleAddButtonPress}
         disabled={addExpense.isPending}
+        bottomInset={insets.bottom}
       />
 
       {/* 추가/수정 모달 */}

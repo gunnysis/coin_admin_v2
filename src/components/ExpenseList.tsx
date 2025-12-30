@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   FlatList,
   View,
@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { FixedMonthCost } from '../types';
 import { ExpenseItem } from './ExpenseItem';
@@ -26,6 +27,7 @@ interface ExpenseListProps {
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
   isDeleting?: boolean;
+  bottomInset?: number;
 }
 
 export const ExpenseList: React.FC<ExpenseListProps> = ({
@@ -40,7 +42,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   isFetchingNextPage = false,
   onLoadMore,
   isDeleting = false,
+  bottomInset = 0,
 }) => {
+  // 하단 바와 추가 버튼을 고려한 하단 패딩 계산
+  const bottomPadding = useMemo(() => {
+    // 추가 버튼 높이 + 여백 + 하단 SafeArea 여백
+    const buttonHeight = 56; // 버튼 크기 (ICON_SIZES.xl + SPACING.base)
+    const buttonMargin = Platform.OS === 'ios' ? SPACING.xl : SPACING.lg;
+    const additionalPadding = SPACING.base; // 추가 여유 공간
+    
+    return bottomInset + buttonHeight + buttonMargin + additionalPadding;
+  }, [bottomInset]);
   const renderItem = ({ item }: { item: FixedMonthCost }) => (
     <ExpenseItem
       item={item}
@@ -120,7 +132,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         keyExtractor={(item) => item.id.toString()}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomPadding }]}
         showsVerticalScrollIndicator={true}
         refreshControl={
           onRefresh ? (
@@ -151,7 +163,7 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.base,
   },
   listContent: {
-    paddingBottom: 100,
+    // paddingBottom은 동적으로 계산되어 전달됨
   },
   footer: {
     paddingVertical: SPACING.base,
