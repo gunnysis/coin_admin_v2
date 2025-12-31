@@ -9,7 +9,7 @@ import {
   ScrollView,
   Keyboard,
   Pressable,
-  StyleSheet,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -17,10 +17,13 @@ import { AddExpenseFormData, FixedMonthCost } from '../types';
 import { validateExpenseForm } from '../utils/validation';
 import { DATE_FORMAT_PLACEHOLDER } from '../constants';
 import { formatDateToString, getTodayDateString } from '../utils/date';
+import { formatError, logError } from '../utils/errorHandler';
 import { Typography } from './ui/Typography';
 import { InputField } from './ui/InputField';
 import { Button } from './ui/Button';
 import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { getResponsivePadding } from '../utils/responsive';
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -69,8 +72,12 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   isPending = false,
 }) => {
   const insets = useSafeAreaInsets();
+  const device = useDeviceDimensions();
   const nameInputRef = useRef<TextInput>(null);
   const amountInputRef = useRef<TextInput>(null);
+  
+  // 반응형 스타일
+  const responsivePadding = getResponsivePadding(device, SPACING.xl);
   
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -116,12 +123,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setStartDate(todayStr);
       setValidationErrors({});
       
-      // 모달이 열릴 때 이름 입력 필드에 포커스 (약간의 지연 후)
+      // 모달이 열릴 때 이름 입력 필드에 포커스 (태블릿에서는 지연 시간 증가)
+      const focusDelay = device.isTablet ? MODAL_ANIMATION_DURATION + 100 : MODAL_ANIMATION_DURATION;
       setTimeout(() => {
         nameInputRef.current?.focus();
-      }, MODAL_ANIMATION_DURATION);
+      }, focusDelay);
     }
-  }, [visible, editingItem]);
+  }, [visible, editingItem, device.isTablet]);
 
   // 실시간 유효성 검사
   const validateField = useCallback((field: 'name' | 'amount' | 'startDate', value: string) => {
@@ -240,14 +248,17 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       // 성공 시 모달 닫기 (Alert는 상위 컴포넌트에서 처리)
       onClose();
     } catch (error) {
+      logError(error, isEditMode ? 'UpdateExpense' : 'AddExpense');
+      const appError = formatError(error);
+      
       Alert.alert(
         '오류 발생',
-        isEditMode 
-          ? '월 고정비 수정에 실패했습니다.\n다시 시도해주세요.' 
-          : '월 고정비 추가에 실패했습니다.\n다시 시도해주세요.',
-        [{ text: '확인', style: 'default' }]
+        appError.userMessage,
+        [
+          { text: '확인', style: 'default' },
+          ...(appError.recoverable ? [{ text: '다시 시도', style: 'default', onPress: handleSubmit }] : []),
+        ]
       );
-      console.error(isEditMode ? 'Update expense error:' : 'Add expense error:', error);
     }
   }, [name, amount, startDate, isEditMode, editingItem, onAdd, onUpdate, onClose]);
 
@@ -275,53 +286,61 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     return startDate || '결제일을 선택하세요';
   }, [startDate]);
 
+  // 태블릿에서는 fade 애니메이션 사용 (흔들림 방지)
+  const animationType = device.isTablet ? 'fade' : 'slide';
+  
+  // 태블릿에서는 KeyboardAvoidingView behavior 조정
+  const keyboardBehavior = device.isTablet ? undefined : (Platform.OS === 'ios' ? 'padding' : 'height');
+
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType={animationType}
       transparent={true}
       onRequestClose={handleClose}
       statusBarTranslucent={true}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={keyboardBehavior}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={KEYBOARD_AVOIDING_OFFSET}
+        keyboardVerticalOffset={device.isTablet ? 0 : KEYBOARD_AVOIDING_OFFSET}
+        enabled={!device.isTablet}
       >
         <Pressable
-          style={styles.backdrop}
+          className="flex-1 bg-black/50"
           onPress={handleBackdropPress}
           accessible={false}
         >
           <Pressable
-            style={styles.modalContentWrapper}
+            className={`flex-1 ${device.isTablet ? 'justify-center items-center px-6' : 'justify-end'}`}
             onPress={(e) => e.stopPropagation()}
           >
             <View
-              style={[
-                styles.modalContent,
-                {
-                  paddingBottom: Math.max(insets.bottom, SPACING.base),
-                },
-              ]}
+              className={`bg-white ${device.isTablet ? 'rounded-3xl max-h-[85%] w-[90%]' : 'rounded-t-3xl'} max-h-[90%] w-full`}
+              style={{
+                paddingBottom: Math.max(insets.bottom, SPACING.base),
+                maxWidth: device.isTablet ? 600 : undefined,
+              }}
             >
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={{ padding: responsivePadding, paddingBottom: SPACING.base }}
                 bounces={false}
               >
                 {/* 헤더 */}
-                <View style={styles.header}>
+                <View className="flex-row items-center justify-between mb-6">
                   <Typography variant="h2" color="textPrimary" accessibilityRole="header">
                     {isEditMode ? '월 고정비 수정' : '월 고정비 추가'}
                   </Typography>
                   <TouchableOpacity
                     onPress={handleClose}
                     disabled={isPending}
-                    style={styles.closeButton}
-                    accessibilityLabel="닫기"
+                    className="p-1"
+                    accessibilityLabel="모달 닫기"
                     accessibilityRole="button"
+                    accessibilityHint="입력 내용을 저장하지 않고 모달을 닫습니다"
+                    accessibilityState={{ disabled: isPending }}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   >
                     <Typography variant="h2" color="textTertiary">
@@ -365,19 +384,17 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 />
 
                 {/* 날짜 선택 필드 */}
-                <View style={styles.dateFieldContainer}>
-                  <Typography variant="label" color="textSecondary" style={styles.dateLabel}>
+                <View className="mb-6">
+                  <Typography variant="label" color="textSecondary" className="mb-1">
                     결제일 ({DATE_FORMAT_PLACEHOLDER})
                   </Typography>
                   <TouchableOpacity
                     onPress={openDatePicker}
                     disabled={isPending}
                     activeOpacity={0.7}
-                    style={[
-                      styles.datePickerButton,
-                      validationErrors.startDate && styles.datePickerButtonError,
-                      isPending && styles.datePickerButtonDisabled,
-                    ]}
+                    className={`bg-gray-100 rounded-xl p-4 flex-row items-center justify-between border min-h-[56px] ${
+                      validationErrors.startDate ? 'border-red-500' : 'border-transparent'
+                    } ${isPending ? 'opacity-50' : ''}`}
                     accessibilityLabel="결제일 선택"
                     accessibilityHint="월 고정비 결제일을 선택하세요"
                     accessibilityRole="button"
@@ -389,12 +406,12 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     >
                       {dateDisplayText}
                     </Typography>
-                    <View style={styles.datePickerIcon}>
+                    <View className="flex-row items-center gap-1">
                       <Typography variant="body" color="textSecondary">
                         📅
                       </Typography>
                       {startDate && (
-                        <Typography variant="caption" color="textTertiary" style={styles.dateModifyText}>
+                        <Typography variant="caption" color="textTertiary" className="ml-1">
                           수정
                         </Typography>
                       )}
@@ -402,7 +419,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   </TouchableOpacity>
                   
                   {validationErrors.startDate && (
-                    <Typography variant="caption" color="danger" style={styles.dateErrorText}>
+                    <Typography variant="caption" color="danger" className="mt-1">
                       {validationErrors.startDate}
                     </Typography>
                   )}
@@ -421,8 +438,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
                   {/* iOS 날짜 선택기 */}
                   {showDatePicker && Platform.OS === 'ios' && (
-                    <View style={styles.iosDatePickerContainer}>
-                      <View style={styles.datePickerHeader}>
+                    <View className="mt-4 bg-gray-50 rounded-xl p-4">
+                      <View className="flex-row items-center justify-between mb-4">
                         <Typography variant="h3" color="textPrimary">
                           날짜 선택
                         </Typography>
@@ -445,22 +462,25 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                       />
                     </View>
                   )}
-                </View>
 
-                {/* 제출 버튼 */}
+                </View>
+              </ScrollView>
+
+              {/* 제출 버튼 - ScrollView 밖으로 이동하여 항상 보이도록 */}
+              <View style={{ padding: responsivePadding, paddingTop: SPACING.base }}>
                 <Button
                   variant={isEditMode ? 'secondary' : 'primary'}
                   size="lg"
                   onPress={handleSubmit}
                   disabled={isPending || !isFormValid}
                   loading={isPending}
-                  style={styles.submitButton}
                   accessibilityLabel={isEditMode ? '수정하기' : '추가하기'}
-                  accessibilityState={{ disabled: isPending || !isFormValid }}
+                  accessibilityHint={isEditMode ? '입력한 내용으로 고정비를 수정합니다' : '입력한 내용으로 고정비를 추가합니다'}
+                  accessibilityState={{ disabled: isPending || !isFormValid, busy: isPending }}
                 >
                   {isEditMode ? '수정' : '추가'}
                 </Button>
-              </ScrollView>
+              </View>
             </View>
           </Pressable>
         </Pressable>
@@ -468,85 +488,3 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContentWrapper: {
-    justifyContent: 'flex-end',
-    flex: 1,
-  },
-  modalContent: {
-    backgroundColor: COLORS.surface,
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    maxHeight: MAX_MODAL_HEIGHT,
-  },
-  scrollContent: {
-    padding: SPACING.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.xl,
-  },
-  closeButton: {
-    padding: SPACING.xs,
-  },
-  dateFieldContainer: {
-    marginBottom: SPACING.xl,
-  },
-  dateLabel: {
-    marginBottom: SPACING.xs,
-  },
-  datePickerButton: {
-    backgroundColor: COLORS.gray100,
-    borderRadius: RADIUS.base,
-    padding: SPACING.base,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: 'transparent',
-    minHeight: 56,
-  },
-  datePickerButtonError: {
-    borderColor: COLORS.danger,
-  },
-  datePickerButtonDisabled: {
-    opacity: 0.5,
-  },
-  datePickerIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-  },
-  dateModifyText: {
-    marginLeft: SPACING.xs,
-  },
-  dateErrorText: {
-    marginTop: SPACING.xs,
-  },
-  datePickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.base,
-    paddingHorizontal: SPACING.base,
-    paddingTop: SPACING.base,
-    backgroundColor: COLORS.gray50,
-    borderRadius: RADIUS.base,
-  },
-  submitButton: {
-    marginTop: SPACING.sm,
-  },
-  iosDatePickerContainer: {
-    marginTop: SPACING.base,
-    backgroundColor: COLORS.gray50,
-    borderRadius: RADIUS.base,
-    padding: SPACING.base,
-  },
-});

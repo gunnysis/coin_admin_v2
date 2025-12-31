@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, TextInput, TextInputProps, StyleSheet } from 'react-native';
+import { View, TextInput, TextInputProps } from 'react-native';
 import { Typography } from './Typography';
-import { COLORS, SPACING, RADIUS } from '../../constants/theme';
+import { COLORS } from '../../constants/theme';
 
 interface InputFieldProps extends TextInputProps {
   label: string;
@@ -9,71 +9,46 @@ interface InputFieldProps extends TextInputProps {
   helperText?: string;
 }
 
-export const InputField = React.forwardRef<TextInput, InputFieldProps>(({
-  label,
-  error,
-  helperText,
-  style,
-  ...props
-}, ref) => {
-  return (
-    <View style={styles.container}>
-      <Typography variant="label" color="textSecondary" style={styles.label}>
-        {label}
-      </Typography>
-      <TextInput
-        ref={ref}
-        style={[
-          styles.input,
-          error && styles.inputError,
-          props.editable === false && styles.inputDisabled,
-          style,
-        ]}
-        placeholderTextColor={COLORS.textTertiary}
-        {...props}
-      />
-      {error && (
-        <Typography variant="caption" color="danger" style={styles.errorText}>
-          {error}
+export const InputField = React.memo(
+  React.forwardRef<TextInput, InputFieldProps>(({
+    label,
+    error,
+    helperText,
+    style,
+    editable = true,
+    ...props
+  }, ref) => {
+    return (
+      <View className="mb-4">
+        <Typography variant="label" color="textSecondary" className="mb-1">
+          {label}
         </Typography>
-      )}
-      {helperText && !error && (
-        <Typography variant="caption" color="textTertiary" style={styles.helperText}>
-          {helperText}
-        </Typography>
-      )}
-    </View>
-  );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: SPACING.base,
-  },
-  label: {
-    marginBottom: SPACING.xs,
-  },
-  input: {
-    backgroundColor: COLORS.gray100,
-    borderRadius: RADIUS.base,
-    padding: SPACING.base,
-    fontSize: 16,
-    color: COLORS.textPrimary,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  inputError: {
-    borderColor: COLORS.danger,
-    borderWidth: 1,
-  },
-  inputDisabled: {
-    opacity: 0.6,
-    backgroundColor: COLORS.gray200,
-  },
-  errorText: {
-    marginTop: SPACING.xs,
-  },
-  helperText: {
-    marginTop: SPACING.xs,
-  },
-});
+        <TextInput
+          ref={ref}
+          className={`bg-gray-100 rounded-xl p-4 text-base text-gray-800 border ${
+            error 
+              ? 'border-red-500' 
+              : 'border-transparent'
+          } ${!editable ? 'opacity-60 bg-gray-200' : ''}`}
+          placeholderTextColor={COLORS.textTertiary}
+          editable={editable}
+          style={style}
+          accessibilityLabel={label}
+          accessibilityHint={helperText || error}
+          accessibilityState={{ disabled: !editable }}
+          {...props}
+        />
+        {error && (
+          <Typography variant="caption" color="danger" className="mt-1">
+            {error}
+          </Typography>
+        )}
+        {helperText && !error && (
+          <Typography variant="caption" color="textTertiary" className="mt-1">
+            {helperText}
+          </Typography>
+        )}
+      </View>
+    );
+  })
+);

@@ -1,6 +1,6 @@
 // =========================================================================
 // !! 중요: 새 배포 빌드 전 반드시 이 마케팅 버전을 업데이트하세요 !!
-const MARKETING_VERSION = "2.0.1"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
+const MARKETING_VERSION = "2.0.2"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
 // =========================================================================
 
 // 상수 정의
@@ -82,7 +82,7 @@ export default () => {
     name: envConfig.appName,
     slug: APP_CONSTANTS.APP_SLUG,
     version: MARKETING_VERSION,
-    orientation: "portrait",
+    orientation: "default", // 가로/세로 모두 지원
     icon: envConfig.icon,
     scheme: APP_CONSTANTS.APP_SCHEME,
     userInterfaceStyle: "automatic",
@@ -119,6 +119,12 @@ export default () => {
         barStyle: "dark-content",
         translucent: false,
       },
+      // 태블릿 최적화 설정
+      supportsTablet: true,
+      // 갤럭시탭 S11 및 최신 태블릿 지원
+      minSdkVersion: 24, // Android 7.0 (Nougat)
+      targetSdkVersion: 34, // Android 14
+      compileSdkVersion: 34,
     },
     web: {
       bundler: "metro",

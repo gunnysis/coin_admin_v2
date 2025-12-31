@@ -1,7 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator, StyleSheet } from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator } from 'react-native';
 import { Typography } from './Typography';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../../constants/theme';
+import { COLORS } from '../../constants/theme';
 
 interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline';
@@ -11,7 +11,20 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   style?: TouchableOpacityProps['style'];
 }
 
-export const Button: React.FC<ButtonProps> = ({
+const variantClasses = {
+  primary: 'bg-blue-500',
+  secondary: 'bg-green-500',
+  danger: 'bg-red-500',
+  outline: 'bg-transparent border-2 border-blue-500',
+};
+
+const sizeClasses = {
+  sm: 'px-4 py-2',
+  md: 'px-6 py-3',
+  lg: 'px-8 py-4',
+};
+
+export const Button = React.memo<ButtonProps>(({
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -20,21 +33,17 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   ...props
 }) => {
-  const buttonStyle = [
-    styles.base,
-    styles[variant],
-    styles[`size_${size}`],
-    (disabled || loading) && styles.disabled,
-    style,
-  ];
-
+  const isDisabled = disabled || loading;
   const textColor = variant === 'outline' ? COLORS.primary : COLORS.textInverse;
 
   return (
     <TouchableOpacity
-      style={buttonStyle}
-      disabled={disabled || loading}
+      className={`rounded-xl items-center justify-center shadow-sm ${variantClasses[variant]} ${sizeClasses[size]} ${isDisabled ? 'opacity-50' : ''}`}
+      disabled={isDisabled}
       activeOpacity={0.8}
+      style={style}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
       {...props}
     >
       {loading ? (
@@ -50,42 +59,4 @@ export const Button: React.FC<ButtonProps> = ({
       )}
     </TouchableOpacity>
   );
-};
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: RADIUS.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...SHADOWS.sm,
-  },
-  primary: {
-    backgroundColor: COLORS.primary,
-  },
-  secondary: {
-    backgroundColor: COLORS.secondary,
-  },
-  danger: {
-    backgroundColor: COLORS.danger,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  size_sm: {
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm,
-  },
-  size_md: {
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-  },
-  size_lg: {
-    paddingHorizontal: SPACING['2xl'],
-    paddingVertical: SPACING.base,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
 });

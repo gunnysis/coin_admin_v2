@@ -1,11 +1,14 @@
-import React from 'react';
-import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { View, TouchableOpacity, Animated } from 'react-native';
 import { FixedMonthCost } from '../types';
 import { formatCurrency } from '../utils/format';
 import { getNextPaymentDate } from '../utils/date';
 import { Card } from './ui/Card';
 import { Typography } from './ui/Typography';
-import { COLORS, SPACING, RADIUS, SHADOWS, ICON_SIZES } from '../constants/theme';
+import { SPACING } from '../constants/theme';
+import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { getResponsiveMargin, getResponsiveValue, getResponsiveFontSize } from '../utils/responsive';
+import { TYPOGRAPHY } from '../constants/theme';
 
 interface ExpenseItemProps {
   item: FixedMonthCost;
@@ -14,52 +17,84 @@ interface ExpenseItemProps {
   isDeleting?: boolean;
 }
 
-export const ExpenseItem: React.FC<ExpenseItemProps> = ({
+export const ExpenseItem = React.memo<ExpenseItemProps>(({
   item,
   onDelete,
   onEdit,
   isDeleting = false,
 }) => {
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const device = useDeviceDimensions();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  
+  // 반응형 스타일
+  const responsiveMargin = getResponsiveMargin(device, SPACING.base);
+  const buttonSize = getResponsiveValue(device, 40, device.isTablet ? 48 : 40);
+  const buttonGap = getResponsiveValue(device, SPACING.sm, device.isTablet ? SPACING.base : SPACING.sm);
+  
+  // 금액 폰트 크기 미세 조정 (태블릿에서 약간 작게)
+  const amountFontSize = getResponsiveFontSize(device, TYPOGRAPHY.fontSize['3xl']);
+  // 태블릿에서는 금액을 조금 더 작게 (기본 배율의 0.9배)
+  const adjustedAmountSize = device.isTablet 
+    ? amountFontSize * 0.95  // 태블릿에서 5% 감소
+    : amountFontSize;
 
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 0.97,
       useNativeDriver: true,
       tension: 300,
       friction: 10,
     }).start();
-  };
+  }, [scaleAnim]);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
       tension: 300,
       friction: 10,
     }).start();
-  };
+  }, [scaleAnim]);
+
+  const handleEditPress = useCallback(() => {
+    if (onEdit) {
+      onEdit(item);
+    }
+  }, [onEdit, item]);
+
+  const handleDeletePress = useCallback(() => {
+    onDelete(item.id);
+  }, [onDelete, item.id]);
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
+      style={{
+        transform: [{ scale: scaleAnim }],
+        marginHorizontal: 0, // 부모 컨테이너에서 패딩 처리
+        marginBottom: device.isTablet ? responsiveMargin : SPACING.md,
+      }}
     >
-      <Card variant="elevated" padding="base" style={styles.card}>
-        <View style={styles.content}>
-          <View style={styles.info}>
-            <Typography variant="h3" color="textPrimary" weight="semibold" style={styles.name}>
+      <Card 
+        variant="elevated" 
+        padding={device.isTablet ? "lg" : "base"} 
+        className="border border-gray-100"
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1" style={{ marginRight: SPACING.md }}>
+            <Typography variant="h3" color="textPrimary" weight="semibold" className="mb-1">
               {item.name}
             </Typography>
-            <Typography variant="h2" color="primary" weight="bold" style={styles.amount}>
+            <Typography 
+              variant="h2" 
+              color="primary" 
+              weight="bold" 
+              className="mb-1"
+              style={{ fontSize: adjustedAmountSize }}
+            >
               {formatCurrency(item.amount)}
             </Typography>
-            <View style={styles.dateContainer}>
-              <Typography variant="caption" color="textTertiary" style={styles.dateIcon}>
+            <View className="flex-row items-center mt-1">
+              <Typography variant="caption" color="textTertiary" className="mr-1">
                 📅
               </Typography>
               <Typography variant="caption" color="textSecondary">
@@ -68,34 +103,43 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
             </View>
           </View>
           
-          <View style={styles.actions}>
+          <View className="flex-row items-center">
             {onEdit && (
               <TouchableOpacity
-                onPress={() => onEdit(item)}
+                onPress={handleEditPress}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 activeOpacity={0.8}
-                style={[styles.actionButton, styles.editButton]}
-                accessibilityLabel="수정"
+                className="rounded-xl bg-amber-300 items-center justify-center shadow-md"
+                style={{
+                  width: buttonSize,
+                  height: buttonSize,
+                  marginRight: buttonGap,
+                }}
+                accessibilityLabel={`${item.name} 수정`}
                 accessibilityRole="button"
+                accessibilityHint="이 항목을 수정합니다"
               >
                 <Typography variant="body" color="textPrimary">✏️</Typography>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              onPress={() => onDelete(item.id)}
+              onPress={handleDeletePress}
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
               disabled={isDeleting}
               activeOpacity={0.8}
-              style={[
-                styles.actionButton,
-                styles.deleteButton,
-                isDeleting && styles.deleteButtonDisabled,
-              ]}
-              accessibilityLabel="삭제"
+              className={`rounded-xl items-center justify-center shadow-md ${
+                isDeleting ? 'bg-gray-300 opacity-60' : 'bg-red-500'
+              }`}
+              style={{
+                width: buttonSize,
+                height: buttonSize,
+              }}
+              accessibilityLabel={`${item.name} 삭제`}
               accessibilityRole="button"
               accessibilityState={{ disabled: isDeleting }}
+              accessibilityHint="이 항목을 삭제합니다"
             >
               <Typography variant="body" color="textInverse" weight="semibold">
                 ✕
@@ -106,60 +150,4 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
       </Card>
     </Animated.View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: SPACING.base,
-    marginBottom: SPACING.md,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  info: {
-    flex: 1,
-    marginRight: SPACING.md,
-  },
-  name: {
-    marginBottom: SPACING.xs,
-  },
-  amount: {
-    marginBottom: SPACING.xs,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: SPACING.xs,
-  },
-  dateIcon: {
-    marginRight: SPACING.xs,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-  },
-  actionButton: {
-    width: ICON_SIZES.base + SPACING.base,
-    height: ICON_SIZES.base + SPACING.base,
-    borderRadius: RADIUS.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...SHADOWS.base,
-  },
-  editButton: {
-    backgroundColor: COLORS.warningLight,
-  },
-  deleteButton: {
-    backgroundColor: COLORS.danger,
-  },
-  deleteButtonDisabled: {
-    backgroundColor: COLORS.gray300,
-    opacity: 0.6,
-  },
 });

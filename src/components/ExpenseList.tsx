@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   FlatList,
   View,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
-  StyleSheet,
   Platform,
 } from 'react-native';
 import { FixedMonthCost } from '../types';
@@ -14,6 +13,8 @@ import { Typography } from './ui/Typography';
 import { EmptyState } from './ui/EmptyState';
 import { Button } from './ui/Button';
 import { COLORS, SPACING } from '../constants/theme';
+import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { getResponsivePadding, getResponsiveMargin } from '../utils/responsive';
 
 interface ExpenseListProps {
   expenses: FixedMonthCost[];
@@ -28,9 +29,10 @@ interface ExpenseListProps {
   onLoadMore?: () => void;
   isDeleting?: boolean;
   bottomInset?: number;
+  isTabletLandscape?: boolean;
 }
 
-export const ExpenseList: React.FC<ExpenseListProps> = ({
+export const ExpenseList = React.memo<ExpenseListProps>(({
   expenses,
   isLoading = false,
   isInitLoading = false,
@@ -43,29 +45,46 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   onLoadMore,
   isDeleting = false,
   bottomInset = 0,
+  isTabletLandscape = false,
 }) => {
+  const device = useDeviceDimensions();
+  
   // 하단 바와 추가 버튼을 고려한 하단 패딩 계산
   const bottomPadding = useMemo(() => {
+    // 태블릿 가로 모드에서는 추가 버튼이 오른쪽 하단에 있으므로 패딩 조정
+    if (isTabletLandscape) {
+      return bottomInset + SPACING.base;
+    }
     // 추가 버튼 높이 + 여백 + 하단 SafeArea 여백
     const buttonHeight = 56; // 버튼 크기 (ICON_SIZES.xl + SPACING.base)
     const buttonMargin = Platform.OS === 'ios' ? SPACING.xl : SPACING.lg;
     const additionalPadding = SPACING.base; // 추가 여유 공간
     
     return bottomInset + buttonHeight + buttonMargin + additionalPadding;
-  }, [bottomInset]);
-  const renderItem = ({ item }: { item: FixedMonthCost }) => (
+  }, [bottomInset, isTabletLandscape]);
+  
+  // 반응형 스타일
+  const responsivePadding = getResponsivePadding(device, SPACING.base);
+  
+  // 태블릿 가로 모드에서는 paddingHorizontal을 0으로 설정 (부모 컨테이너에서 이미 처리)
+  // 태블릿 세로 모드에서는 적절한 패딩 적용
+  const listPaddingHorizontal = 0;
+  
+  const renderItem = React.useCallback(({ item }: { item: FixedMonthCost }) => (
     <ExpenseItem
       item={item}
       onDelete={onDelete}
       onEdit={onEdit}
       isDeleting={isDeleting}
     />
-  );
+  ), [onDelete, onEdit, isDeleting]);
 
-  const renderFooter = () => {
+  const keyExtractor = React.useCallback((item: FixedMonthCost) => item.id.toString(), []);
+
+  const renderFooter = useCallback(() => {
     if (isFetchingNextPage) {
       return (
-        <View style={styles.footer}>
+        <View className="py-4 items-center">
           <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       );
@@ -73,7 +92,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
     if (hasNextPage && onLoadMore) {
       return (
-        <View style={styles.footer}>
+        <View className="py-4 items-center">
           <Button
             variant="primary"
             size="md"
@@ -90,7 +109,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
     if (expenses.length > 0) {
       return (
-        <View style={styles.footer}>
+        <View className="py-4 items-center">
           <Typography variant="body2" color="textTertiary">
             모든 데이터를 불러왔습니다
           </Typography>
@@ -99,9 +118,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     }
 
     return null;
-  };
+  }, [isFetchingNextPage, hasNextPage, onLoadMore, expenses.length]);
 
-  const renderEmpty = () => {
+  const renderEmpty = useCallback(() => {
     if (isLoading || isInitLoading) {
       return (
         <EmptyState
@@ -118,21 +137,33 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         description="하단의 + 버튼을 눌러 월 고정비를 추가해보세요"
       />
     );
-  };
+  }, [isLoading, isInitLoading]);
 
   return (
-    <View style={styles.container}>
-      <Typography variant="h3" color="textPrimary" style={styles.title}>
-        월 고정비 항목
-      </Typography>
+    <View className="flex-1">
+      {!isTabletLandscape && (
+        <Typography 
+          variant="h3" 
+          color="textPrimary" 
+          className="mb-4"
+          style={{ marginHorizontal: device.isTablet ? 0 : responsivePadding }}
+        >
+          월 고정비 항목
+        </Typography>
+      )}
 
       <FlatList
         data={expenses}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={keyExtractor}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={[styles.listContent, { paddingBottom: bottomPadding }]}
+        contentContainerStyle={{ 
+          paddingBottom: bottomPadding,
+          paddingHorizontal: device.isTablet && !isTabletLandscape ? 0 : listPaddingHorizontal,
+          ...(expenses.length === 0 && { flexGrow: 1 }),
+        }}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={true}
         refreshControl={
           onRefresh ? (
@@ -144,29 +175,15 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             />
           ) : undefined
         }
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
+        removeClippedSubviews={device.isTablet ? false : true}
+        maxToRenderPerBatch={device.isTablet ? 15 : 10}
         updateCellsBatchingPeriod={50}
-        initialNumToRender={10}
-        windowSize={10}
+        initialNumToRender={device.isTablet ? 15 : 10}
+        windowSize={device.isTablet ? 15 : 10}
+        accessibilityLabel="월 고정비 항목 목록"
+        accessibilityHint={`총 ${expenses.length}개의 고정비 항목이 있습니다. 아래로 당겨서 새로고침할 수 있습니다.`}
+        accessibilityRole="list"
       />
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  title: {
-    marginBottom: SPACING.base,
-    marginHorizontal: SPACING.base,
-  },
-  listContent: {
-    // paddingBottom은 동적으로 계산되어 전달됨
-  },
-  footer: {
-    paddingVertical: SPACING.base,
-    alignItems: 'center',
-  },
 });

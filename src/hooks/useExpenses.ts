@@ -129,6 +129,11 @@ export const useAddExpense = () => {
       // 성공 시 관련 쿼리 무효화하여 재조회
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
     },
+    onError: (error) => {
+      if (__DEV__) {
+        console.error('고정비 추가 실패:', error);
+      }
+    },
   });
 };
 

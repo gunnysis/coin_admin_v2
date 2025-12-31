@@ -26,7 +26,7 @@ interface ExpenseGroup {
  * - 인터랙티브 애니메이션
  * - 시각적 계층 구조
  */
-export const ExpenseVisualization: React.FC<ExpenseVisualizationProps> = ({
+export const ExpenseVisualization = React.memo<ExpenseVisualizationProps>(({
   expenses,
   totalAmount,
 }) => {
@@ -143,7 +143,7 @@ export const ExpenseVisualization: React.FC<ExpenseVisualizationProps> = ({
       </View>
     </ScrollView>
   );
-};
+});
 
 /**
  * 그룹 카드 컴포넌트 (애니메이션 포함)

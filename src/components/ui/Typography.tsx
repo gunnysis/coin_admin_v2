@@ -1,6 +1,8 @@
 import React from 'react';
-import { Text, TextProps, StyleSheet } from 'react-native';
+import { Text, TextProps } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../../constants/theme';
+import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
+import { getResponsiveFontSize } from '../../utils/responsive';
 
 type ColorKey = 
   | 'textPrimary' 
@@ -21,7 +23,7 @@ interface TypographyProps extends TextProps {
   align?: 'left' | 'center' | 'right';
 }
 
-export const Typography: React.FC<TypographyProps> = ({
+export const Typography = React.memo<TypographyProps>(({
   variant = 'body',
   color = 'textPrimary',
   weight,
@@ -30,43 +32,56 @@ export const Typography: React.FC<TypographyProps> = ({
   children,
   ...props
 }) => {
-  const variantStyles = {
-    h1: {
-      fontSize: TYPOGRAPHY.fontSize['4xl'],
-      fontWeight: TYPOGRAPHY.fontWeight.bold,
-      lineHeight: TYPOGRAPHY.fontSize['4xl'] * TYPOGRAPHY.lineHeight.tight,
-    },
-    h2: {
-      fontSize: TYPOGRAPHY.fontSize['3xl'],
-      fontWeight: TYPOGRAPHY.fontWeight.bold,
-      lineHeight: TYPOGRAPHY.fontSize['3xl'] * TYPOGRAPHY.lineHeight.tight,
-    },
-    h3: {
-      fontSize: TYPOGRAPHY.fontSize['2xl'],
-      fontWeight: TYPOGRAPHY.fontWeight.semibold,
-      lineHeight: TYPOGRAPHY.fontSize['2xl'] * TYPOGRAPHY.lineHeight.normal,
-    },
-    body: {
-      fontSize: TYPOGRAPHY.fontSize.base,
-      fontWeight: TYPOGRAPHY.fontWeight.normal,
-      lineHeight: TYPOGRAPHY.fontSize.base * TYPOGRAPHY.lineHeight.normal,
-    },
-    body2: {
-      fontSize: TYPOGRAPHY.fontSize.sm,
-      fontWeight: TYPOGRAPHY.fontWeight.normal,
-      lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
-    },
-    caption: {
-      fontSize: TYPOGRAPHY.fontSize.xs,
-      fontWeight: TYPOGRAPHY.fontWeight.normal,
-      lineHeight: TYPOGRAPHY.fontSize.xs * TYPOGRAPHY.lineHeight.normal,
-    },
-    label: {
-      fontSize: TYPOGRAPHY.fontSize.sm,
-      fontWeight: TYPOGRAPHY.fontWeight.semibold,
-      lineHeight: TYPOGRAPHY.fontSize.sm * TYPOGRAPHY.lineHeight.normal,
-    },
-  };
+  const device = useDeviceDimensions();
+  
+  // 반응형 폰트 크기 계산 (useMemo로 최적화)
+  const variantStyles = React.useMemo(() => {
+    const baseH1 = TYPOGRAPHY.fontSize['4xl'];
+    const baseH2 = TYPOGRAPHY.fontSize['3xl'];
+    const baseH3 = TYPOGRAPHY.fontSize['2xl'];
+    const baseBody = TYPOGRAPHY.fontSize.base;
+    const baseBody2 = TYPOGRAPHY.fontSize.sm;
+    const baseCaption = TYPOGRAPHY.fontSize.xs;
+    const baseLabel = TYPOGRAPHY.fontSize.sm;
+
+    return {
+      h1: {
+        fontSize: getResponsiveFontSize(device, baseH1),
+        fontWeight: TYPOGRAPHY.fontWeight.bold,
+        lineHeight: getResponsiveFontSize(device, baseH1) * TYPOGRAPHY.lineHeight.tight,
+      },
+      h2: {
+        fontSize: getResponsiveFontSize(device, baseH2),
+        fontWeight: TYPOGRAPHY.fontWeight.bold,
+        lineHeight: getResponsiveFontSize(device, baseH2) * TYPOGRAPHY.lineHeight.tight,
+      },
+      h3: {
+        fontSize: getResponsiveFontSize(device, baseH3),
+        fontWeight: TYPOGRAPHY.fontWeight.semibold,
+        lineHeight: getResponsiveFontSize(device, baseH3) * TYPOGRAPHY.lineHeight.normal,
+      },
+      body: {
+        fontSize: getResponsiveFontSize(device, baseBody),
+        fontWeight: TYPOGRAPHY.fontWeight.normal,
+        lineHeight: getResponsiveFontSize(device, baseBody) * TYPOGRAPHY.lineHeight.normal,
+      },
+      body2: {
+        fontSize: getResponsiveFontSize(device, baseBody2),
+        fontWeight: TYPOGRAPHY.fontWeight.normal,
+        lineHeight: getResponsiveFontSize(device, baseBody2) * TYPOGRAPHY.lineHeight.normal,
+      },
+      caption: {
+        fontSize: getResponsiveFontSize(device, baseCaption),
+        fontWeight: TYPOGRAPHY.fontWeight.normal,
+        lineHeight: getResponsiveFontSize(device, baseCaption) * TYPOGRAPHY.lineHeight.normal,
+      },
+      label: {
+        fontSize: getResponsiveFontSize(device, baseLabel),
+        fontWeight: TYPOGRAPHY.fontWeight.semibold,
+        lineHeight: getResponsiveFontSize(device, baseLabel) * TYPOGRAPHY.lineHeight.normal,
+      },
+    };
+  }, [device]);
 
   const colorValue = COLORS[color as keyof typeof COLORS] || COLORS.textPrimary;
 
@@ -83,4 +98,4 @@ export const Typography: React.FC<TypographyProps> = ({
       {children}
     </Text>
   );
-};
+});
