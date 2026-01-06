@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { Platform } from 'react-native';
-import { FixedMonthCost } from '../types';
+import { FixedMonthCost, VariableMonthExpense } from '../types';
 
 // 공통 DB 인스턴스
 let db: SQLite.SQLiteDatabase | null = null;
@@ -94,6 +94,30 @@ export const getDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
         name TEXT NOT NULL,
         start_date DATE NOT NULL
       );
+    `);
+
+    // variable_month_expenses 테이블 생성 (유동비)
+    await newDb.execAsync(`
+      CREATE TABLE IF NOT EXISTS variable_month_expenses (
+        id INTEGER PRIMARY KEY,
+        created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours')),
+        amount INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        spent_date DATE NOT NULL,
+        category TEXT,
+        memo TEXT
+      );
+    `);
+
+    // 인덱스 생성 (성능 최적화)
+    await newDb.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_variable_expenses_spent_date 
+      ON variable_month_expenses(spent_date);
+    `);
+    
+    await newDb.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_variable_expenses_category 
+      ON variable_month_expenses(category);
     `);
 
     db = newDb;
@@ -351,6 +375,246 @@ export const updateFixedMonthCost = async (
     }
   } catch (error) {
     console.error('데이터 수정 중 오류:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// 유동비 관련 함수
+// ============================================================================
+
+// 유동비 조회 (페이지네이션)
+export const getVariableMonthExpenses = async (
+  limit: number = 10,
+  offset: number = 0,
+  month?: string // YYYY-MM 형식, 선택적 필터
+): Promise<VariableMonthExpense[]> => {
+  try {
+    const db = await getDatabase();
+    let query = 'SELECT * FROM variable_month_expenses';
+    const params: (string | number)[] = [];
+    
+    if (month) {
+      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      params.push(month);
+    }
+    
+    query += ' ORDER BY spent_date DESC, id DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+    
+    const result = await db.getAllAsync(query, params);
+    return result as VariableMonthExpense[];
+  } catch (error) {
+    console.error('유동비 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 유동비 전체 개수 조회
+export const getVariableMonthExpensesCount = async (month?: string): Promise<number> => {
+  try {
+    const db = await getDatabase();
+    let query = 'SELECT COUNT(*) as count FROM variable_month_expenses';
+    const params: string[] = [];
+    
+    if (month) {
+      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      params.push(month);
+    }
+    
+    const result = await db.getFirstAsync<{ count: number }>(query, params.length > 0 ? params : undefined);
+    return result?.count || 0;
+  } catch (error) {
+    console.error('유동비 개수 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 유동비 총액 계산
+export const getVariableMonthExpensesTotal = async (month?: string): Promise<number> => {
+  try {
+    const db = await getDatabase();
+    let query = 'SELECT SUM(amount) as total FROM variable_month_expenses';
+    const params: string[] = [];
+    
+    if (month) {
+      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      params.push(month);
+    }
+    
+    const result = await db.getFirstAsync<{ total: number | null }>(query, params.length > 0 ? params : undefined);
+    return result?.total || 0;
+  } catch (error) {
+    console.error('유동비 총액 조회 중 오류:', error);
+    throw error;
+  }
+};
+
+// 유동비 추가
+export const addVariableMonthExpense = async (
+  name: string,
+  amount: number,
+  spent_date: string,
+  category?: string,
+  memo?: string
+): Promise<number> => {
+  const result = await (dbQueue = dbQueue.then(async () => {
+    try {
+      let dbInstance = await getDatabase();
+      
+      if (!dbInstance || typeof dbInstance.runAsync !== 'function') {
+        db = null;
+        dbInstance = await resetDatabase();
+        
+        if (!dbInstance || typeof dbInstance.runAsync !== 'function') {
+          throw new Error('Database instance is invalid after reset');
+        }
+      }
+
+      const isValid = await validateDatabase(dbInstance);
+      if (!isValid) {
+        if (__DEV__) {
+          console.log('데이터베이스 유효성 검증 실패, 재초기화...');
+        }
+        db = null;
+        dbInstance = await resetDatabase();
+        const retryIsValid = await validateDatabase(dbInstance);
+        if (!retryIsValid) {
+          throw new Error('Database validation failed after reset');
+        }
+      }
+
+      const insertResult = await dbInstance.runAsync(
+        'INSERT INTO variable_month_expenses (name, amount, spent_date, category, memo) VALUES (?, ?, ?, ?, ?)',
+        [name, amount, spent_date, category || null, memo || null]
+      );
+
+      return insertResult.lastInsertRowId;
+    } catch (error: unknown) {
+      console.error('유동비 추가 중 오류:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('NullPointerException') || errorMessage.includes('prepareAsync')) {
+        if (__DEV__) {
+          console.log('NullPointerException 감지, 데이터베이스 재초기화 시도...');
+        }
+        
+        if (db) {
+          try {
+            await db.closeAsync().catch(() => {});
+          } catch (e) {
+            // 무시
+          }
+        }
+        db = null;
+        isInitializing = false;
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        try {
+          const dbInstance = await resetDatabase();
+          const isValid = await validateDatabase(dbInstance);
+          if (isValid && typeof dbInstance.runAsync === 'function') {
+            const retryResult = await dbInstance.runAsync(
+              'INSERT INTO variable_month_expenses (name, amount, spent_date, category, memo) VALUES (?, ?, ?, ?, ?)',
+              [name, amount, spent_date, category || null, memo || null]
+            );
+            if (__DEV__) {
+              console.log('재시도 성공');
+            }
+            return retryResult.lastInsertRowId;
+          }
+        } catch (retryError) {
+          console.error('재시도 실패:', retryError);
+        }
+      }
+      
+      throw error;
+    }
+  }));
+
+  return result;
+};
+
+// 유동비 수정
+export const updateVariableMonthExpense = async (
+  id: number,
+  name: string,
+  amount: number,
+  spent_date: string,
+  category?: string,
+  memo?: string
+): Promise<void> => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db.ts:540',message:'updateVariableMonthExpense called',data:{id,name,amount,spent_date,category,memo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
+  // #endregion
+  try {
+    const db = await getDatabase();
+    await db.runAsync(
+      'UPDATE variable_month_expenses SET name = ?, amount = ?, spent_date = ?, category = ?, memo = ? WHERE id = ?',
+      [name, amount, spent_date, category || null, memo || null, id]
+    );
+    if (__DEV__) {
+      console.log(`유동비 항목 ${id}가 수정되었습니다.`);
+    }
+  } catch (error) {
+    console.error('유동비 수정 중 오류:', error);
+    throw error;
+  }
+};
+
+// 유동비 삭제
+export const deleteVariableMonthExpense = async (id: number): Promise<void> => {
+  try {
+    const db = await getDatabase();
+    await db.runAsync('DELETE FROM variable_month_expenses WHERE id = ?', [id]);
+    if (__DEV__) {
+      console.log(`유동비 항목 ${id}가 삭제되었습니다.`);
+    }
+  } catch (error) {
+    console.error('유동비 삭제 중 오류:', error);
+    throw error;
+  }
+};
+
+// 월별 유동비 통계 조회
+export const getVariableExpensesMonthlyStats = async (year: string, month: string): Promise<{
+  total: number;
+  count: number;
+  byCategory: Array<{ category: string | null; total: number; count: number }>;
+}> => {
+  try {
+    const db = await getDatabase();
+    const monthStr = `${year}-${month.padStart(2, '0')}`;
+    
+    // 총액 및 개수
+    const totalResult = await db.getFirstAsync<{ total: number | null; count: number }>(
+      `SELECT SUM(amount) as total, COUNT(*) as count 
+       FROM variable_month_expenses 
+       WHERE strftime("%Y-%m", spent_date) = ?`,
+      [monthStr]
+    );
+    
+    // 카테고리별 통계
+    const categoryResult = await db.getAllAsync<{ category: string | null; total: number; count: number }>(
+      `SELECT 
+        COALESCE(category, '미분류') as category,
+        SUM(amount) as total,
+        COUNT(*) as count
+       FROM variable_month_expenses 
+       WHERE strftime("%Y-%m", spent_date) = ?
+       GROUP BY category
+       ORDER BY total DESC`,
+      [monthStr]
+    );
+    
+    return {
+      total: totalResult?.total || 0,
+      count: totalResult?.count || 0,
+      byCategory: categoryResult || [],
+    };
+  } catch (error) {
+    console.error('월별 유동비 통계 조회 중 오류:', error);
     throw error;
   }
 };

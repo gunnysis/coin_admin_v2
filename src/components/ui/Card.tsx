@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ViewStyle, AccessibilityRole } from 'react-native';
-import { SPACING } from '../../constants/theme';
+import { SPACING, SHADOWS } from '../../constants/theme';
 
 interface CardProps {
   children: React.ReactNode;
@@ -34,14 +34,16 @@ export const Card = React.memo<CardProps>(({
 }) => {
   const variantClasses = {
     default: 'bg-white rounded-3xl',
-    elevated: 'bg-white rounded-3xl border border-gray-100 shadow-md',
+    elevated: 'bg-white rounded-3xl border border-gray-100',
     outlined: 'bg-white rounded-3xl border border-gray-200',
   };
+
+  const shadowStyle = variant === 'elevated' ? SHADOWS.md : undefined;
 
   return (
     <View 
       className={`${variantClasses[variant]} ${paddingMap[padding]} ${className}`.trim()}
-      style={style}
+      style={[shadowStyle, style]}
       accessibilityRole={accessibilityRole}
     >
       {children}

@@ -1,7 +1,8 @@
-import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator } from 'react-native';
+import React, { useRef } from 'react';
+import { TouchableOpacity, TouchableOpacityProps, ActivityIndicator, Animated, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Typography } from './Typography';
-import { COLORS } from '../../constants/theme';
+import { COLORS, SHADOWS } from '../../constants/theme';
 
 interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline';
@@ -31,32 +32,76 @@ export const Button = React.memo<ButtonProps>(({
   disabled,
   children,
   style,
+  onPress,
   ...props
 }) => {
   const isDisabled = disabled || loading;
   const textColor = variant === 'outline' ? COLORS.primary : COLORS.textInverse;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    if (!isDisabled) {
+      Animated.spring(scaleAnim, {
+        toValue: 0.96,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }).start();
+      
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  const handlePress = (e: any) => {
+    if (!isDisabled && onPress) {
+      onPress(e);
+    }
+  };
 
   return (
-    <TouchableOpacity
-      className={`rounded-xl items-center justify-center shadow-sm ${variantClasses[variant]} ${sizeClasses[size]} ${isDisabled ? 'opacity-50' : ''}`}
-      disabled={isDisabled}
-      activeOpacity={0.8}
-      style={style}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
-      {...props}
+    <Animated.View
+      style={[
+        {
+          transform: [{ scale: scaleAnim }],
+        },
+        variant !== 'outline' && !isDisabled && SHADOWS.md,
+        style,
+      ]}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={textColor} />
-      ) : (
-        <Typography
-          variant={size === 'sm' ? 'body2' : 'body'}
-          color={variant === 'outline' ? 'primary' : 'textInverse'}
-          weight="semibold"
-        >
-          {children}
-        </Typography>
-      )}
-    </TouchableOpacity>
+      <TouchableOpacity
+        className={`rounded-xl items-center justify-center ${variantClasses[variant]} ${sizeClasses[size]} ${isDisabled ? 'opacity-50' : ''}`}
+        disabled={isDisabled}
+        activeOpacity={1}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: isDisabled }}
+        {...props}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={textColor} />
+        ) : (
+          <Typography
+            variant={size === 'sm' ? 'body2' : 'body'}
+            color={variant === 'outline' ? 'primary' : 'textInverse'}
+            weight="semibold"
+          >
+            {children}
+          </Typography>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 });

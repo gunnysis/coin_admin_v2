@@ -182,10 +182,14 @@ const GroupCard: React.FC<{ group: ExpenseGroup; totalAmount: number }> = ({
     }).start();
   };
 
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  // Initialize interpolate immediately but store in ref to avoid re-creating
+  // This ensures the interpolate result is available on first render
+  const progressWidthRef = useRef(
+    progressAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0%', '100%'],
+    })
+  );
 
   return (
     <Animated.View
@@ -222,7 +226,7 @@ const GroupCard: React.FC<{ group: ExpenseGroup; totalAmount: number }> = ({
               <Animated.View
                 className="h-full rounded-full"
                 style={{
-                  width: progressWidth,
+                  width: progressWidthRef.current,
                   backgroundColor: group.color,
                 }}
               />
@@ -271,10 +275,14 @@ const ExpenseProgressCard: React.FC<{
   };
 
   const progressColor = getColorByAmount(expense.amount, totalAmount);
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  // Initialize interpolate immediately but store in ref to avoid re-creating
+  // This ensures the interpolate result is available on first render
+  const progressWidthRef = useRef(
+    progressAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0%', '100%'],
+    })
+  );
 
   return (
     <Animated.View
@@ -307,7 +315,7 @@ const ExpenseProgressCard: React.FC<{
             <Animated.View
               className="h-full rounded-full"
               style={{
-                width: progressWidth,
+                width: progressWidthRef.current,
                 backgroundColor: progressColor,
               }}
             />

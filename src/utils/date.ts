@@ -55,3 +55,51 @@ export const formatDateToString = (date: Date): string => {
 export const getTodayDateString = (): string => {
   return formatDateToString(new Date());
 };
+
+/**
+ * 날짜 문자열을 MM-DD 형식으로 포맷팅
+ */
+export const formatDateToShort = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month}-${day}`;
+  } catch {
+    return dateStr;
+  }
+};
+
+/**
+ * 현재 월 문자열 반환 (YYYY-MM)
+ */
+export const getCurrentMonth = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+/**
+ * 월의 일수 계산
+ */
+export const getDaysInMonth = (year: number, month: number): number => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+/**
+ * 현재 월의 경과 일수 계산
+ */
+export const getDaysElapsedInMonth = (): number => {
+  const now = new Date();
+  return now.getDate();
+};
+
+/**
+ * 현재 월의 남은 일수 계산
+ */
+export const getDaysRemainingInMonth = (): number => {
+  const now = new Date();
+  const daysInMonth = getDaysInMonth(now.getFullYear(), now.getMonth());
+  return daysInMonth - now.getDate();
+};

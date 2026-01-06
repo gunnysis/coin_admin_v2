@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, TouchableOpacity, Platform } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, TouchableOpacity, Platform, Animated } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Typography } from './ui/Typography';
-import { SPACING } from '../constants/theme';
+import { SPACING, SHADOWS, COLORS } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsiveValue } from '../utils/responsive';
 
@@ -17,48 +18,110 @@ export const AddButton = React.memo<AddButtonProps>(({
   bottomInset = 0,
 }) => {
   const device = useDeviceDimensions();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
   
   // 반응형 버튼 크기
   const buttonSize = getResponsiveValue(device, 56, device.isTablet ? 64 : 56);
   const borderWidth = getResponsiveValue(device, 2, device.isTablet ? 3 : 2);
   
   // 하단 바를 고려한 버튼 위치 계산
-  // 하단 여백 = SafeArea 하단 여백 + 추가 여백 (플랫폼별)
   const additionalBottomPadding = Platform.OS === 'ios' ? SPACING.xl : SPACING.lg;
   const bottomPosition = bottomInset + additionalBottomPadding;
+
+  const handlePressIn = () => {
+    if (!disabled) {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 0.9,
+          useNativeDriver: true,
+          tension: 300,
+          friction: 10,
+        }),
+        Animated.spring(rotateAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 8,
+        }),
+      ]).start();
+      
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    }
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }),
+      Animated.spring(rotateAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 200,
+        friction: 8,
+      }),
+    ]).start();
+  };
+
+  // Initialize interpolate immediately but store in ref to avoid re-creating
+  // This ensures the interpolate result is available on first render
+  const rotateRef = useRef(
+    rotateAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '135deg'],
+    })
+  );
 
   return (
     <View 
       className="absolute left-0 right-0 items-center z-10"
       style={{ bottom: bottomPosition }}
     >
-      <TouchableOpacity
-        onPress={onPress}
-        className={`
-          rounded-full bg-white border-2 
-          items-center justify-center shadow-lg
-          ${disabled ? 'opacity-50 border-gray-400' : 'border-blue-500'}
-        `}
-        style={{
-          width: buttonSize,
-          height: buttonSize,
-          borderWidth,
-        }}
-        disabled={disabled}
-        activeOpacity={0.8}
-        accessibilityLabel="고정비 추가"
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
+      <Animated.View
+        style={[
+          {
+            transform: [{ scale: scaleAnim }, { rotate: rotateRef.current }],
+          },
+          SHADOWS.lg,
+        ]}
       >
-        <Typography 
-          variant="h1" 
-          color="primary" 
-          weight="light" 
-          className="leading-10"
+        <TouchableOpacity
+          onPress={onPress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          className={`
+            rounded-full bg-white border-2 
+            items-center justify-center
+            ${disabled ? 'opacity-50 border-gray-400' : 'border-blue-500'}
+          `}
+          style={{
+            width: buttonSize,
+            height: buttonSize,
+            borderWidth,
+            backgroundColor: COLORS.surface,
+          }}
+          disabled={disabled}
+          activeOpacity={1}
+          accessibilityLabel="항목 추가"
+          accessibilityRole="button"
+          accessibilityState={{ disabled }}
         >
-          +
-        </Typography>
-      </TouchableOpacity>
+          <Typography 
+            variant="h1" 
+            color="primary" 
+            weight="light" 
+            className="leading-10"
+          >
+            +
+          </Typography>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 });

@@ -17,11 +17,12 @@ import { AddExpenseFormData, FixedMonthCost } from '../types';
 import { validateExpenseForm } from '../utils/validation';
 import { DATE_FORMAT_PLACEHOLDER } from '../constants';
 import { formatDateToString, getTodayDateString } from '../utils/date';
+import { formatAmount, parseAmount } from '../utils/amount';
 import { formatError, logError } from '../utils/errorHandler';
 import { Typography } from './ui/Typography';
 import { InputField } from './ui/InputField';
 import { Button } from './ui/Button';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { SPACING } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsivePadding } from '../utils/responsive';
 
@@ -37,22 +38,6 @@ interface AddExpenseModalProps {
 // 상수 정의
 const MODAL_ANIMATION_DURATION = 300;
 const KEYBOARD_AVOIDING_OFFSET = Platform.OS === 'ios' ? 0 : 20;
-const MAX_MODAL_HEIGHT = '90%';
-
-// 금액 포맷팅 유틸리티
-const formatAmount = (value: string): string => {
-  // 숫자만 추출
-  const numbers = value.replace(/[^0-9]/g, '');
-  if (!numbers) return '';
-  
-  // 천 단위 구분자 추가
-  return Number(numbers).toLocaleString('ko-KR');
-};
-
-// 포맷된 금액을 숫자로 변환
-const parseAmount = (formattedValue: string): string => {
-  return formattedValue.replace(/[^0-9]/g, '');
-};
 
 /**
  * AddExpenseModal 컴포넌트
@@ -255,8 +240,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         '오류 발생',
         appError.userMessage,
         [
-          { text: '확인', style: 'default' },
-          ...(appError.recoverable ? [{ text: '다시 시도', style: 'default', onPress: handleSubmit }] : []),
+          { text: '확인', style: 'default' as const },
+          ...(appError.recoverable ? [{ text: '다시 시도', style: 'default' as const, onPress: handleSubmit }] : []),
         ]
       );
     }
@@ -307,7 +292,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         enabled={!device.isTablet}
       >
         <Pressable
-          className="flex-1 bg-black/50"
+          className="flex-1"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
           onPress={handleBackdropPress}
           accessible={false}
         >

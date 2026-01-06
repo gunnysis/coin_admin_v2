@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, TouchableOpacity, Animated, LayoutAnimation } from 'react-native';
 import { formatCurrency } from '../utils/format';
 import { ExpenseVisualization } from './ExpenseVisualization';
@@ -72,22 +72,39 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
     }
   }, [isExpanded, rotateAnim, heightAnim]);
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-
   // 태블릿에서는 차트 높이를 더 크게
   const maxChartHeight = device.isTablet ? (device.isLandscape ? 400 : 350) : 300;
-  const chartHeight = heightAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, maxChartHeight],
-  });
 
-  const chartOpacity = heightAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0, 1],
-  });
+  // Initialize interpolate immediately but store in ref to avoid re-creating
+  // This ensures the interpolate result is available on first render
+  const rotateRef = useRef(
+    rotateAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '180deg'],
+    })
+  );
+
+  const chartHeightRef = useRef(
+    heightAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, maxChartHeight],
+    })
+  );
+
+  const chartOpacityRef = useRef(
+    heightAnim.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0, 0, 1],
+    })
+  );
+
+  // Update chartHeightRef when maxChartHeight changes
+  useEffect(() => {
+    chartHeightRef.current = heightAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, maxChartHeight],
+    });
+  }, [heightAnim, maxChartHeight]);
 
   return (
     <View
@@ -147,7 +164,7 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
             accessibilityHint={isExpanded ? '차트를 접어 숨깁니다' : '고정비 차트를 펼쳐서 확인합니다'}
             accessibilityState={{ expanded: isExpanded }}
           >
-            <Animated.View style={{ transform: [{ rotate }] }}>
+            <Animated.View style={{ transform: [{ rotate: rotateRef.current }] }}>
               <Typography variant="body" color="textTertiary">
                 ▼
               </Typography>
@@ -160,8 +177,8 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
           <Animated.View
             className="overflow-hidden mt-4"
             style={{
-              height: chartHeight,
-              opacity: chartOpacity,
+              height: chartHeightRef.current,
+              opacity: chartOpacityRef.current,
               marginHorizontal: -SPACING.lg, // 카드의 padding을 상쇄
               minHeight: device.isTablet ? (device.isLandscape ? 250 : 300) : 200,
             }}
