@@ -12,6 +12,10 @@ export { useVariableExpensesPaginated, useVariableExpensesTotal } from './useVar
 export { useVariableExpenseHandlers } from './useVariableExpenseHandlers';
 export { useExpenseItemActions } from './useExpenseItemActions';
 
+// Month Navigation & Comparison
+export { useMonthNavigation } from './useMonthNavigation';
+export { useMonthComparison, type MonthComparisonResult } from './useMonthComparison';
+
 // Error Handling
 export { useErrorHandler } from './useErrorHandler';
 

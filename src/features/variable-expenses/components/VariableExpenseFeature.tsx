@@ -48,6 +48,7 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
     closeVariableModal,
     isVariableExpanded,
     toggleVariableExpanded,
+    selectedVariableMonth,
   } = useAppContext();
 
   const {
@@ -55,7 +56,7 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
     handleAdd,
     handleUpdate,
     isPending,
-  } = useVariableExpenseHandlers();
+  } = useVariableExpenseHandlers(selectedVariableMonth);
 
   const handleEdit = React.useCallback((item: VariableMonthExpense) => {
     openVariableModal(item);

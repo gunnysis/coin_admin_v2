@@ -30,6 +30,7 @@ export default function App() {
     isVariableRefreshing,
     setFixedRefreshing,
     setVariableRefreshing,
+    selectedVariableMonth,
   } = useAppContext();
 
   // 반응형 스타일 계산
@@ -97,20 +98,20 @@ export default function App() {
     isDeleting: fixedIsDeleting,
   } = useExpenseHandlers();
 
-  // 유동비 데이터
+  // 유동비 데이터 (선택된 월 기준)
   const {
     data: variableData,
     fetchNextPage: fetchVariableNextPage,
     hasNextPage: hasVariableNextPage,
     isFetchingNextPage: isFetchingVariableNextPage,
     isLoading: isVariableLoading,
-  } = useVariableExpensesPaginated();
-  const { data: variableTotalAmount = 0 } = useVariableExpensesTotal();
+  } = useVariableExpensesPaginated(selectedVariableMonth);
+  const { data: variableTotalAmount = 0 } = useVariableExpensesTotal(selectedVariableMonth);
   const variableExpenses = variableData?.pages.flatMap((page: { data: VariableMonthExpense[] }) => page.data) ?? [];
   const {
     handleRefresh: handleVariableRefresh,
     isDeleting: variableIsDeleting,
-  } = useVariableExpenseHandlers();
+  } = useVariableExpenseHandlers(selectedVariableMonth);
 
   // Pull-to-refresh 핸들러
   const onFixedRefresh = useCallback(async () => {

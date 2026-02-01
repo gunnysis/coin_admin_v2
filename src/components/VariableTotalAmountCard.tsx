@@ -9,6 +9,7 @@ import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsiveMargin, getResponsiveFontSize } from '../utils/responsive';
 import { TYPOGRAPHY } from '../constants/theme';
 import { VariableExpenseVisualization } from './VariableExpenseVisualization';
+import { MonthSelector } from './MonthSelector';
 import { useHaptics } from '../hooks/useHaptics';
 import {
   createRotateAnimation,
@@ -18,7 +19,7 @@ import {
 } from '../utils/animations';
 
 interface VariableTotalAmountCardProps {
-  /** 이번 달 유동비 총액 */
+  /** 선택된 월의 유동비 총액 */
   totalAmount: number;
   /** 차트 확장 상태 */
   isExpanded?: boolean;
@@ -31,7 +32,8 @@ interface VariableTotalAmountCardProps {
 /**
  * 유동비 총액 카드 컴포넌트
  * 
- * 이번 달 유동비 총액을 표시하고, 확장 시 상세 시각화를 제공합니다.
+ * 선택된 월의 유동비 총액을 표시하고, 확장 시 상세 시각화를 제공합니다.
+ * - 월 선택기 통합
  * - 총액 및 항목 수 표시
  * - 확장 가능한 차트 영역
  * - 반응형 디자인 지원
@@ -107,10 +109,41 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
         className="relative"
         accessibilityRole="summary"
       >
+        {/* 월 선택기 */}
+        <View className="mb-3">
+          <MonthSelector compact />
+        </View>
+
+        {/* 총액 표시 영역 - 라벨과 토글 버튼을 같은 행에 배치 */}
         <View className="mb-3" accessibilityRole="text">
-          <Typography variant="label" color="textSecondary" className="mb-1">
-            이번 달 유동비 총액
-          </Typography>
+          <View className="flex-row items-center justify-between mb-1">
+            <Typography variant="label" color="textSecondary">
+              유동비 총액
+            </Typography>
+            {onToggleExpand && (
+              <TouchableOpacity
+                onPress={handleToggle}
+                className="items-center justify-center rounded-full"
+                style={{
+                  width: 40,
+                  height: 40,
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                }}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityLabel={isExpanded ? '차트 접기' : '차트 펼치기'}
+                accessibilityRole="button"
+                accessibilityHint={isExpanded ? '차트를 접어 숨깁니다' : '유동비 차트를 펼쳐서 확인합니다'}
+                accessibilityState={{ expanded: isExpanded }}
+              >
+                <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+                  <Typography variant="body" color="primary" weight="semibold" style={{ fontSize: 18 }}>
+                    ▼
+                  </Typography>
+                </Animated.View>
+              </TouchableOpacity>
+            )}
+          </View>
           <Typography 
             variant="h1" 
             color="primary" 
@@ -132,33 +165,6 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
             </Typography>
           )}
         </View>
-        
-        {onToggleExpand && (
-          <TouchableOpacity
-            onPress={handleToggle}
-            className="absolute items-center justify-center"
-            style={{
-              top: SPACING.lg,
-              right: SPACING.lg,
-              padding: SPACING.sm,
-              zIndex: 10,
-              minWidth: 44,
-              minHeight: 44,
-            }}
-            activeOpacity={0.7}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            accessibilityLabel={isExpanded ? '차트 접기' : '차트 펼치기'}
-            accessibilityRole="button"
-            accessibilityHint={isExpanded ? '차트를 접어 숨깁니다' : '유동비 차트를 펼쳐서 확인합니다'}
-            accessibilityState={{ expanded: isExpanded }}
-          >
-            <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
-              <Typography variant="body" color="textTertiary">
-                ▼
-              </Typography>
-            </Animated.View>
-          </TouchableOpacity>
-        )}
 
         {/* 차트 영역 */}
         {isExpanded && (

@@ -10,3 +10,4 @@ export { VariableExpenseVisualization } from './VariableExpenseVisualization';
 export { AddVariableExpenseModal } from './AddVariableExpenseModal';
 export { TabNavigation } from './TabNavigation';
 export type { TabType } from './TabNavigation';
+export { MonthSelector } from './MonthSelector';

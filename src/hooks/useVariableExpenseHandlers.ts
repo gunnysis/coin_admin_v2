@@ -13,12 +13,12 @@ import {
  * 유동비 관련 핸들러 훅
  * App.tsx의 중복 코드를 줄이기 위한 공통 훅
  */
-export const useVariableExpenseHandlers = () => {
+export const useVariableExpenseHandlers = (month?: string) => {
   const queryClient = useQueryClient();
-  const deleteVariableExpense = useDeleteVariableExpense();
-  const addVariableExpense = useAddVariableExpense();
-  const updateVariableExpense = useUpdateVariableExpense();
-  const { refetch } = useVariableExpensesPaginated();
+  const deleteVariableExpense = useDeleteVariableExpense(month);
+  const addVariableExpense = useAddVariableExpense(month);
+  const updateVariableExpense = useUpdateVariableExpense(month);
+  const { refetch } = useVariableExpensesPaginated(month);
 
   const handleDelete = useCallback(
     (id: number) => {
@@ -63,12 +63,14 @@ export const useVariableExpenseHandlers = () => {
 
   const handleRefresh = useCallback(async () => {
     try {
+      // React Query 캐시 무효화 및 재조회
       await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
       await refetch();
     } catch (error) {
       if (__DEV__) {
         console.error('유동비 새로고침 중 오류:', error);
       }
+      // 에러를 상위로 전파하여 UI에서 처리할 수 있도록 함
       throw error;
     }
   }, [queryClient, refetch]);
