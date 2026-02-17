@@ -11,10 +11,21 @@ export interface UseAmountWithCurrencyOptions {
   visible?: boolean;
 }
 
+/** AmountInputSection에 넘길 uiProps 형태 (errorMessage는 모달에서 병합) */
+export interface AmountInputSectionUiProps {
+  amount: string;
+  currency: AmountCurrency;
+  onChangeAmount: (text: string) => void;
+  onToggleCurrency: () => void;
+  isDisabled?: boolean;
+  returnKeyType?: 'done' | 'next';
+  onSubmitEditing?: () => void;
+  amountHintContext?: string;
+}
+
 /**
  * 금액 입력 + 원/달러 선택 공통 로직.
- * 고정비/유동비 모달에서 중복 제거용.
- * 수정 시에도 달러 입력 가능하며, 저장 시 현재 환율로 원화 변환하여 저장.
+ * 반환: uiProps(AmountInputSection용), data(저장 시 원화 계산용).
  */
 export function useAmountWithCurrency(options: UseAmountWithCurrencyOptions = {}) {
   const { initialAmountKrw, visible = true } = options;
@@ -46,6 +57,10 @@ export function useAmountWithCurrency(options: UseAmountWithCurrencyOptions = {}
     setFormattedAmount(formatAmount(numbers));
   }, []);
 
+  const onToggleCurrency = useCallback(() => {
+    setAmountCurrency((c) => (c === 'KRW' ? 'USD' : 'KRW'));
+  }, []);
+
   /** 제출 시 저장할 원화 금액. USD일 때는 rate 필수. 호출 전 폼 검증으로 amount 유효성 보장 */
   const getAmountInKrw = useCallback(
     (usdToKrwRate: number): number => {
@@ -56,13 +71,18 @@ export function useAmountWithCurrency(options: UseAmountWithCurrencyOptions = {}
     [amount, amountCurrency]
   );
 
+  const uiProps: AmountInputSectionUiProps = {
+    amount: formattedAmount,
+    currency: amountCurrency,
+    onChangeAmount: handleAmountChange,
+    onToggleCurrency,
+    returnKeyType: 'done',
+    amountHintContext: '금액',
+  };
+
   return {
-    amount,
-    formattedAmount,
-    amountCurrency,
-    setAmountCurrency,
-    handleAmountChange,
-    getAmountInKrw,
+    uiProps,
+    data: { getAmountInKrw, amount },
     isEditMode,
   };
 }

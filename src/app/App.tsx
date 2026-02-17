@@ -81,7 +81,7 @@ export default function App() {
   const renderHeader = useCallback(
     () => (
       <View
-        className="items-center bg-gray-50"
+        className="items-center bg-slate-50"
         style={{
           paddingHorizontal: headerPadding,
           paddingTop: device.isTablet ? SPACING['2xl'] : SPACING.xl,

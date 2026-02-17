@@ -1,5 +1,7 @@
 # E2E 테스트 설계
 
+Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항.
+
 ## 목표
 
 - **웹 빌드**(Expo `expo start --web`) 대상으로 주요 사용자 시나리오를 자동화하여 회귀 방지 및 품질 보증
@@ -11,7 +13,7 @@
 |------|------|
 | **대상** | Expo 웹 앱 (`npm run web` → localhost:8081) |
 | **도구** | Playwright (Chromium 기준, 필요 시 WebKit/Firefox 확장) |
-| **선택자** | 접근성 라벨(`accessibilityLabel`) → DOM `aria-label` / `role` 기반 (`getByRole`, `getByLabelText`) |
+| **선택자** | 접근성 라벨(`accessibilityLabel`) → DOM `aria-label` / `role` 기반 (`getByRole`, `getByLabelText`). 보조로 `getTestProps(id)`로 부여한 `data-testid`/`testID` 사용 가능 (`getByTestId`) |
 | **CI** | `npm run web` 기동 후 `npx playwright test` 실행 (동일 머신 또는 별도 job) |
 
 ## 시나리오
@@ -59,6 +61,7 @@
 - **웹에서 검증하는 것**: 로드, 탭 전환, 모달 열기, 이름·금액 입력, 버튼 활성화(날짜 기본값 오늘 적용 시) 등 **웹에서 존재하는 시나리오만**.
 - **웹에서 하지 않는 것**: 날짜 선택기 조작(웹에서는 미렌더), "날짜 미선택 시 비활성화"처럼 **웹에서는 발생하지 않는 상태** 검증.
 - **선택자**: `accessibilityLabel` → DOM `aria-label` / `role` 기준. RN Web 차이로 `aria-selected` 등은 플랫폼별로 다를 수 있음. 탭 전환은 "탭 클릭 후 다른 탭 보임" 등으로 검증.
+- **testID**: `src/utils/test-utils.ts`의 `getTestProps(id)`로 주요 요소에 `data-testid`(웹)/`testID`(네이티브)가 부여됨. E2E에서 `page.getByTestId('amount-input')`, `page.getByTestId('currency-toggle')`, `page.getByTestId('tab-fixed')` 등으로 보조 사용 가능.
 - **고정비/유동비 모달**: 제출 버튼은 `getByRole('button', { name: '추가하기' })` 로만 대상 (화면의 FAB "항목 추가"와 구분).
 
 ## Metro 캐시 (Unable to deserialize cloned data)

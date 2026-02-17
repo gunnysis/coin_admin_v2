@@ -144,10 +144,11 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
               </TouchableOpacity>
             )}
           </View>
-          <Typography 
-            variant="h1" 
-            color="primary" 
-            weight="bold" 
+          <Typography
+            variant="display"
+            color="primary"
+            weight="bold"
+            tabularNums
             className="mb-1"
             style={{ fontSize: adjustedTotalSize }}
             accessibilityLabel={`총액 ${formatCurrency(totalAmount)}원`}

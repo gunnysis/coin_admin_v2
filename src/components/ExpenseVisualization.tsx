@@ -201,7 +201,7 @@ const GroupCard: React.FC<{ group: ExpenseGroup; totalAmount: number }> = ({
         onPressOut={handlePressOut}
         activeOpacity={1}
       >
-        <Card variant="elevated" padding="md" className="border border-gray-200">
+        <Card variant="elevated" padding="md" className="border border-slate-200">
           <View className="mb-4">
             <View
               className="w-1 h-6 rounded mb-1"
@@ -222,7 +222,7 @@ const GroupCard: React.FC<{ group: ExpenseGroup; totalAmount: number }> = ({
 
           {/* Progress Bar */}
           <View className="mt-2">
-            <View className="h-2 bg-gray-100 rounded-full overflow-hidden shadow-sm">
+            <View className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-sm">
               <Animated.View
                 className="h-full rounded-full"
                 style={{
@@ -289,7 +289,7 @@ const ExpenseProgressCard: React.FC<{
       className="mb-4"
       style={{ opacity: opacityAnim }}
     >
-      <Card variant="elevated" padding="md" className="border border-gray-200">
+      <Card variant="elevated" padding="md" className="border border-slate-200">
         <View className="flex-row justify-between items-start mb-2">
           <View className="flex-1 mr-2">
             <Typography variant="h3" color="textPrimary" weight="semibold" numberOfLines={1}>
@@ -311,7 +311,7 @@ const ExpenseProgressCard: React.FC<{
 
         {/* Progress Bar */}
         <View className="mt-2">
-          <View className="h-2 bg-gray-100 rounded-full overflow-hidden shadow-sm">
+          <View className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-sm">
             <Animated.View
               className="h-full rounded-full"
               style={{

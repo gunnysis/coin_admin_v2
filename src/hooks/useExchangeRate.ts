@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { EXCHANGE_RATE } from '../config/constants';
-import { QUERY_KEYS } from '../constants';
+import { exchangeRateKeys } from '../config/queryKeys';
 
 const ONE_HOUR_MS = 1000 * 60 * 60;
 
@@ -30,7 +30,7 @@ export function useExchangeRate(): {
   isFallback: boolean;
 } {
   const query = useQuery({
-    queryKey: QUERY_KEYS.EXCHANGE_RATE,
+    queryKey: exchangeRateKeys.all(),
     queryFn: ({ signal }) => fetchUsdToKrwRate(signal),
     staleTime: ONE_HOUR_MS,
     gcTime: ONE_HOUR_MS,

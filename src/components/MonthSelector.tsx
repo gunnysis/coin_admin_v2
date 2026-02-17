@@ -8,6 +8,7 @@ import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsiveFontSize, getResponsiveValue } from '../utils/responsive';
 import { TYPOGRAPHY } from '../constants/theme';
 import { useHaptics } from '../hooks/useHaptics';
+import { getTestProps } from '../utils/test-utils';
 
 // 상수 정의 - UX/UI 최적화
 const MIN_TOUCH_SIZE = 48; // 44px → 48px로 확대 (더 쉬운 터치)
@@ -98,6 +99,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
       style={containerStyle}
       accessibilityRole="toolbar"
       accessibilityLabel="월 선택 도구"
+      {...getTestProps('month-selector')}
     >
       {/* 이전 달 버튼 */}
       <TouchableOpacity
@@ -114,6 +116,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         accessibilityLabel="이전 달"
         accessibilityRole="button"
         accessibilityState={{ disabled: !canGoPrevious }}
+        {...getTestProps('month-prev')}
       >
         <Typography 
           variant="body" 
@@ -139,6 +142,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         accessibilityLabel={`현재 선택된 월: ${monthDisplayText}`}
         accessibilityRole="button"
         accessibilityHint="탭하여 월 선택 모달 열기"
+        {...getTestProps('month-display')}
       >
         <View className="flex-row items-center">
           <Typography
@@ -177,6 +181,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         accessibilityLabel="다음 달"
         accessibilityRole="button"
         accessibilityState={{ disabled: !canGoNext }}
+        {...getTestProps('month-next')}
       >
         <Typography 
           variant="body" 

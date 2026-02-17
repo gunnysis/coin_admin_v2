@@ -29,6 +29,7 @@ export { useAppExpenseData } from './useAppExpenseData';
 export {
   useAmountWithCurrency,
   type AmountCurrency,
+  type AmountInputSectionUiProps,
   type UseAmountWithCurrencyOptions,
 } from './useAmountWithCurrency';
 

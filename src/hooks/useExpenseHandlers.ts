@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../constants';
+import { expenseKeys } from '../config/queryKeys';
 import { AddExpenseFormData, FixedMonthCost } from '../types';
 import {
   useDeleteExpense,
@@ -63,7 +63,7 @@ export const useExpenseHandlers = () => {
 
   const handleRefresh = useCallback(async () => {
     try {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      await queryClient.invalidateQueries({ queryKey: expenseKeys.fixed.all() });
       await refetch();
     } catch (error) {
       if (__DEV__) {

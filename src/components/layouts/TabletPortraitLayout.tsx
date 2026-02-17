@@ -33,7 +33,7 @@ export const TabletPortraitLayout = React.memo<TabletPortraitLayoutProps>(({
   const { activeTab, setActiveTab } = useAppContext();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
       <View className="flex-1" style={containerStyle}>
         {renderHeader()}

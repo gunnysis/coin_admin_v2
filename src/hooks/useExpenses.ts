@@ -8,12 +8,13 @@ import {
   getDatabase,
 } from '../database/db';
 import { FixedMonthCost, InfiniteQueryPage, InfiniteQueryData, AddExpenseFormData } from '../types';
-import { PAGE_SIZE, QUERY_KEYS } from '../constants';
+import { PAGE_SIZE } from '../constants';
+import { databaseKeys, expenseKeys } from '../config/queryKeys';
 
 // 데이터베이스 초기화
 export const useInitDatabase = () => {
   return useQuery({
-    queryKey: [...QUERY_KEYS.DATABASE, 'init'],
+    queryKey: databaseKeys.init(),
     queryFn: async () => {
       await getDatabase();
       return true;
@@ -26,7 +27,7 @@ export const useInitDatabase = () => {
 // 페이지네이션 방식 (더 보기 버튼)
 export const useExpensesPaginated = () => {
   return useInfiniteQuery<InfiniteQueryPage, Error, InfiniteQueryData, string[], number>({
-    queryKey: QUERY_KEYS.EXPENSES_PAGINATED,
+    queryKey: expenseKeys.fixed.lists(),
     queryFn: async ({ pageParam = 0 }) => {
       const data = await getFixedMonthCosts(PAGE_SIZE, pageParam);
       return {
@@ -48,7 +49,7 @@ export const useExpensesPaginated = () => {
 // 전체 데이터 개수 조회
 export const useExpensesCount = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.EXPENSES_COUNT,
+    queryKey: expenseKeys.fixed.count(),
     queryFn: getFixedMonthCostsCount,
   });
 };
@@ -56,7 +57,7 @@ export const useExpensesCount = () => {
 // 총액 계산
 export const useTotalAmount = () => {
   return useQuery<number>({
-    queryKey: QUERY_KEYS.EXPENSES_TOTAL,
+    queryKey: expenseKeys.fixed.total(),
     queryFn: async () => {
       const count = await getFixedMonthCostsCount();
       const allData = await getFixedMonthCosts(count, 0);
@@ -73,16 +74,16 @@ export const useDeleteExpense = () => {
     mutationFn: deleteFixedMonthCost,
     onMutate: async (id) => {
       // 진행 중인 쿼리 취소
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      await queryClient.cancelQueries({ queryKey: expenseKeys.fixed.all() });
 
       // 이전 데이터 백업
       const previousPages = queryClient.getQueryData<InfiniteQueryData>(
-        QUERY_KEYS.EXPENSES_PAGINATED
+        expenseKeys.fixed.lists()
       );
 
       // 낙관적 업데이트: 즉시 UI에서 제거
       queryClient.setQueryData<InfiniteQueryData>(
-        QUERY_KEYS.EXPENSES_PAGINATED,
+        expenseKeys.fixed.lists(),
         (old) => {
           if (!old) return old;
           return {
@@ -96,7 +97,7 @@ export const useDeleteExpense = () => {
       );
 
       // 총액도 낙관적 업데이트
-      queryClient.setQueryData<number>(QUERY_KEYS.EXPENSES_TOTAL, (old = 0) => {
+      queryClient.setQueryData<number>(expenseKeys.fixed.total(), (old = 0) => {
         const expense = previousPages?.pages
           .flatMap((p) => p.data)
           .find((item) => item.id === id);
@@ -108,12 +109,12 @@ export const useDeleteExpense = () => {
     onError: (err, id, context) => {
       // 에러 발생 시 롤백
       if (context?.previousPages) {
-        queryClient.setQueryData(QUERY_KEYS.EXPENSES_PAGINATED, context.previousPages);
+        queryClient.setQueryData(expenseKeys.fixed.lists(), context.previousPages);
       }
     },
     onSettled: () => {
       // 성공/실패 관계없이 데이터 재검증
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.fixed.all() });
     },
   });
 };
@@ -127,7 +128,7 @@ export const useAddExpense = () => {
       addFixedMonthCost(name, amount, start_date),
     onSuccess: () => {
       // 성공 시 관련 쿼리 무효화하여 재조회
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.fixed.all() });
     },
     onError: (error) => {
       if (__DEV__) {
@@ -151,17 +152,17 @@ export const useUpdateExpense = () => {
       updateFixedMonthCost(id, name, amount, start_date),
     onMutate: async (newData) => {
       // 진행 중인 쿼리 취소
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      await queryClient.cancelQueries({ queryKey: expenseKeys.fixed.all() });
 
       // 이전 데이터 백업
       const previousPages = queryClient.getQueryData<InfiniteQueryData>(
-        QUERY_KEYS.EXPENSES_PAGINATED
+        expenseKeys.fixed.lists()
       );
-      const previousTotal = queryClient.getQueryData<number>(QUERY_KEYS.EXPENSES_TOTAL);
+      const previousTotal = queryClient.getQueryData<number>(expenseKeys.fixed.total());
 
       // 낙관적 업데이트: 즉시 UI에서 수정
       queryClient.setQueryData<InfiniteQueryData>(
-        QUERY_KEYS.EXPENSES_PAGINATED,
+        expenseKeys.fixed.lists(),
         (old) => {
           if (!old) return old;
           return {
@@ -184,7 +185,7 @@ export const useUpdateExpense = () => {
       );
 
       // 총액도 낙관적 업데이트
-      queryClient.setQueryData<number>(QUERY_KEYS.EXPENSES_TOTAL, (old = 0) => {
+      queryClient.setQueryData<number>(expenseKeys.fixed.total(), (old = 0) => {
         const oldExpense = previousPages?.pages
           .flatMap((p) => p.data)
           .find((item) => item.id === newData.id);
@@ -199,15 +200,15 @@ export const useUpdateExpense = () => {
     onError: (err, newData, context) => {
       // 에러 발생 시 롤백
       if (context?.previousPages) {
-        queryClient.setQueryData(QUERY_KEYS.EXPENSES_PAGINATED, context.previousPages);
+        queryClient.setQueryData(expenseKeys.fixed.lists(), context.previousPages);
       }
       if (context?.previousTotal !== undefined) {
-        queryClient.setQueryData(QUERY_KEYS.EXPENSES_TOTAL, context.previousTotal);
+        queryClient.setQueryData(expenseKeys.fixed.total(), context.previousTotal);
       }
     },
     onSettled: () => {
       // 성공/실패 관계없이 데이터 재검증
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.fixed.all() });
     },
   });
 };

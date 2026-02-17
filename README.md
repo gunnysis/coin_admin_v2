@@ -21,7 +21,7 @@ npm run web       # 웹 (기본 http://localhost:8081)
 
 - **월 고정비 관리**: 월세, 관리비 등 월 단위 고정 지출을 추가, 수정, 삭제
 - **월 유동비 관리**: 일별 지출을 항목·금액·지출일·메모로 추가, 수정, 삭제
-- **금액 통화 입력 (원/달러)**: 원 또는 달러로 입력 가능, 달러는 실시간 환율로 원화 변환 후 저장 ([상세 문서](docs/features/amount-currency.md))
+- **금액 통화 입력 (원/달러)**: 원 또는 달러로 입력 가능, 달러는 실시간 환율로 원화 변환 후 저장 ([상세 문서](docs/amount-currency.md))
 - **총액 계산**: 등록된 고정비/유동비 총액을 실시간으로 계산
 - **데이터 시각화**: 금액별 그룹화 및 항목별 비율을 차트로 시각화
 - **반응형 디자인**: 스마트폰과 태블릿 모두 최적화된 UI/UX
@@ -37,7 +37,7 @@ npm run web       # 웹 (기본 http://localhost:8081)
 - **React** 19.1.0
 
 ### 스타일·상태·데이터
-- **Nativewind / Tailwind** — 스타일링
+- **Nativewind / Tailwind** — 스타일링. 시맨틱 컬러(primary/expense/income), slate 중성색, 8pt 그리드·radius(card/button/input)는 `src/constants/theme.ts` 및 `tailwind.config.js`에서 관리
 - **TanStack React Query v5** — 서버/비동기 상태, 무한 스크롤 페이지네이션
 - **Expo SQLite** — 로컬 DB
 - **Phosphor Icons** — 아이콘
@@ -60,8 +60,8 @@ coin-admin/
 │   │   ├── ui/           # UI 기본 컴포넌트
 │   │   ├── layouts/      # 반응형 레이아웃 (Phone, TabletPortrait, TabletLandscape)
 │   │   └── ...           # 기능별 컴포넌트
-│   ├── config/           # 앱 설정 (상수, queryClient)
-│   ├── constants/        # 상수·테마·쿼리 키
+│   ├── config/           # 앱 설정 (상수, queryKeys.ts React Query Key Factory)
+│   ├── constants/        # 상수·테마 (QUERY_KEYS re-export)
 │   ├── contexts/         # React Context (AppContext 등)
 │   ├── database/         # SQLite·DB 로직
 │   ├── features/         # 도메인별 기능
@@ -70,7 +70,7 @@ coin-admin/
 │   ├── hooks/            # 커스텀 훅
 │   ├── lib/              # 인프라 유틸 (에러, 로거, 스토리지, react-query 헬퍼)
 │   ├── types/            # TypeScript 타입
-│   └── utils/            # 도메인 유틸 (금액·날짜 포맷, 검증, 반응형)
+│   └── utils/            # 도메인 유틸 (금액·날짜 포맷, 검증, 반응형, test-utils getTestProps)
 ├── docs/                 # 상세 문서
 ├── e2e/                  # Playwright E2E 스펙
 ├── android/              # Android 네이티브
@@ -94,11 +94,11 @@ coin-admin/
 ## 🎨 주요 컴포넌트
 
 ### UI 컴포넌트
-- `Typography` — 텍스트 스타일
-- `Button` — 버튼
-- `Card` — 카드 컨테이너
-- `InputField` — 입력 필드
-- `AmountInputSection` — 금액 입력(기본 원화). "달러로 입력"/"원으로 입력" 텍스트 링크로 통화 전환. 환율은 별도 표시 없음
+- `Typography` — 텍스트 스타일 (display/h1~caption, tabularNums 옵션)
+- `Button` — 버튼 (Primary/Income/Expense 시맨틱 컬러, scale 애니메이션)
+- `Card` — 카드 (Flat & shadow-sm, border-slate-100, rounded-2xl)
+- `InputField` — 입력 필드 (rounded-lg, slate 팔레트)
+- `AmountInputSection` — 금액 입력 Dumb 컴포넌트. amount/currency/onChangeAmount/onToggleCurrency만 받음. "달러로 입력"/"원으로 입력" 링크로 통화 전환. 환율·검증은 상위(훅/모달)에서 처리
 - `ExchangeRateHint` — 환율 안내 (필요 시 재사용)
 - `EmptyState` — 빈 상태 표시
 
@@ -114,7 +114,7 @@ coin-admin/
 
 ### lib vs utils
 - **lib** (`src/lib/`): 범용·인프라(에러, 로거, 스토리지, react-query 유틸). 앱 비즈니스에 무관한 코드.
-- **utils** (`src/utils/`): 앱 도메인(날짜·금액 포맷, 검증, 반응형). 포맷/검증은 여기서 단일 소스 유지. 자세한 역할은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 참고.
+- **utils** (`src/utils/`): 앱 도메인(날짜·금액 포맷, 검증, 반응형). 포맷/검증은 여기서 단일 소스 유지. 자세한 역할은 [docs/development.md](docs/development.md) 참고.
 
 ### 코드 스타일
 - TypeScript strict 모드
@@ -127,7 +127,7 @@ coin-admin/
 
 ### 상태 관리
 - **전역 UI**: React Context (`AppContext`)
-- **비동기/서버 상태**: TanStack React Query v5 (`useInfiniteQuery`, 페이지 크기 10)
+- **비동기/서버 상태**: TanStack React Query v5 (`useInfiniteQuery`, 페이지 크기 10). Query Key는 `src/config/queryKeys.ts` Factory(databaseKeys, expenseKeys, exchangeRateKeys)로 중앙 관리
 - **로컬**: useState, useReducer
 
 ### 반응형
@@ -146,12 +146,13 @@ coin-admin/
 
 ### E2E 테스트 (Playwright)
 - **대상**: Expo 웹 빌드 (`npm run web` → localhost:8081)
+- **선택자**: `accessibilityLabel`(aria-label/role) 및 보조로 `getTestProps(id)`의 `data-testid`(웹)/`testID`(네이티브) 사용 가능
 - **최초 1회**: `npx playwright install`(또는 `npx playwright install chromium`) 로 브라우저 설치
 - **실행**
   - **방법 A (수동)**: 터미널 1에서 `npm run web` 또는 `npm run web:clear` → 터미널 2에서 `npm run test:e2e:run`
   - **방법 B (한 번에)**: `npm run test:e2e` — 웹 서버 자동 기동 후 Playwright 실행 (포트 8081 비어 있어야 함)
 - **다른 포트 사용 시**: `E2E_BASE_URL=http://localhost:<포트> npm run test:e2e:run`
-- **상세**: [docs/e2e-testing.md](docs/e2e-testing.md) — 시나리오, 제한 사항(웹 날짜 선택 등), 실패 시 체크리스트
+- **상세**: [docs/e2e-testing.md](docs/e2e-testing.md) — 시나리오, testID 가이드, 제한 사항(웹 날짜 선택 등), 실패 시 체크리스트
 
 ## 🔧 문제 해결 (캐시·의존성)
 
@@ -180,7 +181,7 @@ npm install
 
 ### 고정비 / 유동비 관리
 - 이름, 금액, 결제일(또는 지출일), 메모(유동비) 입력
-- **금액**: 원(KRW) 또는 달러(USD) 선택 후 입력 — 달러는 실시간 환율로 원화 변환 저장 ([금액·통화 기능](docs/features/amount-currency.md))
+- **금액**: 원(KRW) 또는 달러(USD) 선택 후 입력 — 달러는 실시간 환율로 원화 변환 저장 ([금액·통화 기능](docs/amount-currency.md))
 - 실시간 유효성 검사, 천 단위 구분자 자동 포맷팅
 
 ### 데이터 시각화
@@ -199,11 +200,16 @@ npm install
 ## 🔒 접근성
 
 - 인터랙티브 요소에 `accessibilityLabel` 추가 (웹에서는 `aria-label`로 매핑)
+- E2E/테스트용 식별자: `src/utils/test-utils.ts`의 `getTestProps(id)`로 웹 `data-testid`/네이티브 `testID` 부여
 - 스크린 리더·키보드 네비게이션 지원
 
 ## 📄 추가 문서
 
-- [에러 처리](docs/error-handling.md) — 비동기/동기 에러, ErrorBoundary, 모달/환율 실패 시 사용자 노출
-- [아키텍처 (lib vs utils)](docs/ARCHITECTURE.md) — 폴더 역할 정리
-- [금액·통화 기능](docs/features/amount-currency.md) — 원/달러 입력, 환율 API, 환경변수
-- [E2E 테스트](docs/e2e-testing.md) — Playwright 시나리오 및 실행 방법
+**전체 목차**: [docs/README.md](docs/README.md) — 문서 인덱스(6개 파일)
+
+- [개발 가이드](docs/development.md) — 아키텍처(lib/utils/config), 에러 처리
+- [금액·통화 기능](docs/amount-currency.md) — 원/달러 입력, 환율 API
+- [유동비 월별 관리](docs/variable-expense-month.md) — 월 선택·캐싱 설계
+- [E2E 테스트](docs/e2e-testing.md) — Playwright, testID, 실행 방법
+- [설계·계획](docs/plans.md) — 리팩토링·디자인 설계
+- [가이드](docs/guides.md) — 지난달 보기, PowerShell 오류 해결

@@ -4,47 +4,45 @@ import * as Haptics from 'expo-haptics';
 import { Typography } from './Typography';
 import { InputField } from './InputField';
 import { SPACING, COLORS, RADIUS, TYPOGRAPHY } from '../../constants/theme';
+import { getTestProps } from '../../utils/test-utils';
 import type { AmountCurrency } from '../../types';
 
 const MIN_TOUCH_TARGET = 44;
 
 export interface AmountInputSectionProps {
-  amountCurrency: AmountCurrency;
-  onCurrencyChange: (c: AmountCurrency) => void;
-  formattedAmount: string;
-  onAmountChange: (text: string) => void;
-  error?: string;
-  disabled?: boolean;
-  currencySelectorDisabled?: boolean;
+  /** 표시할 금액 문자열 (천 단위 포맷 등 상위에서 관리) */
+  amount: string;
+  currency: AmountCurrency;
+  onChangeAmount: (text: string) => void;
+  onToggleCurrency: () => void;
+  errorMessage?: string;
+  isDisabled?: boolean;
   returnKeyType?: 'done' | 'next';
   onSubmitEditing?: () => void;
+  /** 접근성 힌트 문맥 (예: "월 고정비 금액") */
   amountHintContext?: string;
-  /** 통화 전환 직후 호출 (예: 금액 필드 포커스) */
-  onAfterCurrencyChange?: () => void;
 }
 
 /**
- * 금액 입력 섹션: 입력 필드가 주인공, 통화 전환은 단일 링크로 보조.
- * 기본은 원(KRW). 달러 입력 시 "달러로 입력" 한 번 탭 후 금액 입력. 환율은 화면에 표시하지 않고 저장 시에만 원화 변환에 사용.
+ * 금액 입력 섹션 (Dumb): 값과 콜백만 받아 표시·입력·통화 전환만 담당.
+ * 환율·검증·저장 로직은 상위(훅/모달)에서 처리.
  */
 export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>(
   (
     {
-      amountCurrency,
-      onCurrencyChange,
-      formattedAmount,
-      onAmountChange,
-      error,
-      disabled = false,
-      currencySelectorDisabled = false,
+      amount,
+      currency,
+      onChangeAmount,
+      onToggleCurrency,
+      errorMessage,
+      isDisabled = false,
       returnKeyType = 'done',
       onSubmitEditing = () => Keyboard.dismiss(),
       amountHintContext = '금액',
-      onAfterCurrencyChange,
     },
     ref
   ) => {
-    const isKrw = amountCurrency === 'KRW';
+    const isKrw = currency === 'KRW';
 
     const label = useMemo(() => (isKrw ? '금액 (원)' : '금액 (달러)'), [isKrw]);
     const placeholder = useMemo(() => (isKrw ? '예: 500,000' : '예: 100'), [isKrw]);
@@ -56,31 +54,15 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
       [isKrw]
     );
 
-    const focusAmountAfterChange = useCallback(() => {
-      if (onAfterCurrencyChange) setTimeout(onAfterCurrencyChange, 0);
-    }, [onAfterCurrencyChange]);
-
-    const switchToKrw = useCallback(() => {
-      if (currencySelectorDisabled) return;
+    const handleToggle = useCallback(() => {
+      if (isDisabled) return;
       try {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       } catch {
         /* noop */
       }
-      onCurrencyChange('KRW');
-      focusAmountAfterChange();
-    }, [onCurrencyChange, currencySelectorDisabled, focusAmountAfterChange]);
-
-    const switchToUsd = useCallback(() => {
-      if (currencySelectorDisabled) return;
-      try {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      } catch {
-        /* noop */
-      }
-      onCurrencyChange('USD');
-      focusAmountAfterChange();
-    }, [onCurrencyChange, currencySelectorDisabled, focusAmountAfterChange]);
+      onToggleCurrency();
+    }, [onToggleCurrency, isDisabled]);
 
     const accessibilityHint = useMemo(
       () =>
@@ -90,7 +72,7 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
       [isKrw, amountHintContext]
     );
 
-    const linkColor = currencySelectorDisabled ? COLORS.textTertiary : COLORS.primary;
+    const linkColor = isDisabled ? COLORS.textTertiary : COLORS.primary;
 
     return (
       <View
@@ -105,22 +87,24 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
           ref={ref}
           label={label}
           placeholder={placeholder}
-          value={formattedAmount}
-          onChangeText={onAmountChange}
-          error={error}
+          value={amount}
+          onChangeText={onChangeAmount}
+          error={errorMessage}
           helperText={helperText}
           keyboardType="numeric"
-          editable={!disabled}
+          editable={!isDisabled}
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           accessibilityLabel="금액 입력"
           accessibilityHint={accessibilityHint}
+          {...getTestProps('amount-input')}
         />
 
         <Pressable
-          onPress={isKrw ? switchToUsd : switchToKrw}
-          disabled={currencySelectorDisabled}
+          onPress={handleToggle}
+          disabled={isDisabled}
           hitSlop={{ top: SPACING.sm, bottom: SPACING.sm, left: SPACING.sm, right: SPACING.sm }}
+          {...getTestProps('currency-toggle')}
           style={({ pressed }) => ({
             marginTop: SPACING.sm,
             paddingVertical: SPACING.sm,
@@ -136,7 +120,7 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
               ? '탭하면 달러 금액을 입력할 수 있습니다. 저장 시 원화로 변환됩니다.'
               : '탭하면 원화 금액을 직접 입력할 수 있습니다.'
           }
-          accessibilityState={{ disabled: currencySelectorDisabled }}
+          accessibilityState={{ disabled: isDisabled }}
         >
           <Typography
             variant="caption"

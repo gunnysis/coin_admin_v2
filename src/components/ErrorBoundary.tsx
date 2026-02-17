@@ -46,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+        <View className="flex-1 items-center justify-center p-6 bg-slate-50">
           <Card variant="elevated" padding="xl" className="max-w-md">
             <Typography variant="h2" color="danger" className="mb-4" align="center">
               오류가 발생했습니다

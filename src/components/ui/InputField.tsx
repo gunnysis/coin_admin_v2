@@ -25,11 +25,11 @@ export const InputField = React.memo(
         </Typography>
         <TextInput
           ref={ref}
-          className={`bg-gray-100 rounded-xl p-4 text-base text-gray-800 border ${
+          className={`bg-slate-100 rounded-lg p-4 text-base text-slate-900 border ${
             error 
-              ? 'border-red-500' 
+              ? 'border-expense' 
               : 'border-transparent'
-          } ${!editable ? 'opacity-60 bg-gray-200' : ''}`}
+          } ${!editable ? 'opacity-60 bg-slate-200' : ''}`}
           placeholderTextColor={COLORS.textTertiary}
           editable={editable}
           style={style}

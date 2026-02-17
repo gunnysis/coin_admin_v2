@@ -56,7 +56,7 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
         disabled={isDeleting}
         activeOpacity={0.8}
         className={`rounded-xl items-center justify-center shadow-md ${
-          isDeleting ? 'bg-gray-300 opacity-60' : 'bg-red-500'
+          isDeleting ? 'bg-slate-300 opacity-60' : 'bg-[#f43f5e]'
         }`}
         style={{
           width: buttonSize,

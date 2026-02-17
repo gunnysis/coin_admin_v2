@@ -116,7 +116,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
     [editingVariableItem, handleVariableAdd, handleVariableUpdate, closeVariableModal]
   );
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
       <StatusBar style="dark" />
       
       <View className="flex-1" style={containerStyle}>

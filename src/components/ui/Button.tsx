@@ -12,11 +12,12 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   style?: TouchableOpacityProps['style'];
 }
 
+// Semantic: Primary(Brand) / Income(Positive) / Expense(Danger)
 const variantClasses = {
-  primary: 'bg-blue-500',
-  secondary: 'bg-green-500',
-  danger: 'bg-red-500',
-  outline: 'bg-transparent border-2 border-blue-500',
+  primary: 'bg-[#2563eb]',   // blue-600
+  secondary: 'bg-[#14b8a6]', // teal-500 income
+  danger: 'bg-[#f43f5e]',    // rose-500 expense
+  outline: 'bg-transparent border-2 border-[#2563eb]',
 };
 
 const sizeClasses = {
@@ -80,7 +81,7 @@ export const Button = React.memo<ButtonProps>(({
       ]}
     >
       <TouchableOpacity
-        className={`rounded-xl items-center justify-center ${variantClasses[variant]} ${sizeClasses[size]} ${isDisabled ? 'opacity-50' : ''}`}
+        className={`rounded-[12px] items-center justify-center ${variantClasses[variant]} ${sizeClasses[size]} ${isDisabled ? 'opacity-50' : ''}`}
         disabled={isDisabled}
         activeOpacity={1}
         onPressIn={handlePressIn}

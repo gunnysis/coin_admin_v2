@@ -14,7 +14,8 @@ import {
   VariableExpenseInfiniteQueryData,
   AddVariableExpenseFormData,
 } from '../types';
-import { PAGE_SIZE, QUERY_KEYS } from '../constants';
+import { PAGE_SIZE } from '../constants';
+import { expenseKeys } from '../config/queryKeys';
 import { getTodayDateString } from '../utils/date';
 
 // 현재 월 문자열 반환 (YYYY-MM)
@@ -36,7 +37,7 @@ export const useVariableExpensesPaginated = (month?: string) => {
     (string | number)[],
     number
   >({
-    queryKey: [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth],
+    queryKey: expenseKeys.variable.lists(targetMonth),
     queryFn: async ({ pageParam = 0 }) => {
       const data = await getVariableMonthExpenses(PAGE_SIZE, pageParam, targetMonth);
       return {
@@ -60,7 +61,7 @@ export const useVariableExpensesCount = (month?: string) => {
   const targetMonth = month || getCurrentMonth();
   
   return useQuery({
-    queryKey: [...QUERY_KEYS.VARIABLE_EXPENSES_COUNT, targetMonth],
+    queryKey: expenseKeys.variable.count(targetMonth),
     queryFn: () => getVariableMonthExpensesCount(targetMonth),
   });
 };
@@ -70,7 +71,7 @@ export const useVariableExpensesTotal = (month?: string) => {
   const targetMonth = month || getCurrentMonth();
   
   return useQuery<number>({
-    queryKey: [...QUERY_KEYS.VARIABLE_EXPENSES_TOTAL, targetMonth],
+    queryKey: expenseKeys.variable.total(targetMonth),
     queryFn: () => getVariableMonthExpensesTotal(targetMonth),
   });
 };
@@ -78,7 +79,7 @@ export const useVariableExpensesTotal = (month?: string) => {
 // 월별 유동비 통계 조회
 export const useVariableExpensesMonthlyStats = (year: string, month: string) => {
   return useQuery({
-    queryKey: [...QUERY_KEYS.VARIABLE_EXPENSES_MONTHLY, year, month],
+    queryKey: expenseKeys.variable.monthly(year, month),
     queryFn: () => getVariableExpensesMonthlyStats(year, month),
   });
 };
@@ -91,15 +92,15 @@ export const useDeleteVariableExpense = (month?: string) => {
   return useMutation<void, Error, number, { previousPages: VariableExpenseInfiniteQueryData | undefined }>({
     mutationFn: deleteVariableMonthExpense,
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      await queryClient.cancelQueries({ queryKey: expenseKeys.variable.all() });
 
       const previousPages = queryClient.getQueryData<VariableExpenseInfiniteQueryData>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth]
+        expenseKeys.variable.lists(targetMonth)
       );
 
       // 낙관적 업데이트
       queryClient.setQueryData<VariableExpenseInfiniteQueryData>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth],
+        expenseKeys.variable.lists(targetMonth),
         (old) => {
           if (!old) return old;
           return {
@@ -114,7 +115,7 @@ export const useDeleteVariableExpense = (month?: string) => {
 
       // 총액도 낙관적 업데이트
       queryClient.setQueryData<number>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_TOTAL, targetMonth],
+        expenseKeys.variable.total(targetMonth),
         (old = 0) => {
           const expense = previousPages?.pages
             .flatMap((p) => p.data)
@@ -128,13 +129,13 @@ export const useDeleteVariableExpense = (month?: string) => {
     onError: (err, id, context) => {
       if (context?.previousPages) {
         queryClient.setQueryData(
-          [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth],
+          expenseKeys.variable.lists(targetMonth),
           context.previousPages
         );
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.variable.all() });
     },
   });
 };
@@ -148,7 +149,7 @@ export const useAddVariableExpense = (month?: string) => {
     mutationFn: ({ name, amount, spent_date, category, memo }) =>
       addVariableMonthExpense(name, amount, spent_date, category, memo),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.variable.all() });
     },
     onError: (error) => {
       if (__DEV__) {
@@ -172,18 +173,18 @@ export const useUpdateVariableExpense = (month?: string) => {
     mutationFn: ({ id, name, amount, spent_date, category, memo }) =>
       updateVariableMonthExpense(id, name, amount, spent_date, category, memo),
     onMutate: async (newData) => {
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      await queryClient.cancelQueries({ queryKey: expenseKeys.variable.all() });
 
       const previousPages = queryClient.getQueryData<VariableExpenseInfiniteQueryData>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth]
+        expenseKeys.variable.lists(targetMonth)
       );
       const previousTotal = queryClient.getQueryData<number>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_TOTAL, targetMonth]
+        expenseKeys.variable.total(targetMonth)
       );
 
       // 낙관적 업데이트
       queryClient.setQueryData<VariableExpenseInfiniteQueryData>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth],
+        expenseKeys.variable.lists(targetMonth),
         (old) => {
           if (!old) return old;
           return {
@@ -209,7 +210,7 @@ export const useUpdateVariableExpense = (month?: string) => {
 
       // 총액도 낙관적 업데이트
       queryClient.setQueryData<number>(
-        [...QUERY_KEYS.VARIABLE_EXPENSES_TOTAL, targetMonth],
+        expenseKeys.variable.total(targetMonth),
         (old = 0) => {
           const oldExpense = previousPages?.pages
             .flatMap((p) => p.data)
@@ -226,19 +227,19 @@ export const useUpdateVariableExpense = (month?: string) => {
     onError: (err, newData, context) => {
       if (context?.previousPages) {
         queryClient.setQueryData(
-          [...QUERY_KEYS.VARIABLE_EXPENSES_PAGINATED, targetMonth],
+          expenseKeys.variable.lists(targetMonth),
           context.previousPages
         );
       }
       if (context?.previousTotal !== undefined) {
         queryClient.setQueryData(
-          [...QUERY_KEYS.VARIABLE_EXPENSES_TOTAL, targetMonth],
+          expenseKeys.variable.total(targetMonth),
           context.previousTotal
         );
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      queryClient.invalidateQueries({ queryKey: expenseKeys.variable.all() });
     },
   });
 };

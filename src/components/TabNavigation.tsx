@@ -5,6 +5,7 @@ import { Typography } from './ui/Typography';
 import { SPACING, COLORS } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsivePadding } from '../utils/responsive';
+import { getTestProps } from '../utils/test-utils';
 
 export type TabType = 'fixed' | 'variable';
 
@@ -66,7 +67,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
 
   return (
     <View 
-      className="bg-white border-b border-gray-200 relative"
+      className="bg-white border-b border-slate-200 relative"
       style={{ paddingHorizontal: responsivePadding }}
     >
       <View className="flex-row relative">
@@ -77,6 +78,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           accessibilityRole="button"
           accessibilityLabel="고정비 탭"
           accessibilityState={{ selected: activeTab === 'fixed' }}
+          {...getTestProps('tab-fixed')}
         >
           <Animated.View style={{ opacity: fixedOpacity }}>
             <Typography
@@ -96,6 +98,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
           accessibilityRole="button"
           accessibilityLabel="유동비 탭"
           accessibilityState={{ selected: activeTab === 'variable' }}
+          {...getTestProps('tab-variable')}
         >
           <Animated.View style={{ opacity: variableOpacity }}>
             <Typography

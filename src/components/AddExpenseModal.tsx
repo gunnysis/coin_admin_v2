@@ -28,6 +28,7 @@ import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { useExchangeRate } from '../hooks/useExchangeRate';
 import { useAmountWithCurrency } from '../hooks/useAmountWithCurrency';
 import { getResponsivePadding } from '../utils/responsive';
+import { getTestProps } from '../utils/test-utils';
 
 interface AddExpenseModalProps {
   visible: boolean;
@@ -68,18 +69,11 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const responsivePadding = getResponsivePadding(device, SPACING.xl);
 
   const { rate: exchangeRate, isLoading: isExchangeRateLoading, isFallback: isExchangeRateFallback } = useExchangeRate();
-  const {
-    amount,
-    formattedAmount,
-    amountCurrency,
-    setAmountCurrency,
-    handleAmountChange: hookHandleAmountChange,
-    getAmountInKrw,
-    isEditMode: isAmountEditMode,
-  } = useAmountWithCurrency({
+  const { uiProps: amountUiProps, data: amountData, isEditMode: isAmountEditMode } = useAmountWithCurrency({
     initialAmountKrw: editingItem?.amount,
     visible,
   });
+  const { amount } = amountData;
 
   const [name, setName] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -194,12 +188,17 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const handleAmountChange = useCallback(
     (text: string) => {
-      hookHandleAmountChange(text);
+      amountUiProps.onChangeAmount(text);
       const formatted = formatAmount(parseAmount(text));
       validateField('amount', formatted);
     },
-    [validateField, hookHandleAmountChange]
+    [validateField, amountUiProps]
   );
+
+  const handleToggleCurrency = useCallback(() => {
+    amountUiProps.onToggleCurrency();
+    setTimeout(() => amountInputRef.current?.focus(), 0);
+  }, [amountUiProps]);
 
   const handleSubmit = useCallback(async () => {
     const validation = validateExpenseForm(name, amount, startDate);
@@ -209,13 +208,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       ]);
       return;
     }
-    if (amountCurrency === 'USD' && isExchangeRateLoading) {
+    if (amountUiProps.currency === 'USD' && isExchangeRateLoading) {
       Alert.alert('안내', '환율을 불러오는 중입니다. 잠시 후 다시 시도해주세요.', [{ text: '확인', style: 'default' }]);
       return;
     }
 
     try {
-      const amountInKrw = getAmountInKrw(exchangeRate);
+      const amountInKrw = amountData.getAmountInKrw(exchangeRate);
       const formData: AddExpenseFormData = {
         name: name.trim(),
         amount: amountInKrw,
@@ -242,9 +241,8 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     name,
     amount,
     startDate,
-    amountCurrency,
+    amountData,
     isExchangeRateLoading,
-    getAmountInKrw,
     exchangeRate,
     isEditMode,
     editingItem,
@@ -334,6 +332,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     accessibilityHint="입력 내용을 저장하지 않고 모달을 닫습니다"
                     accessibilityState={{ disabled: isPending }}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    {...getTestProps('modal-close')}
                   >
                     <Typography variant="h2" color="textTertiary">
                       ✕
@@ -356,22 +355,21 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   onSubmitEditing={() => amountInputRef.current?.focus()}
                   accessibilityLabel="이름 입력"
                   accessibilityHint="월 고정비 항목의 이름을 입력하세요"
+                  {...getTestProps('name-input')}
                 />
 
-                {/* 통화 선택 + 금액 입력 + 환율 안내 */}
+                {/* 통화 선택 + 금액 입력 */}
                 <AmountInputSection
                   ref={amountInputRef}
-                  amountCurrency={amountCurrency}
-                  onCurrencyChange={setAmountCurrency}
-                  formattedAmount={formattedAmount}
-                  onAmountChange={handleAmountChange}
-                  error={validationErrors.amount}
-                  disabled={isPending}
-                  currencySelectorDisabled={isPending}
+                  {...amountUiProps}
+                  amount={amountUiProps.amount}
+                  onChangeAmount={handleAmountChange}
+                  onToggleCurrency={handleToggleCurrency}
+                  errorMessage={validationErrors.amount}
+                  isDisabled={isPending}
                   returnKeyType="done"
                   onSubmitEditing={Keyboard.dismiss}
                   amountHintContext="월 고정비 금액"
-                  onAfterCurrencyChange={() => amountInputRef.current?.focus()}
                 />
 
                 {/* 날짜 선택 필드 */}
@@ -383,12 +381,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     onPress={openDatePicker}
                     disabled={isPending}
                     activeOpacity={0.7}
-                    className={`bg-gray-100 rounded-xl p-4 flex-row items-center justify-between border min-h-[56px] ${
-                      validationErrors.startDate ? 'border-red-500' : 'border-transparent'
+                    className={`bg-slate-100 rounded-xl p-4 flex-row items-center justify-between border min-h-[56px] ${
+                      validationErrors.startDate ? 'border-expense' : 'border-transparent'
                     } ${isPending ? 'opacity-50' : ''}`}
                     accessibilityLabel="결제일 선택"
                     accessibilityHint="월 고정비 결제일을 선택하세요"
                     accessibilityRole="button"
+                    {...getTestProps('date-picker')}
                   >
                     <Typography
                       variant="body"
@@ -429,7 +428,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
                   {/* iOS 날짜 선택기 */}
                   {showDatePicker && Platform.OS === 'ios' && (
-                    <View className="mt-4 bg-gray-50 rounded-xl p-4">
+                    <View className="mt-4 bg-slate-50 rounded-xl p-4">
                       <View className="flex-row items-center justify-between mb-4">
                         <Typography variant="h3" color="textPrimary">
                           날짜 선택
@@ -468,6 +467,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   accessibilityLabel={isEditMode ? '수정하기' : '추가하기'}
                   accessibilityHint={isEditMode ? '입력한 내용으로 고정비를 수정합니다' : '입력한 내용으로 고정비를 추가합니다'}
                   accessibilityState={{ disabled: isPending || !isFormValid, busy: isPending }}
+                  {...getTestProps('submit')}
                 >
                   {isEditMode ? '수정' : '추가'}
                 </Button>

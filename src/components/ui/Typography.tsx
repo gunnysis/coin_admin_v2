@@ -4,23 +4,28 @@ import { COLORS, TYPOGRAPHY } from '../../constants/theme';
 import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
 import { getResponsiveFontSize } from '../../utils/responsive';
 
-type ColorKey = 
-  | 'textPrimary' 
-  | 'textSecondary' 
-  | 'textTertiary' 
+type ColorKey =
+  | 'textPrimary'
+  | 'textSecondary'
+  | 'textTertiary'
   | 'textInverse'
   | 'primary'
   | 'secondary'
   | 'danger'
+  | 'expense'
+  | 'income'
   | 'warning'
   | 'success'
   | keyof typeof COLORS;
 
 interface TypographyProps extends TextProps {
-  variant?: 'h1' | 'h2' | 'h3' | 'body' | 'body2' | 'caption' | 'label';
+  /** Display(총액 등) / Heading / Body / Caption */
+  variant?: 'display' | 'h1' | 'h2' | 'h3' | 'body' | 'body2' | 'caption' | 'label';
   color?: ColorKey;
   weight?: keyof typeof TYPOGRAPHY.fontWeight;
   align?: 'left' | 'center' | 'right';
+  /** 금액 등 숫자 가독성: tabular-nums 적용 */
+  tabularNums?: boolean;
 }
 
 export const Typography = React.memo<TypographyProps>(({
@@ -28,14 +33,15 @@ export const Typography = React.memo<TypographyProps>(({
   color = 'textPrimary',
   weight,
   align = 'left',
+  tabularNums = false,
   style,
   children,
   ...props
 }) => {
   const device = useDeviceDimensions();
-  
-  // 반응형 폰트 크기 계산 (useMemo로 최적화)
+
   const variantStyles = React.useMemo(() => {
+    const baseDisplay = 32;
     const baseH1 = TYPOGRAPHY.fontSize['4xl'];
     const baseH2 = TYPOGRAPHY.fontSize['3xl'];
     const baseH3 = TYPOGRAPHY.fontSize['2xl'];
@@ -45,6 +51,11 @@ export const Typography = React.memo<TypographyProps>(({
     const baseLabel = TYPOGRAPHY.fontSize.sm;
 
     return {
+      display: {
+        fontSize: getResponsiveFontSize(device, baseDisplay),
+        fontWeight: TYPOGRAPHY.fontWeight.bold,
+        lineHeight: getResponsiveFontSize(device, baseDisplay) * TYPOGRAPHY.lineHeight.tight,
+      },
       h1: {
         fontSize: getResponsiveFontSize(device, baseH1),
         fontWeight: TYPOGRAPHY.fontWeight.bold,
@@ -72,7 +83,7 @@ export const Typography = React.memo<TypographyProps>(({
       },
       caption: {
         fontSize: getResponsiveFontSize(device, baseCaption),
-        fontWeight: TYPOGRAPHY.fontWeight.normal,
+        fontWeight: TYPOGRAPHY.fontWeight.medium,
         lineHeight: getResponsiveFontSize(device, baseCaption) * TYPOGRAPHY.lineHeight.normal,
       },
       label: {
@@ -83,7 +94,7 @@ export const Typography = React.memo<TypographyProps>(({
     };
   }, [device]);
 
-  const colorValue = COLORS[color as keyof typeof COLORS] || COLORS.textPrimary;
+  const colorValue = COLORS[color as keyof typeof COLORS] ?? COLORS.textPrimary;
 
   return (
     <Text
@@ -91,6 +102,7 @@ export const Typography = React.memo<TypographyProps>(({
         variantStyles[variant],
         { color: colorValue, textAlign: align },
         weight && { fontWeight: TYPOGRAPHY.fontWeight[weight] },
+        tabularNums && { fontVariant: ['tabular-nums'] },
         style,
       ]}
       {...props}

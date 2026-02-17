@@ -54,20 +54,21 @@ export const ExpenseItem = React.memo<ExpenseItemProps>(({
         marginBottom: device.isTablet ? responsiveMargin : SPACING.md,
       }}
     >
-      <Card 
-        variant="elevated" 
-        padding={device.isTablet ? "lg" : "base"} 
-        className="border border-gray-100"
+      <Card
+        variant="elevated"
+        padding={device.isTablet ? "lg" : "base"}
+        className="border border-slate-100"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1" style={{ marginRight: SPACING.md }}>
             <Typography variant="h3" color="textPrimary" weight="semibold" className="mb-1">
               {item.name}
             </Typography>
-            <Typography 
-              variant="h2" 
-              color="primary" 
-              weight="bold" 
+            <Typography
+              variant="h2"
+              color="primary"
+              weight="bold"
+              tabularNums
               className="mb-1"
               style={{ fontSize: adjustedAmountSize }}
             >

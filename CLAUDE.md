@@ -36,7 +36,7 @@ Features live in `src/features/{domain}/components/`. Each feature component (e.
 - **Component state:** useState/useReducer for local concerns
 
 ### Currency & Amount Handling
-All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/features/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
+All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
 
 ### Responsive Layouts
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`.
@@ -46,9 +46,10 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Key Constants
 
-- **Query keys:** `QUERY_KEYS` in `src/constants/index.ts`
-- **Categories:** `EXPENSE_CATEGORIES` — 7 predefined Korean categories (식비, 교통비, 쇼핑, 의료, 교육, 오락, 기타)
+- **Query keys:** `src/config/queryKeys.ts` — factory: `databaseKeys`, `expenseKeys`, `exchangeRateKeys`. Legacy `QUERY_KEYS` re-exported from `src/constants/index.ts`.
+- **Categories:** `EXPENSE_CATEGORIES` in `src/constants/index.ts` — 7 predefined Korean categories (식비, 교통비, 쇼핑, 의료, 교육, 오락, 기타)
 - **Config:** `src/config/constants.ts` — pagination, date format, animation, timing, error/success messages, exchange rate settings
+- **Theme/design:** `src/constants/theme.ts` — semantic colors (slate, expense, income), radius, shadows. UI: Card, Button, Typography, InputField in `src/components/ui/`.
 
 ## Type Conventions
 
@@ -59,7 +60,12 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 ## Testing
 
 - **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
-- **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
+- **testID:** `src/utils/test-utils.ts` — `getTestProps(id)` returns `data-testid` (web) / `testID` (native). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
+- **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
+
+## Documentation
+
+- **Index:** `docs/README.md` — 7 docs: development (architecture + error handling), amount-currency, variable-expense-month, e2e-testing, plans (refactor + design), guides (previous month, PowerShell), PAST_IMPLEMENTATIONS.
 
 ## Deployment
 

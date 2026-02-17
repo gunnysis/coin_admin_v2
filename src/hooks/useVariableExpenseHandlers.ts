@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../constants';
+import { expenseKeys } from '../config/queryKeys';
 import { AddVariableExpenseFormData, VariableMonthExpense } from '../types';
 import {
   useDeleteVariableExpense,
@@ -64,7 +64,7 @@ export const useVariableExpenseHandlers = (month?: string) => {
   const handleRefresh = useCallback(async () => {
     try {
       // React Query 캐시 무효화 및 재조회
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.VARIABLE_EXPENSES });
+      await queryClient.invalidateQueries({ queryKey: expenseKeys.variable.all() });
       await refetch();
     } catch (error) {
       if (__DEV__) {

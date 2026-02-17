@@ -5,6 +5,7 @@ import { Typography } from './ui/Typography';
 import { SPACING, SHADOWS, COLORS } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getResponsiveValue } from '../utils/responsive';
+import { getTestProps } from '../utils/test-utils';
 
 interface AddButtonProps {
   onPress: () => void;
@@ -98,7 +99,7 @@ export const AddButton = React.memo<AddButtonProps>(({
           className={`
             rounded-full bg-white border-2 
             items-center justify-center
-            ${disabled ? 'opacity-50 border-gray-400' : 'border-blue-500'}
+            ${disabled ? 'opacity-50 border-slate-400' : 'border-[#2563eb]'}
           `}
           style={{
             width: buttonSize,
@@ -111,6 +112,7 @@ export const AddButton = React.memo<AddButtonProps>(({
           accessibilityLabel="항목 추가"
           accessibilityRole="button"
           accessibilityState={{ disabled }}
+          {...getTestProps('add-button')}
         >
           <Typography 
             variant="h1" 

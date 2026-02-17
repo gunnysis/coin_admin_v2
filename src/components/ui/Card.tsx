@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ViewStyle, AccessibilityRole } from 'react-native';
-import { SPACING, SHADOWS } from '../../constants/theme';
+import { SPACING, SHADOWS, RADIUS } from '../../constants/theme';
 
 interface CardProps {
   children: React.ReactNode;
@@ -24,6 +24,9 @@ const paddingMap: Record<keyof typeof SPACING, string> = {
   '5xl': 'p-16',
 };
 
+/**
+ * 카드: Flat & Shadow - 옅은 테두리(border-slate-100) + shadow-sm, rounded-2xl(16px)
+ */
 export const Card = React.memo<CardProps>(({
   children,
   style,
@@ -33,17 +36,18 @@ export const Card = React.memo<CardProps>(({
   accessibilityRole,
 }) => {
   const variantClasses = {
-    default: 'bg-white rounded-3xl',
-    elevated: 'bg-white rounded-3xl border border-gray-100',
-    outlined: 'bg-white rounded-3xl border border-gray-200',
+    default: 'bg-white border border-slate-100',
+    elevated: 'bg-white border border-slate-100',
+    outlined: 'bg-white border border-slate-200',
   };
 
-  const shadowStyle = variant === 'elevated' ? SHADOWS.md : undefined;
+  const shadowStyle = variant === 'elevated' ? SHADOWS.sm : undefined;
+  const borderRadius = RADIUS.card;
 
   return (
-    <View 
+    <View
       className={`${variantClasses[variant]} ${paddingMap[padding]} ${className}`.trim()}
-      style={[shadowStyle, style]}
+      style={[{ borderRadius }, shadowStyle, style]}
       accessibilityRole={accessibilityRole}
     >
       {children}
