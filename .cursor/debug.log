@@ -1,4 +1,0 @@
-{"location":"smoke.spec.ts","message":"page.goto done","data":{"url":"http://localhost:8081/"},"hypothesisId":"H2,H4","timestamp":1771311616621}
-{"location":"smoke.spec.ts:failIfErrorOverlay","message":"error overlay check","data":{"hasError":false,"serverVisible":false,"unableVisible":false},"hypothesisId":"H1,H3","timestamp":1771311616763}
-{"location":"smoke.spec.ts","message":"about to assert tabs visible","data":{},"hypothesisId":"H5","timestamp":1771311616763}
-{"location":"smoke.spec.ts","message":"page.goto failed","data":{"err":"page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8081/\", waiting until \"load\"\u001b[22m\n"},"hypothesisId":"H2,H4","timestamp":1771311617254}

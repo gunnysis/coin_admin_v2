@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppExpenseData } from '../hooks/useAppExpenseData';
@@ -11,12 +11,14 @@ import { PhoneLayout } from '../components/layouts/PhoneLayout';
 import { TabletPortraitLayout } from '../components/layouts/TabletPortraitLayout';
 import { TabletLandscapeLayout } from '../components/layouts/TabletLandscapeLayout';
 import { TABLET_COLUMN_WIDTHS } from '../constants/responsive';
+import { SettingsScreen } from '../features/settings/components/SettingsScreen';
 
 /**
  * 메인 App 컴포넌트
  * 레이아웃 선택과 데이터 훅 조합만 담당
  */
 export default function App() {
+  const [showSettings, setShowSettings] = useState(false);
   const insets = useSafeAreaInsets();
   const device = useDeviceDimensions();
   const {
@@ -80,22 +82,37 @@ export default function App() {
   // 헤더 컴포넌트
   const renderHeader = useCallback(
     () => (
-      <View
-        className="items-center bg-slate-50"
-        style={{
-          paddingHorizontal: headerPadding,
-          paddingTop: device.isTablet ? SPACING['2xl'] : SPACING.xl,
-          paddingBottom: device.isTablet ? SPACING.base : SPACING.md,
-        }}
-        accessibilityRole="header"
-      >
-        <Typography variant="h2" color="textPrimary" align="center" accessibilityRole="header">
-          월 지출 관리
-        </Typography>
+      <View className="bg-slate-50">
+        <View
+          className="flex-row items-center justify-between"
+          style={{
+            paddingHorizontal: headerPadding,
+            paddingTop: device.isTablet ? SPACING['2xl'] : SPACING.xl,
+            paddingBottom: device.isTablet ? SPACING.base : SPACING.md,
+          }}
+          accessibilityRole="header"
+        >
+          <Typography variant="h2" color="textPrimary" align="left" accessibilityRole="header">
+            월 지출 관리
+          </Typography>
+          <Typography
+            variant="body2"
+            color="primary"
+            weight="semibold"
+            onPress={() => setShowSettings(true)}
+            accessibilityRole="button"
+          >
+            설정
+          </Typography>
+        </View>
       </View>
     ),
-    [headerPadding, device]
+    [headerPadding, device],
   );
+
+  if (showSettings) {
+    return <SettingsScreen onClose={() => setShowSettings(false)} />;
+  }
 
   if (device.isTablet) {
     if (device.isLandscape) {

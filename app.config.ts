@@ -135,8 +135,14 @@ export default () => {
       output: "static",
       favicon: ASSET_PATHS.FAVICON,
     },
-    plugins: ["expo-sqlite"],
+    plugins: ["expo-sqlite", "expo-web-browser"],
     extra: {
+      appEnv,
+      googleAndroidClientId:
+        process.env.GOOGLE_ANDROID_CLIENT_ID_PROD ??
+        "",
+      googleAndroidDriveApiKey:
+        process.env.GOOGLE_ANDROID_DRIVE_API_KEY_PROD,
       eas: {
         projectId: APP_CONSTANTS.EAS_PROJECT_ID,
       },
