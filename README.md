@@ -57,8 +57,8 @@ coin-admin/
 - `Button` - 버튼 컴포넌트
 - `Card` - 카드 컨테이너
 - `InputField` - 입력 필드
-- `AmountInputSection` - 금액 입력(기본 원화) + 원/달러 칩(SVG 아이콘, 둘 다 노출) 통화 전환 및 환율 안내. 아이콘은 phosphor-react-native(원 전용 CurrencyKrw, 달러 전용 CurrencyDollar) 사용.
-- `ExchangeRateHint` - 달러 선택 시 환율/로딩 안내
+- `AmountInputSection` - 금액 입력(기본 원화)이 주인공. "달러로 입력"/"원으로 입력" 단일 텍스트 링크로 통화 전환. 환율은 화면에 표시하지 않음.
+- `ExchangeRateHint` - 환율 안내 컴포넌트 (현재 금액 섹션에서는 미사용, 필요 시 재사용 가능)
 - `EmptyState` - 빈 상태 표시
 
 ### 기능 컴포넌트

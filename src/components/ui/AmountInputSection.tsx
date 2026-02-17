@@ -1,15 +1,11 @@
 import React, { forwardRef, useCallback, useMemo } from 'react';
 import { View, TextInput, Keyboard, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { CurrencyKrw, CurrencyDollar } from 'phosphor-react-native';
 import { Typography } from './Typography';
-import { ExchangeRateHint } from './ExchangeRateHint';
 import { InputField } from './InputField';
-import { SPACING, COLORS, RADIUS, TYPOGRAPHY, ICON_SIZES } from '../../constants/theme';
+import { SPACING, COLORS, RADIUS, TYPOGRAPHY } from '../../constants/theme';
 import type { AmountCurrency } from '../../types';
 
-const CHIP_RIPPLE_UNSELECTED = 'rgba(59, 130, 246, 0.12)';
-const CHIP_RIPPLE_SELECTED = 'rgba(255, 255, 255, 0.3)';
 const MIN_TOUCH_TARGET = 44;
 
 export interface AmountInputSectionProps {
@@ -31,8 +27,8 @@ export interface AmountInputSectionProps {
 }
 
 /**
- * 금액 입력 섹션: 입력 필드 + 원/달러 칩(둘 다 노출) + 환율 안내.
- * 기본은 원(KRW), 필요할 때만 달러(USD) 선택. 원 전용(CurrencyKrw)·달러 전용(CurrencyDollar) SVG 아이콘 사용.
+ * 금액 입력 섹션: 입력 필드가 주인공, 통화 전환은 단일 링크로 보조.
+ * 기본은 원(KRW). 달러 입력 시 "달러로 입력" 한 번 탭 후 금액 입력. 환율은 화면에 표시하지 않고 저장 시에만 원화 변환에 사용.
  */
 export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>(
   (
@@ -62,7 +58,7 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
       () =>
         isKrw
           ? '천 단위 구분자가 자동으로 추가됩니다'
-          : '저장 시 현재 환율로 원화 변환됩니다',
+          : '저장 시 원화로 변환되어 저장됩니다',
       [isKrw]
     );
 
@@ -95,14 +91,12 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
     const accessibilityHint = useMemo(
       () =>
         isKrw
-          ? `${amountHintContext}을 원으로 입력하세요. 달러로 입력하려면 달러 칩을 탭하세요.`
-          : `${amountHintContext}을 달러로 입력하면 원으로 변환되어 저장됩니다. 원화로 입력하려면 원 칩을 탭하세요.`,
+          ? `${amountHintContext}을 원으로 입력하세요. 달러로 입력하려면 아래 달러로 입력을 탭하세요.`
+          : `${amountHintContext}을 달러로 입력하면 원으로 변환되어 저장됩니다. 원화로 입력하려면 원으로 입력을 탭하세요.`,
       [isKrw, amountHintContext]
     );
 
-    const disabledStyle = currencySelectorDisabled;
-    const krwSelected = isKrw;
-    const usdSelected = !isKrw;
+    const linkColor = currencySelectorDisabled ? COLORS.textTertiary : COLORS.primary;
 
     return (
       <View
@@ -129,90 +123,36 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
           accessibilityHint={accessibilityHint}
         />
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginTop: SPACING.sm }}>
-          {/* 원 칩 (왼쪽, 기본 선택) */}
-          <Pressable
-            onPress={switchToKrw}
-            disabled={currencySelectorDisabled}
-            android_ripple={{ color: krwSelected ? CHIP_RIPPLE_SELECTED : CHIP_RIPPLE_UNSELECTED }}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: SPACING.sm,
-              paddingHorizontal: SPACING.md,
-              minHeight: MIN_TOUCH_TARGET,
-              borderRadius: RADIUS.sm,
-              backgroundColor: disabledStyle ? COLORS.gray200 : krwSelected ? COLORS.primary : COLORS.gray100,
-              opacity: pressed ? 0.9 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel={krwSelected ? '원 (선택됨)' : '원'}
-            accessibilityHint="탭하면 원화로 금액을 입력합니다."
-            accessibilityState={{ disabled: currencySelectorDisabled, selected: krwSelected }}
+        <Pressable
+          onPress={isKrw ? switchToUsd : switchToKrw}
+          disabled={currencySelectorDisabled}
+          style={({ pressed }) => ({
+            marginTop: SPACING.sm,
+            paddingVertical: SPACING.sm,
+            paddingHorizontal: SPACING.xs,
+            minHeight: MIN_TOUCH_TARGET,
+            justifyContent: 'center',
+            opacity: pressed ? 0.85 : 1,
+          })}
+          accessibilityRole="button"
+          accessibilityLabel={isKrw ? '달러로 입력' : '원으로 입력'}
+          accessibilityHint={
+            isKrw
+              ? '탭하면 달러 금액을 입력할 수 있습니다. 저장 시 원화로 변환됩니다.'
+              : '탭하면 원화 금액을 직접 입력할 수 있습니다.'
+          }
+          accessibilityState={{ disabled: currencySelectorDisabled }}
+        >
+          <Typography
+            variant="caption"
+            style={{
+              color: linkColor,
+              fontWeight: TYPOGRAPHY.fontWeight.medium,
+            }}
           >
-            <CurrencyKrw
-              size={ICON_SIZES.xs}
-              color={disabledStyle ? COLORS.textTertiary : krwSelected ? COLORS.textInverse : COLORS.textSecondary}
-              style={{ marginRight: SPACING.xs }}
-            />
-            <Typography
-              variant="caption"
-              style={{
-                color: disabledStyle ? COLORS.textTertiary : krwSelected ? COLORS.textInverse : COLORS.textSecondary,
-                fontWeight: TYPOGRAPHY.fontWeight.medium,
-              }}
-            >
-              원
-            </Typography>
-          </Pressable>
-
-          {/* 달러 칩 (오른쪽) */}
-          <Pressable
-            onPress={switchToUsd}
-            disabled={currencySelectorDisabled}
-            android_ripple={{ color: usdSelected ? CHIP_RIPPLE_SELECTED : CHIP_RIPPLE_UNSELECTED }}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: SPACING.sm,
-              paddingHorizontal: SPACING.md,
-              minHeight: MIN_TOUCH_TARGET,
-              borderRadius: RADIUS.sm,
-              backgroundColor: disabledStyle ? COLORS.gray200 : usdSelected ? COLORS.primary : COLORS.gray100,
-              opacity: pressed ? 0.9 : 1,
-            })}
-            accessibilityRole="button"
-            accessibilityLabel={usdSelected ? '달러 (선택됨)' : '달러'}
-            accessibilityHint="탭하면 달러로 입력합니다. 저장 시 원화로 변환됩니다."
-            accessibilityState={{ disabled: currencySelectorDisabled, selected: usdSelected }}
-          >
-            <CurrencyDollar
-              size={ICON_SIZES.xs}
-              color={disabledStyle ? COLORS.textTertiary : usdSelected ? COLORS.textInverse : COLORS.textSecondary}
-              style={{ marginRight: SPACING.xs }}
-            />
-            <Typography
-              variant="caption"
-              style={{
-                color: disabledStyle ? COLORS.textTertiary : usdSelected ? COLORS.textInverse : COLORS.textSecondary,
-                fontWeight: TYPOGRAPHY.fontWeight.medium,
-              }}
-            >
-              달러
-            </Typography>
-          </Pressable>
-        </View>
-
-        {usdSelected && (
-          <View style={{ marginTop: SPACING.xs }}>
-            <ExchangeRateHint
-              show
-              rate={exchangeRate}
-              isLoading={exchangeRateLoading}
-              isFallback={exchangeRateFallback}
-            />
-          </View>
-        )}
+            {isKrw ? '달러로 입력' : '원으로 입력'}
+          </Typography>
+        </Pressable>
       </View>
     );
   }
