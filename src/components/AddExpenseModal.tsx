@@ -22,8 +22,11 @@ import { formatError, logError } from '../utils/errorHandler';
 import { Typography } from './ui/Typography';
 import { InputField } from './ui/InputField';
 import { Button } from './ui/Button';
+import { AmountInputSection } from './ui/AmountInputSection';
 import { SPACING } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { useExchangeRate } from '../hooks/useExchangeRate';
+import { useAmountWithCurrency } from '../hooks/useAmountWithCurrency';
 import { getResponsivePadding } from '../utils/responsive';
 
 interface AddExpenseModalProps {
@@ -63,10 +66,22 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   
   // 반응형 스타일
   const responsivePadding = getResponsivePadding(device, SPACING.xl);
-  
+
+  const { rate: exchangeRate, isLoading: isExchangeRateLoading, isFallback: isExchangeRateFallback } = useExchangeRate();
+  const {
+    amount,
+    formattedAmount,
+    amountCurrency,
+    setAmountCurrency,
+    handleAmountChange: hookHandleAmountChange,
+    getAmountInKrw,
+    isEditMode: isAmountEditMode,
+  } = useAmountWithCurrency({
+    initialAmountKrw: editingItem?.amount,
+    visible,
+  });
+
   const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [formattedAmount, setFormattedAmount] = useState('');
   const [startDate, setStartDate] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -78,41 +93,27 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const isEditMode = useMemo(() => !!editingItem, [editingItem]);
 
-  // 폼 초기화
+  // 폼 초기화 (이름, 날짜, 포커스)
   useEffect(() => {
     if (!visible) {
-      // 모달이 닫힐 때 폼 초기화
       setName('');
-      setAmount('');
-      setFormattedAmount('');
       setStartDate('');
       setSelectedDate(new Date());
       setShowDatePicker(false);
       setValidationErrors({});
       Keyboard.dismiss();
     } else if (editingItem) {
-      // 수정 모드: 기존 데이터로 폼 채우기
       setName(editingItem.name);
-      const amountStr = editingItem.amount.toString();
-      setAmount(amountStr);
-      setFormattedAmount(formatAmount(amountStr));
       setStartDate(editingItem.start_date);
-      const date = new Date(editingItem.start_date);
-      setSelectedDate(date);
+      setSelectedDate(new Date(editingItem.start_date));
       setValidationErrors({});
     } else {
-      // 추가 모드: 오늘 날짜를 기본값으로 설정
       const today = new Date();
       setSelectedDate(today);
-      const todayStr = getTodayDateString();
-      setStartDate(todayStr);
+      setStartDate(getTodayDateString());
       setValidationErrors({});
-      
-      // 모달이 열릴 때 이름 입력 필드에 포커스 (태블릿에서는 지연 시간 증가)
       const focusDelay = device.isTablet ? MODAL_ANIMATION_DURATION + 100 : MODAL_ANIMATION_DURATION;
-      setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, focusDelay);
+      setTimeout(() => nameInputRef.current?.focus(), focusDelay);
     }
   }, [visible, editingItem, device.isTablet]);
 
@@ -191,61 +192,66 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     validateField('name', text);
   }, [validateField]);
 
-  // 금액 변경 핸들러
-  const handleAmountChange = useCallback((text: string) => {
-    const numbers = parseAmount(text);
-    setAmount(numbers);
-    const formatted = formatAmount(numbers);
-    setFormattedAmount(formatted);
-    validateField('amount', formatted);
-  }, [validateField]);
+  const handleAmountChange = useCallback(
+    (text: string) => {
+      hookHandleAmountChange(text);
+      const formatted = formatAmount(parseAmount(text));
+      validateField('amount', formatted);
+    },
+    [validateField, hookHandleAmountChange]
+  );
 
-  // 제출 핸들러
   const handleSubmit = useCallback(async () => {
-    // 최종 유효성 검사
     const validation = validateExpenseForm(name, amount, startDate);
-    
     if (!validation.isValid) {
-      Alert.alert(
-        '입력 오류',
-        validation.errorMessage || '입력 정보를 확인해주세요.',
-        [{ text: '확인', style: 'default' }]
-      );
+      Alert.alert('입력 오류', validation.errorMessage || '입력 정보를 확인해주세요.', [
+        { text: '확인', style: 'default' },
+      ]);
+      return;
+    }
+    if (amountCurrency === 'USD' && isExchangeRateLoading) {
+      Alert.alert('안내', '환율을 불러오는 중입니다. 잠시 후 다시 시도해주세요.', [{ text: '확인', style: 'default' }]);
       return;
     }
 
     try {
+      const amountInKrw = getAmountInKrw(exchangeRate);
       const formData: AddExpenseFormData = {
         name: name.trim(),
-        amount: Number(amount),
+        amount: amountInKrw,
         start_date: startDate.trim(),
       };
 
       if (isEditMode && editingItem && onUpdate) {
-        await onUpdate({
-          ...formData,
-          id: editingItem.id,
-        });
+        await onUpdate({ ...formData, id: editingItem.id });
       } else {
         await onAdd(formData);
       }
-      
-      // 성공 시 모달 닫기 (Alert는 상위 컴포넌트에서 처리)
       onClose();
     } catch (error) {
       logError(error, isEditMode ? 'UpdateExpense' : 'AddExpense');
       const appError = formatError(error);
-      
-      Alert.alert(
-        '오류 발생',
-        appError.userMessage,
-        [
-          { text: '확인', style: 'default' as const },
-          ...(appError.recoverable ? [{ text: '다시 시도', style: 'default' as const, onPress: handleSubmit }] : []),
-        ]
-      );
+      Alert.alert('오류 발생', appError.userMessage, [
+        { text: '확인', style: 'default' as const },
+        ...(appError.recoverable
+          ? [{ text: '다시 시도', style: 'default' as const, onPress: handleSubmit }]
+          : []),
+      ]);
     }
-  }, [name, amount, startDate, isEditMode, editingItem, onAdd, onUpdate, onClose]);
+  }, [
+    name,
+    amount,
+    startDate,
+    amountCurrency,
+    isExchangeRateLoading,
+    getAmountInKrw,
+    exchangeRate,
+    isEditMode,
+    editingItem,
+    onAdd,
+    onUpdate,
+    onClose,
+  ]);
 
   // 모달 배경 클릭 핸들러
   const handleBackdropPress = useCallback(() => {
@@ -352,21 +358,23 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   accessibilityHint="월 고정비 항목의 이름을 입력하세요"
                 />
 
-                {/* 금액 입력 필드 */}
-                <InputField
+                {/* 통화 선택 + 금액 입력 + 환율 안내 */}
+                <AmountInputSection
                   ref={amountInputRef}
-                  label="금액 (원)"
-                  placeholder="예: 500,000"
-                  value={formattedAmount}
-                  onChangeText={handleAmountChange}
+                  amountCurrency={amountCurrency}
+                  onCurrencyChange={setAmountCurrency}
+                  formattedAmount={formattedAmount}
+                  onAmountChange={handleAmountChange}
                   error={validationErrors.amount}
-                  helperText="천 단위 구분자가 자동으로 추가됩니다"
-                  keyboardType="numeric"
-                  editable={!isPending}
+                  disabled={isPending}
+                  currencySelectorDisabled={isAmountEditMode || isPending}
+                  exchangeRate={exchangeRate}
+                  exchangeRateLoading={isExchangeRateLoading}
+                  exchangeRateFallback={isExchangeRateFallback}
                   returnKeyType="done"
                   onSubmitEditing={Keyboard.dismiss}
-                  accessibilityLabel="금액 입력"
-                  accessibilityHint="월 고정비 금액을 숫자로 입력하세요"
+                  amountHintContext="월 고정비 금액"
+                  onAfterCurrencyChange={() => amountInputRef.current?.focus()}
                 />
 
                 {/* 날짜 선택 필드 */}

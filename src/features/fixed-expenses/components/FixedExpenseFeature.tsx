@@ -1,12 +1,12 @@
 import React from 'react';
 import { View } from 'react-native';
-import { TotalAmountCard } from '../../../components/TotalAmountCard';
-import { ExpenseList } from '../../../components/ExpenseList';
-import { AddButton } from '../../../components/AddButton';
-import { AddExpenseModal } from '../../../components/AddExpenseModal';
-import { FixedMonthCost, AddExpenseFormData } from '../../../types';
-import { useAppContext } from '../../../contexts/AppContext';
-import { useExpenseHandlers } from '../../../hooks/useExpenseHandlers';
+import { TotalAmountCard } from '@/components/TotalAmountCard';
+import { ExpenseList } from '@/components/ExpenseList';
+import { AddButton } from '@/components/AddButton';
+import { AddExpenseModal } from '@/components/AddExpenseModal';
+import { FixedMonthCost, AddExpenseFormData } from '@/types';
+import { useAppContext } from '@/contexts/AppContext';
+import { useExpenseHandlers } from '@/hooks/useExpenseHandlers';
 
 interface FixedExpenseFeatureProps {
   expenses: FixedMonthCost[];

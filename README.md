@@ -5,7 +5,9 @@
 ## 📱 주요 기능
 
 - **월 고정비 관리**: 월세, 관리비 등 월 단위 고정 지출을 추가, 수정, 삭제
-- **총액 계산**: 등록된 모든 고정비의 총액을 실시간으로 계산
+- **월 유동비 관리**: 일별 지출을 항목·금액·지출일·메모로 추가, 수정, 삭제
+- **금액 통화 입력 (원/달러)**: 원 또는 달러로 입력 가능, 달러는 실시간 환율로 원화 변환 후 저장 ([상세 문서](docs/features/amount-currency.md))
+- **총액 계산**: 등록된 고정비/유동비 총액을 실시간으로 계산
 - **데이터 시각화**: 금액별 그룹화 및 항목별 비율을 차트로 시각화
 - **반응형 디자인**: 스마트폰과 태블릿 모두 최적화된 UI/UX
 - **페이지네이션**: 대량의 데이터를 효율적으로 로드
@@ -55,6 +57,8 @@ coin-admin/
 - `Button` - 버튼 컴포넌트
 - `Card` - 카드 컨테이너
 - `InputField` - 입력 필드
+- `AmountInputSection` - 금액 입력(기본 원화) + 원/달러 칩(SVG 아이콘, 둘 다 노출) 통화 전환 및 환율 안내. 아이콘은 phosphor-react-native(원 전용 CurrencyKrw, 달러 전용 CurrencyDollar) 사용.
+- `ExchangeRateHint` - 달러 선택 시 환율/로딩 안내
 - `EmptyState` - 빈 상태 표시
 
 ### 기능 컴포넌트
@@ -65,6 +69,10 @@ coin-admin/
 - `ExpenseVisualization` - 데이터 시각화
 
 ## 🔧 개발 가이드
+
+### lib vs utils
+- **lib**: 범용·인프라(에러, 로거, 스토리지, react-query 유틸 등). 앱 비즈니스에 무관한 코드.
+- **utils**: 앱 도메인(날짜·금액 포맷, 검증, 반응형 등). 포맷/검증은 `utils/` 단일 소스 유지. 자세한 역할은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 참고.
 
 ### 코드 스타일
 - TypeScript strict 모드 사용
@@ -103,8 +111,9 @@ npm install
 
 ## 📝 주요 기능 상세
 
-### 고정비 관리
-- 이름, 금액, 결제일 입력
+### 고정비 / 유동비 관리
+- 이름, 금액, 결제일(또는 지출일), 메모(유동비) 입력
+- **금액**: 원(KRW) 또는 달러(USD) 선택 후 입력 — 달러는 실시간 환율로 원화 변환 저장 ([금액·통화 기능 문서](docs/features/amount-currency.md))
 - 실시간 유효성 검사
 - 천 단위 구분자 자동 포맷팅
 
@@ -123,6 +132,17 @@ npm install
 - 모든 인터랙티브 요소에 `accessibilityLabel` 추가
 - 스크린 리더 지원
 - 키보드 네비게이션 지원
+
+## 📄 추가 문서
+
+- [에러 처리](docs/error-handling.md) — 비동기/동기 에러 처리 위치, ErrorBoundary, 모달/환율 실패 시 사용자 노출
+- [아키텍처 (lib vs utils)](docs/ARCHITECTURE.md) — 폴더 역할 정리
+- [금액·통화 기능](docs/features/amount-currency.md) — 원/달러 입력, 환율 API, 환경변수
+
+## 🧪 단위 테스트
+
+- `npm run test` — Jest로 `src/utils/amount.ts`, `src/utils/validation.ts` 단위 테스트 실행
+- 핵심 비즈니스 로직(금액 포맷/변환, 폼 검증)은 위 유틸에 있으며 해당 테스트로 회귀 방지
 
 
 

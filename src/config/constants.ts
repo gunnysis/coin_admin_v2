@@ -49,3 +49,12 @@ export const SUCCESS_MESSAGES = {
   DELETE: '항목이 삭제되었습니다.',
 } as const;
 
+// 환율 (달러 → 원 변환). API_URL은 EXPO_PUBLIC_EXCHANGE_RATE_URL로 오버라이드 가능
+const DEFAULT_EXCHANGE_RATE_URL = 'https://api.frankfurter.app/latest?from=USD&to=KRW';
+export const EXCHANGE_RATE = {
+  USD_KRW_FALLBACK: 1400,
+  API_URL:
+    (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_EXCHANGE_RATE_URL) ||
+    DEFAULT_EXCHANGE_RATE_URL,
+} as const;
+

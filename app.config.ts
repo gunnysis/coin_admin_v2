@@ -1,6 +1,6 @@
 // =========================================================================
 // !! 중요: 새 배포 빌드 전 반드시 이 마케팅 버전을 업데이트하세요 !!
-const MARKETING_VERSION = "2.1.1"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
+const MARKETING_VERSION = "2.2.2"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
 // =========================================================================
 
 // 상수 정의
@@ -82,6 +82,9 @@ export default () => {
     name: envConfig.appName,
     slug: APP_CONSTANTS.APP_SLUG,
     version: MARKETING_VERSION,
+    // OTA 업데이트 대상 구분용. Bare 워크플로에서는 정책 미지원 → 수동으로 버전 문자열 지정
+    // MARKETING_VERSION과 맞춰 두면 같은 앱 버전 빌드에만 OTA가 적용됨
+    runtimeVersion: MARKETING_VERSION,
     orientation: "default", // 가로/세로 모두 지원
     icon: envConfig.icon,
     scheme: APP_CONSTANTS.APP_SCHEME,
@@ -90,6 +93,11 @@ export default () => {
     // EAS Update 설정
     updates: {
       url: `https://u.expo.dev/${APP_CONSTANTS.EAS_PROJECT_ID}`,
+      enabled: true,
+      // 앱 실행 시마다 서버에서 업데이트 확인
+      checkAutomatically: "ON_LOAD",
+      // 새 번들이 준비되면 바로 적용 (다음 앱 재시작 시 적용)
+      fallbackToCacheTimeout: 0,
     },
     // 언어 설정
     locales: {
@@ -98,9 +106,6 @@ export default () => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: envConfig.bundleIdentifier,
-      runtimeVersion: {
-        policy: "appVersion",
-      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -112,7 +117,6 @@ export default () => {
         backgroundColor: UI_CONSTANTS.ADAPTIVE_ICON_BACKGROUND,
       },
       package: envConfig.packageName,
-      runtimeVersion: "1.0.0",
       softwareKeyboardLayoutMode: "pan",
       statusBar: {
         backgroundColor: UI_CONSTANTS.STATUS_BAR_BACKGROUND,

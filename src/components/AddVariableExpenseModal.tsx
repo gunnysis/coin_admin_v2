@@ -23,8 +23,11 @@ import { formatError, logError } from '../utils/errorHandler';
 import { Typography } from './ui/Typography';
 import { InputField } from './ui/InputField';
 import { Button } from './ui/Button';
+import { AmountInputSection } from './ui/AmountInputSection';
 import { SPACING } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { useExchangeRate } from '../hooks/useExchangeRate';
+import { useAmountWithCurrency } from '../hooks/useAmountWithCurrency';
 import { getResponsivePadding } from '../utils/responsive';
 
 interface AddVariableExpenseModalProps {
@@ -62,10 +65,22 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
   const memoInputRef = useRef<TextInput>(null);
   
   const responsivePadding = getResponsivePadding(device, SPACING.xl);
-  
+
+  const { rate: exchangeRate, isLoading: isExchangeRateLoading, isFallback: isExchangeRateFallback } = useExchangeRate();
+  const {
+    amount,
+    formattedAmount,
+    amountCurrency,
+    setAmountCurrency,
+    handleAmountChange: hookHandleAmountChange,
+    getAmountInKrw,
+    isEditMode: isAmountEditMode,
+  } = useAmountWithCurrency({
+    initialAmountKrw: editingItem?.amount,
+    visible,
+  });
+
   const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [formattedAmount, setFormattedAmount] = useState('');
   const [spentDate, setSpentDate] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -78,20 +93,10 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
 
   const isEditMode = useMemo(() => !!editingItem, [editingItem]);
 
-  // #region agent log
-  useEffect(() => {
-    if (visible) {
-      fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AddVariableExpenseModal.tsx:87',message:'Modal opened',data:{visible,isEditMode,editingItem:editingItem?{id:editingItem.id,name:editingItem.name}:null,hasOnUpdate:!!onUpdate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-  }, [visible, isEditMode, editingItem, onUpdate]);
-  // #endregion
-
-  // 폼 초기화
+  // 폼 초기화 (이름, 날짜, 메모, 포커스)
   useEffect(() => {
     if (!visible) {
       setName('');
-      setAmount('');
-      setFormattedAmount('');
       setSpentDate('');
       setSelectedDate(new Date());
       setShowDatePicker(false);
@@ -99,29 +104,18 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
       setValidationErrors({});
       Keyboard.dismiss();
     } else if (editingItem) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AddVariableExpenseModal.tsx:103',message:'Initializing form with editingItem',data:{editingItemId:editingItem.id,editingItemName:editingItem.name,editingItemAmount:editingItem.amount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
       setName(editingItem.name);
-      const amountStr = editingItem.amount.toString();
-      setAmount(amountStr);
-      setFormattedAmount(formatAmount(amountStr));
       setSpentDate(editingItem.spent_date);
-      const date = new Date(editingItem.spent_date);
-      setSelectedDate(date);
+      setSelectedDate(new Date(editingItem.spent_date));
       setMemo(editingItem.memo || '');
       setValidationErrors({});
     } else {
       const today = new Date();
       setSelectedDate(today);
-      const todayStr = getTodayDateString();
-      setSpentDate(todayStr);
+      setSpentDate(getTodayDateString());
       setValidationErrors({});
-      
       const focusDelay = device.isTablet ? MODAL_ANIMATION_DURATION + 100 : MODAL_ANIMATION_DURATION;
-      setTimeout(() => {
-        nameInputRef.current?.focus();
-      }, focusDelay);
+      setTimeout(() => nameInputRef.current?.focus(), focusDelay);
     }
   }, [visible, editingItem, device.isTablet]);
 
@@ -197,68 +191,67 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
     validateField('name', text);
   }, [validateField]);
 
-  const handleAmountChange = useCallback((text: string) => {
-    const numbers = parseAmount(text);
-    setAmount(numbers);
-    const formatted = formatAmount(numbers);
-    setFormattedAmount(formatted);
-    validateField('amount', formatted);
-  }, [validateField]);
+  const handleAmountChange = useCallback(
+    (text: string) => {
+      hookHandleAmountChange(text);
+      validateField('amount', formatAmount(parseAmount(text)));
+    },
+    [validateField, hookHandleAmountChange]
+  );
 
-  // 제출 핸들러
   const handleSubmit = useCallback(async () => {
     const validation = validateExpenseForm(name, amount, spentDate);
-    
     if (!validation.isValid) {
-      Alert.alert(
-        '입력 오류',
-        validation.errorMessage || '입력 정보를 확인해주세요.',
-        [{ text: '확인', style: 'default' }]
-      );
+      Alert.alert('입력 오류', validation.errorMessage || '입력 정보를 확인해주세요.', [
+        { text: '확인', style: 'default' },
+      ]);
+      return;
+    }
+    if (amountCurrency === 'USD' && isExchangeRateLoading) {
+      Alert.alert('안내', '환율을 불러오는 중입니다. 잠시 후 다시 시도해주세요.', [{ text: '확인', style: 'default' }]);
       return;
     }
 
     try {
+      const amountInKrw = getAmountInKrw(exchangeRate);
       const formData: AddVariableExpenseFormData = {
         name: name.trim(),
-        amount: Number(amount),
+        amount: amountInKrw,
         spent_date: spentDate.trim(),
         memo: memo.trim() || undefined,
       };
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AddVariableExpenseModal.tsx:223',message:'handleSubmit called',data:{isEditMode,hasEditingItem:!!editingItem,hasOnUpdate:!!onUpdate,formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       if (isEditMode && editingItem && onUpdate) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AddVariableExpenseModal.tsx:226',message:'Calling onUpdate',data:{editingItemId:editingItem.id,formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        await onUpdate({
-          ...formData,
-          id: editingItem.id,
-        });
+        await onUpdate({ ...formData, id: editingItem.id });
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AddVariableExpenseModal.tsx:232',message:'Calling onAdd instead',data:{reason:!isEditMode?'not edit mode':!editingItem?'no editingItem':!onUpdate?'no onUpdate':'unknown',formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         await onAdd(formData);
       }
-      
       onClose();
     } catch (error) {
       logError(error, isEditMode ? 'UpdateVariableExpense' : 'AddVariableExpense');
       const appError = formatError(error);
-      
-      Alert.alert(
-        '오류 발생',
-        appError.userMessage,
-        [
-          { text: '확인', style: 'default' as const },
-          ...(appError.recoverable ? [{ text: '다시 시도', style: 'default' as const, onPress: handleSubmit }] : []),
-        ]
-      );
+      Alert.alert('오류 발생', appError.userMessage, [
+        { text: '확인', style: 'default' as const },
+        ...(appError.recoverable
+          ? [{ text: '다시 시도', style: 'default' as const, onPress: handleSubmit }]
+          : []),
+      ]);
     }
-  }, [name, amount, spentDate, memo, isEditMode, editingItem, onAdd, onUpdate, onClose]);
+  }, [
+    name,
+    amount,
+    spentDate,
+    memo,
+    amountCurrency,
+    isExchangeRateLoading,
+    getAmountInKrw,
+    exchangeRate,
+    isEditMode,
+    editingItem,
+    onAdd,
+    onUpdate,
+    onClose,
+  ]);
 
   const handleBackdropPress = useCallback(() => {
     if (!isPending) {
@@ -354,19 +347,23 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
                   onSubmitEditing={() => amountInputRef.current?.focus()}
                 />
 
-                {/* 금액 입력 필드 */}
-                <InputField
+                {/* 통화 선택 + 금액 입력 + 환율 안내 */}
+                <AmountInputSection
                   ref={amountInputRef}
-                  label="금액 (원)"
-                  placeholder="예: 15,000"
-                  value={formattedAmount}
-                  onChangeText={handleAmountChange}
+                  amountCurrency={amountCurrency}
+                  onCurrencyChange={setAmountCurrency}
+                  formattedAmount={formattedAmount}
+                  onAmountChange={handleAmountChange}
                   error={validationErrors.amount}
-                  helperText="천 단위 구분자가 자동으로 추가됩니다"
-                  keyboardType="numeric"
-                  editable={!isPending}
+                  disabled={isPending}
+                  currencySelectorDisabled={isAmountEditMode || isPending}
+                  exchangeRate={exchangeRate}
+                  exchangeRateLoading={isExchangeRateLoading}
+                  exchangeRateFallback={isExchangeRateFallback}
                   returnKeyType="next"
                   onSubmitEditing={() => memoInputRef.current?.focus()}
+                  amountHintContext="지출 금액"
+                  onAfterCurrencyChange={() => amountInputRef.current?.focus()}
                 />
 
                 {/* 지출일 선택 필드 */}

@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react';
 import { View } from 'react-native';
-import { VariableExpenseList } from '../../../components/VariableExpenseList';
-import { AddButton } from '../../../components/AddButton';
-import { AddVariableExpenseModal } from '../../../components/AddVariableExpenseModal';
-import { VariableTotalAmountCard } from '../../../components/VariableTotalAmountCard';
-import { VariableMonthExpense, AddVariableExpenseFormData } from '../../../types';
-import { useAppContext } from '../../../contexts/AppContext';
-import { useVariableExpenseHandlers } from '../../../hooks/useVariableExpenseHandlers';
+import { VariableExpenseList } from '@/components/VariableExpenseList';
+import { AddButton } from '@/components/AddButton';
+import { AddVariableExpenseModal } from '@/components/AddVariableExpenseModal';
+import { VariableTotalAmountCard } from '@/components/VariableTotalAmountCard';
+import { VariableMonthExpense, AddVariableExpenseFormData } from '@/types';
+import { useAppContext } from '@/contexts/AppContext';
+import { useVariableExpenseHandlers } from '@/hooks/useVariableExpenseHandlers';
 
 interface VariableExpenseFeatureProps {
   expenses: VariableMonthExpense[];
@@ -63,27 +63,14 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
   }, [openVariableModal]);
 
   const handleAddVariableExpense = React.useCallback(async (data: AddVariableExpenseFormData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VariableExpenseFeature.tsx:59',message:'handleAddVariableExpense called',data:{hasEditingVariableItem:!!editingVariableItem,editingItemId:editingVariableItem?.id,data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     try {
       if (editingVariableItem) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VariableExpenseFeature.tsx:62',message:'Calling handleUpdate',data:{id:editingVariableItem.id,data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
         await handleUpdate({ ...data, id: editingVariableItem.id });
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VariableExpenseFeature.tsx:65',message:'Calling handleAdd',data,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-        // #endregion
         await handleAdd(data);
       }
       closeVariableModal();
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VariableExpenseFeature.tsx:70',message:'Error in handleAddVariableExpense',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
-      // 에러는 모달에서 처리
       throw error;
     }
   }, [editingVariableItem, handleAdd, handleUpdate, closeVariableModal]);

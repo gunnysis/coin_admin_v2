@@ -23,9 +23,6 @@ export * from './validation';
 // Performance
 export * from './performance';
 
-// Format
-export * from './format';
-
 // Hooks
 export * from './hooks';
 

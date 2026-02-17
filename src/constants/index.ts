@@ -1,5 +1,13 @@
 // Re-export from config
-export { PAGINATION, DATE_FORMAT, ANIMATION, TIMING, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants';
+export {
+  PAGINATION,
+  DATE_FORMAT,
+  ANIMATION,
+  TIMING,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  EXCHANGE_RATE,
+} from '../config/constants';
 
 // Legacy exports for backward compatibility
 export const PAGE_SIZE = 10;
@@ -17,6 +25,7 @@ export const QUERY_KEYS = {
   VARIABLE_EXPENSES_COUNT: ['variableExpenses', 'count'] as const,
   VARIABLE_EXPENSES_TOTAL: ['variableExpenses', 'total'] as const,
   VARIABLE_EXPENSES_MONTHLY: ['variableExpenses', 'monthly'] as const,
+  EXCHANGE_RATE: ['exchangeRate', 'USD', 'KRW'] as const,
 } as const;
 
 // 유동비 카테고리 목록

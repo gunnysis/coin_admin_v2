@@ -10,7 +10,8 @@ import { AddButton } from '../AddButton';
 import { AddExpenseModal } from '../AddExpenseModal';
 import { AddVariableExpenseModal } from '../AddVariableExpenseModal';
 import { TabNavigation } from '../TabNavigation';
-import { FixedMonthCost, VariableMonthExpense, AddExpenseFormData, AddVariableExpenseFormData } from '../../types';
+import type { FixedMonthCost, VariableMonthExpense, AddExpenseFormData, AddVariableExpenseFormData } from '../../types';
+import type { FixedExpenseLayoutData, VariableExpenseLayoutData } from '../../types';
 import { useAppContext } from '../../contexts/AppContext';
 import { useExpenseHandlers } from '../../hooks/useExpenseHandlers';
 import { useVariableExpenseHandlers } from '../../hooks/useVariableExpenseHandlers';
@@ -25,28 +26,8 @@ interface TabletLandscapeLayoutProps {
     leftColumn: { maxWidth?: number; marginRight: number };
     rightColumn: { minWidth?: number };
   };
-  // 고정비 데이터
-  fixedExpenses: FixedMonthCost[];
-  fixedTotalAmount: number;
-  fixedIsLoading: boolean;
-  fixedIsInitLoading: boolean;
-  fixedRefreshing: boolean;
-  fixedHasNextPage: boolean;
-  fixedIsFetchingNextPage: boolean;
-  fixedIsDeleting: boolean;
-  onFixedRefresh: () => void;
-  onFixedLoadMore: () => void;
-  // 유동비 데이터
-  variableExpenses: VariableMonthExpense[];
-  variableTotalAmount: number;
-  variableIsLoading: boolean;
-  variableRefreshing: boolean;
-  variableHasNextPage: boolean;
-  variableIsFetchingNextPage: boolean;
-  variableIsDeleting: boolean;
-  onVariableRefresh: () => void;
-  onVariableLoadMore: () => void;
-  // 헤더 렌더링
+  fixedExpenseData: FixedExpenseLayoutData;
+  variableExpenseData: VariableExpenseLayoutData;
   renderHeader: () => React.ReactNode;
 }
 
@@ -55,24 +36,8 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
   containerStyle,
   bottomInset,
   tabletLayoutStyles,
-  fixedExpenses,
-  fixedTotalAmount,
-  fixedIsLoading,
-  fixedIsInitLoading,
-  fixedRefreshing,
-  fixedHasNextPage,
-  fixedIsFetchingNextPage,
-  fixedIsDeleting,
-  onFixedRefresh,
-  onFixedLoadMore,
-  variableExpenses,
-  variableIsLoading,
-  variableRefreshing,
-  variableHasNextPage,
-  variableIsFetchingNextPage,
-  variableIsDeleting,
-  onVariableRefresh,
-  onVariableLoadMore,
+  fixedExpenseData,
+  variableExpenseData,
   renderHeader,
 }) => {
   const {
@@ -90,6 +55,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
     closeFixedModal,
     openVariableModal,
     closeVariableModal,
+    selectedVariableMonth,
   } = useAppContext();
   const {
     handleDelete: handleFixedDelete,
@@ -102,7 +68,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
     handleAdd: handleVariableAdd,
     handleUpdate: handleVariableUpdate,
     isPending: variableIsPending,
-  } = useVariableExpenseHandlers();
+  } = useVariableExpenseHandlers(selectedVariableMonth);
 
   const handleFixedEdit = React.useCallback(
     (item: FixedMonthCost) => {
@@ -161,25 +127,25 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
           <View className="flex-1 flex-row" style={tabletLayoutStyles.grid}>
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
               <TotalAmountCard
-                totalAmount={fixedTotalAmount}
+                totalAmount={fixedExpenseData.totalAmount}
                 isExpanded={isExpanded}
-                onToggleExpand={onToggleExpand}
-                expenses={fixedExpenses}
+                onToggleExpand={toggleExpand}
+                expenses={fixedExpenseData.expenses}
               />
             </View>
             <View className="flex-1" style={tabletLayoutStyles.rightColumn}>
               <ExpenseList
-                expenses={fixedExpenses}
-                isLoading={fixedIsLoading}
-                isInitLoading={fixedIsInitLoading}
-                refreshing={fixedRefreshing}
-                onRefresh={onFixedRefresh}
+                expenses={fixedExpenseData.expenses}
+                isLoading={fixedExpenseData.isLoading}
+                isInitLoading={fixedExpenseData.isInitLoading}
+                refreshing={fixedExpenseData.refreshing}
+                onRefresh={fixedExpenseData.onRefresh}
                 onDelete={handleFixedDelete}
                 onEdit={handleFixedEdit}
-                hasNextPage={fixedHasNextPage}
-                isFetchingNextPage={fixedIsFetchingNextPage}
-                onLoadMore={onFixedLoadMore}
-                isDeleting={fixedIsDeleting}
+                hasNextPage={fixedExpenseData.hasNextPage}
+                isFetchingNextPage={fixedExpenseData.isFetchingNextPage}
+                onLoadMore={fixedExpenseData.onLoadMore}
+                isDeleting={fixedExpenseData.isDeleting}
                 bottomInset={bottomInset}
                 isTabletLandscape={true}
               />
@@ -194,25 +160,25 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
           <View className="flex-1 flex-row" style={tabletLayoutStyles.grid}>
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
               <VariableTotalAmountCard
-                totalAmount={variableTotalAmount}
+                totalAmount={variableExpenseData.totalAmount}
                 isExpanded={isVariableExpanded}
                 onToggleExpand={toggleVariableExpanded}
-                expenses={variableExpenses}
+                expenses={variableExpenseData.expenses}
               />
             </View>
             <View className="flex-1" style={tabletLayoutStyles.rightColumn}>
               <VariableExpenseList
-                expenses={variableExpenses}
-                isLoading={variableIsLoading}
-                isInitLoading={fixedIsInitLoading}
-                refreshing={variableRefreshing}
-                onRefresh={onVariableRefresh}
+                expenses={variableExpenseData.expenses}
+                isLoading={variableExpenseData.isLoading}
+                isInitLoading={variableExpenseData.isInitLoading}
+                refreshing={variableExpenseData.refreshing}
+                onRefresh={variableExpenseData.onRefresh}
                 onDelete={handleVariableDelete}
                 onEdit={handleVariableEdit}
-                hasNextPage={variableHasNextPage}
-                isFetchingNextPage={variableIsFetchingNextPage}
-                onLoadMore={onVariableLoadMore}
-                isDeleting={variableIsDeleting}
+                hasNextPage={variableExpenseData.hasNextPage}
+                isFetchingNextPage={variableExpenseData.isFetchingNextPage}
+                onLoadMore={variableExpenseData.onLoadMore}
+                isDeleting={variableExpenseData.isDeleting}
                 bottomInset={bottomInset}
                 isTabletLandscape={true}
               />

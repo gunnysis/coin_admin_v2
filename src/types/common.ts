@@ -61,3 +61,6 @@ export interface QueryOptions<T extends string = string> {
   filters?: FilterOption[];
 }
 
+/** 금액 입력 통화 (원/달러) */
+export type AmountCurrency = 'KRW' | 'USD';
+
