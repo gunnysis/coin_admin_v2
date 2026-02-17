@@ -16,9 +16,6 @@ export interface AmountInputSectionProps {
   error?: string;
   disabled?: boolean;
   currencySelectorDisabled?: boolean;
-  exchangeRate?: number;
-  exchangeRateLoading?: boolean;
-  exchangeRateFallback?: boolean;
   returnKeyType?: 'done' | 'next';
   onSubmitEditing?: () => void;
   amountHintContext?: string;
@@ -40,9 +37,6 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
       error,
       disabled = false,
       currencySelectorDisabled = false,
-      exchangeRate = 0,
-      exchangeRateLoading = false,
-      exchangeRateFallback = false,
       returnKeyType = 'done',
       onSubmitEditing = () => Keyboard.dismiss(),
       amountHintContext = '금액',
@@ -126,10 +120,11 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
         <Pressable
           onPress={isKrw ? switchToUsd : switchToKrw}
           disabled={currencySelectorDisabled}
+          hitSlop={{ top: SPACING.sm, bottom: SPACING.sm, left: SPACING.sm, right: SPACING.sm }}
           style={({ pressed }) => ({
             marginTop: SPACING.sm,
             paddingVertical: SPACING.sm,
-            paddingHorizontal: SPACING.xs,
+            paddingHorizontal: SPACING.sm,
             minHeight: MIN_TOUCH_TARGET,
             justifyContent: 'center',
             opacity: pressed ? 0.85 : 1,

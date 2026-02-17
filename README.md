@@ -1,6 +1,21 @@
 # 코인관리자 (Coin Admin)
 
-월 고정비를 효율적으로 관리하는 React Native 모바일 애플리케이션입니다.
+월 고정비와 일별 유동비를 효율적으로 관리하는 React Native 모바일 애플리케이션입니다. 원/달러 이중 통화 입력과 실시간 환율 변환을 지원합니다.
+
+## 🚀 빠른 시작
+
+```bash
+# 저장소 클론 후 의존성 설치
+npm install
+
+# 개발 서버 실행
+npm start
+
+# 플랫폼별 실행 (개발 서버 실행 중 터미널에서 키 입력 또는 별도 터미널)
+npm run android   # Android
+npm run ios       # iOS (macOS)
+npm run web       # 웹 (기본 http://localhost:8081)
+```
 
 ## 📱 주요 기능
 
@@ -21,11 +36,16 @@
 - **TypeScript** 5.9.2
 - **React** 19.1.0
 
+### 스타일·상태·데이터
+- **Nativewind / Tailwind** — 스타일링
+- **TanStack React Query v5** — 서버/비동기 상태, 무한 스크롤 페이지네이션
+- **Expo SQLite** — 로컬 DB
+- **Phosphor Icons** — 아이콘
+
 ## 📋 사전 요구사항
 
 - Node.js 18.x 이상
 - npm 또는 yarn
-- Expo CLI
 - Android Studio (Android 개발용)
 - Xcode (iOS 개발용, macOS만)
 
@@ -34,76 +54,123 @@
 ```
 coin-admin/
 ├── src/
-│   ├── app/              # 메인 앱 컴포넌트
+│   ├── app/              # 메인 앱 진입점
 │   ├── assets/           # 이미지 및 리소스
-│   ├── components/       # 재사용 가능한 컴포넌트
-│   │   ├── ui/          # UI 기본 컴포넌트
-│   │   └── ...          # 기능별 컴포넌트
-│   ├── constants/        # 상수 정의
-│   ├── database/         # 데이터베이스 로직
+│   ├── components/       # 재사용 컴포넌트
+│   │   ├── ui/           # UI 기본 컴포넌트
+│   │   ├── layouts/      # 반응형 레이아웃 (Phone, TabletPortrait, TabletLandscape)
+│   │   └── ...           # 기능별 컴포넌트
+│   ├── config/           # 앱 설정 (상수, queryClient)
+│   ├── constants/        # 상수·테마·쿼리 키
+│   ├── contexts/         # React Context (AppContext 등)
+│   ├── database/         # SQLite·DB 로직
+│   ├── features/         # 도메인별 기능
+│   │   ├── fixed-expenses/
+│   │   └── variable-expenses/
 │   ├── hooks/            # 커스텀 훅
-│   ├── types/            # TypeScript 타입 정의
-│   └── utils/            # 유틸리티 함수
-├── android/              # Android 네이티브 코드
-├── app.config.ts         # Expo 설정
-├── package.json          # 프로젝트 의존성
-└── tsconfig.json         # TypeScript 설정
+│   ├── lib/              # 인프라 유틸 (에러, 로거, 스토리지, react-query 헬퍼)
+│   ├── types/            # TypeScript 타입
+│   └── utils/            # 도메인 유틸 (금액·날짜 포맷, 검증, 반응형)
+├── docs/                 # 상세 문서
+├── e2e/                  # Playwright E2E 스펙
+├── android/              # Android 네이티브
+├── app.config.ts         # Expo·EAS 설정 (버전: 2.2.2)
+├── package.json
+└── tsconfig.json
 ```
+
+## ⌨️ 개발 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `npm start` | Expo 개발 서버 실행 |
+| `npm run android` | Android 에뮬레이터/기기 실행 |
+| `npm run ios` | iOS 시뮬레이터 실행 (macOS) |
+| `npm run web` | 웹 빌드 실행 (기본 8081) |
+| `npm test` | Jest 단위 테스트 실행 |
+| `npm run test:e2e` | E2E: 웹 서버 자동 기동 후 Playwright 실행 (포트 8081 비어 있어야 함, 최대 약 3분) |
+| `npm run test:e2e:run` | E2E: 서버 없이 테스트만 실행 (`npm run web` 또는 `npm run web:clear` 실행 중인 터미널이 있을 때). 포트 변경 시 `E2E_BASE_URL=http://localhost:8082` 등으로 지정 |
 
 ## 🎨 주요 컴포넌트
 
 ### UI 컴포넌트
-- `Typography` - 텍스트 스타일링 컴포넌트
-- `Button` - 버튼 컴포넌트
-- `Card` - 카드 컨테이너
-- `InputField` - 입력 필드
-- `AmountInputSection` - 금액 입력(기본 원화)이 주인공. "달러로 입력"/"원으로 입력" 단일 텍스트 링크로 통화 전환. 환율은 화면에 표시하지 않음.
-- `ExchangeRateHint` - 환율 안내 컴포넌트 (현재 금액 섹션에서는 미사용, 필요 시 재사용 가능)
-- `EmptyState` - 빈 상태 표시
+- `Typography` — 텍스트 스타일
+- `Button` — 버튼
+- `Card` — 카드 컨테이너
+- `InputField` — 입력 필드
+- `AmountInputSection` — 금액 입력(기본 원화). "달러로 입력"/"원으로 입력" 텍스트 링크로 통화 전환. 환율은 별도 표시 없음
+- `ExchangeRateHint` — 환율 안내 (필요 시 재사용)
+- `EmptyState` — 빈 상태 표시
 
 ### 기능 컴포넌트
-- `ExpenseList` - 고정비 목록
-- `ExpenseItem` - 고정비 항목
-- `AddExpenseModal` - 추가/수정 모달
-- `TotalAmountCard` - 총액 카드
-- `ExpenseVisualization` - 데이터 시각화
+- `ExpenseList` / `ExpenseItem` — 고정비 목록·항목
+- `AddExpenseModal` — 고정비 추가/수정 모달
+- `VariableExpenseList` / `VariableExpenseItem` — 유동비 목록·항목
+- `AddVariableExpenseModal` — 유동비 추가/수정 모달
+- `TotalAmountCard` / `VariableTotalAmountCard` — 총액 카드
+- `ExpenseVisualization` / `VariableExpenseVisualization` — 데이터 시각화
 
 ## 🔧 개발 가이드
 
 ### lib vs utils
-- **lib**: 범용·인프라(에러, 로거, 스토리지, react-query 유틸 등). 앱 비즈니스에 무관한 코드.
-- **utils**: 앱 도메인(날짜·금액 포맷, 검증, 반응형 등). 포맷/검증은 `utils/` 단일 소스 유지. 자세한 역할은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 참고.
+- **lib** (`src/lib/`): 범용·인프라(에러, 로거, 스토리지, react-query 유틸). 앱 비즈니스에 무관한 코드.
+- **utils** (`src/utils/`): 앱 도메인(날짜·금액 포맷, 검증, 반응형). 포맷/검증은 여기서 단일 소스 유지. 자세한 역할은 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) 참고.
 
 ### 코드 스타일
-- TypeScript strict 모드 사용
-- 함수형 컴포넌트 및 Hooks 사용
-- React.memo, useMemo, useCallback을 활용한 성능 최적화
+- TypeScript strict 모드
+- 함수형 컴포넌트 및 Hooks
+- React.memo, useMemo, useCallback 활용
 
 ### 데이터베이스
-- SQLite를 사용한 로컬 데이터 저장
-- 페이지네이션 지원
-- Optimistic Update 패턴 적용
+- SQLite 로컬 저장, React Query 캐시·페이지네이션
+- Optimistic Update로 즉각적인 UI 반영
 
 ### 상태 관리
-- React Query를 사용한 서버 상태 관리
-- 로컬 상태는 useState, useReducer 사용
+- **전역 UI**: React Context (`AppContext`)
+- **비동기/서버 상태**: TanStack React Query v5 (`useInfiniteQuery`, 페이지 크기 10)
+- **로컬**: useState, useReducer
 
-### 반응형 디자인
-- `useDeviceDimensions` 훅을 통한 디바이스 감지
-- 태블릿 가로/세로 모드 지원
-- 동적 폰트 크기 및 패딩 조정
+### 반응형
+- `useDeviceDimensions` 훅으로 디바이스 감지
+- `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout` 사용
 
 ### 버전 관리
-- `app.config.ts`의 `MARKETING_VERSION`을 업데이트하여 버전 관리
-- 프로덕션 빌드 전 반드시 버전 업데이트 필요
+- `app.config.ts`의 `MARKETING_VERSION`(현재 2.2.2) 업데이트
+- 프로덕션 빌드 전 버전 업데이트 권장
 
 ## 🧪 테스트
 
+### 단위 테스트 (Jest)
+- `npm test` — `src/utils/amount.ts`, `src/utils/validation.ts` 등 단위 테스트
+- 금액 포맷/변환, 폼 검증 등 핵심 로직 회귀 방지
+
+### E2E 테스트 (Playwright)
+- **대상**: Expo 웹 빌드 (`npm run web` → localhost:8081)
+- **최초 1회**: `npx playwright install`(또는 `npx playwright install chromium`) 로 브라우저 설치
+- **실행**
+  - **방법 A (수동)**: 터미널 1에서 `npm run web` 또는 `npm run web:clear` → 터미널 2에서 `npm run test:e2e:run`
+  - **방법 B (한 번에)**: `npm run test:e2e` — 웹 서버 자동 기동 후 Playwright 실행 (포트 8081 비어 있어야 함)
+- **다른 포트 사용 시**: `E2E_BASE_URL=http://localhost:<포트> npm run test:e2e:run`
+- **상세**: [docs/e2e-testing.md](docs/e2e-testing.md) — 시나리오, 제한 사항(웹 날짜 선택 등), 실패 시 체크리스트
+
+## 🔧 문제 해결 (캐시·의존성)
+
+- **Metro "Unable to deserialize cloned data" / 웹 번들 오류**: `npm run web:clear`(또는 `npx expo start --web --clear`)로 Metro 캐시를 비운 뒤 웹을 다시 띄운다. 반복되면 OS 임시 디렉터리 내 `metro-file-map-*` 파일을 수동 삭제 후 동일 명령 실행. ([E2E 테스트](docs/e2e-testing.md) 문서의 "Metro 캐시" 섹션 참고.)
+
+빌드/실행 오류 시 아래 순서로 시도해 보세요.
+
 ```bash
-# 캐시 클리어
+# 캐시 클리어 후 웹 export
 npx expo export -c
 
-# 의존성 재설치
+# 의존성 재설치 (Windows PowerShell)
+Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json
+npm cache clean --force
+npm install
+```
+
+Unix/macOS:
+```bash
 rm -rf node_modules package-lock.json
 npm cache clean --force
 npm install
@@ -113,36 +180,30 @@ npm install
 
 ### 고정비 / 유동비 관리
 - 이름, 금액, 결제일(또는 지출일), 메모(유동비) 입력
-- **금액**: 원(KRW) 또는 달러(USD) 선택 후 입력 — 달러는 실시간 환율로 원화 변환 저장 ([금액·통화 기능 문서](docs/features/amount-currency.md))
-- 실시간 유효성 검사
-- 천 단위 구분자 자동 포맷팅
+- **금액**: 원(KRW) 또는 달러(USD) 선택 후 입력 — 달러는 실시간 환율로 원화 변환 저장 ([금액·통화 기능](docs/features/amount-currency.md))
+- 실시간 유효성 검사, 천 단위 구분자 자동 포맷팅
 
 ### 데이터 시각화
-- 금액별 그룹화 (고액/중액/저액)
-- 항목별 비율 표시
-- Progress Bar 애니메이션
+- 금액별 그룹화 (고액/중액/저액), 항목별 비율, Progress Bar 애니메이션
 
-### 성능 최적화
-- 페이지네이션으로 대량 데이터 처리
-- React.memo를 통한 불필요한 리렌더링 방지
-- Optimistic Update로 즉각적인 UI 반응
+### 성능
+- 페이지네이션, React.memo, Optimistic Update
+
+## 🚀 배포
+
+- **앱 버전**: `app.config.ts`의 `MARKETING_VERSION`(현재 2.2.2)에서 관리
+- **환경**: development / preview / production (각각 별도 번들 ID)
+- **EAS Update**: `checkAutomatically: "ON_LOAD"` 로 OTA 업데이트 지원
+- **Android**: minSdk 24, targetSdk 34
 
 ## 🔒 접근성
 
-- 모든 인터랙티브 요소에 `accessibilityLabel` 추가
-- 스크린 리더 지원
-- 키보드 네비게이션 지원
+- 인터랙티브 요소에 `accessibilityLabel` 추가 (웹에서는 `aria-label`로 매핑)
+- 스크린 리더·키보드 네비게이션 지원
 
 ## 📄 추가 문서
 
-- [에러 처리](docs/error-handling.md) — 비동기/동기 에러 처리 위치, ErrorBoundary, 모달/환율 실패 시 사용자 노출
+- [에러 처리](docs/error-handling.md) — 비동기/동기 에러, ErrorBoundary, 모달/환율 실패 시 사용자 노출
 - [아키텍처 (lib vs utils)](docs/ARCHITECTURE.md) — 폴더 역할 정리
 - [금액·통화 기능](docs/features/amount-currency.md) — 원/달러 입력, 환율 API, 환경변수
-
-## 🧪 단위 테스트
-
-- `npm run test` — Jest로 `src/utils/amount.ts`, `src/utils/validation.ts` 단위 테스트 실행
-- 핵심 비즈니스 로직(금액 포맷/변환, 폼 검증)은 위 유틸에 있으며 해당 테스트로 회귀 방지
-
-
-
+- [E2E 테스트](docs/e2e-testing.md) — Playwright 시나리오 및 실행 방법

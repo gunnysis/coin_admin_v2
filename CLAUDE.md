@@ -17,6 +17,8 @@ npm run ios        # Run on iOS
 npm run web        # Run on web
 npm test           # Run all Jest tests
 npx jest --testPathPattern="amount" # Run a single test file
+npm run test:e2e   # E2E: start web server + Playwright (max 3min). Port 8081 must be free.
+npm run test:e2e:run  # E2E: run only (no server). Use after `npm run web` in another terminal. Override: E2E_BASE_URL=http://localhost:8082
 ```
 
 ## Architecture
@@ -34,13 +36,13 @@ Features live in `src/features/{domain}/components/`. Each feature component (e.
 - **Component state:** useState/useReducer for local concerns
 
 ### Currency & Amount Handling
-All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`.
+All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/features/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
 
 ### Responsive Layouts
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`.
 
 ### Data Layer
-SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns.
+SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
 
 ## Key Constants
 
@@ -56,7 +58,8 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Testing
 
-Jest with `ts-jest` preset. Tests in `src/utils/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
+- **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
+- **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
 
 ## Deployment
 

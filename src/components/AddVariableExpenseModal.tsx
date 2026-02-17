@@ -356,10 +356,7 @@ export const AddVariableExpenseModal: React.FC<AddVariableExpenseModalProps> = (
                   onAmountChange={handleAmountChange}
                   error={validationErrors.amount}
                   disabled={isPending}
-                  currencySelectorDisabled={isAmountEditMode || isPending}
-                  exchangeRate={exchangeRate}
-                  exchangeRateLoading={isExchangeRateLoading}
-                  exchangeRateFallback={isExchangeRateFallback}
+                  currencySelectorDisabled={isPending}
                   returnKeyType="next"
                   onSubmitEditing={() => memoInputRef.current?.focus()}
                   amountHintContext="지출 금액"

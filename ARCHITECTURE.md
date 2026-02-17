@@ -118,5 +118,5 @@ src/
 - Feature 전체 플로우
 
 ### E2E 테스트
-- 주요 사용자 시나리오
+- Playwright 기반 웹 E2E — 시나리오·실행 방법은 [docs/e2e-testing.md](docs/e2e-testing.md) 참고
 

@@ -19,9 +19,6 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
 }) => {
   const device = useDeviceDimensions();
   const responsivePadding = getResponsivePadding(device, SPACING.base);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TabNavigation.tsx:22',message:'Component render',data:{activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   // Initialize with fixed values, update via useEffect
   const indicatorAnim = useRef(new Animated.Value(0)).current;
   const fixedOpacity = useRef(new Animated.Value(1)).current;
@@ -36,10 +33,6 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
   );
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'TabNavigation.tsx:32',message:'useEffect triggered',data:{activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
-    
     const toValue = activeTab === 'fixed' ? 0 : 1;
     
     Animated.parallel([
