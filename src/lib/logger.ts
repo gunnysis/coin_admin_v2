@@ -30,9 +30,12 @@ class Logger {
       case 'warn':
         console.warn(logMessage, context || '');
         break;
-      case 'error':
-        console.error(logMessage, context || '');
+      case 'error': {
+        const err = context?.error as { message?: string } | undefined;
+        const detail = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : '';
+        console.error(logMessage, detail ? `${detail}` : '', context || '');
         break;
+      }
     }
 
     // 프로덕션에서는 에러만 외부 서비스로 전송

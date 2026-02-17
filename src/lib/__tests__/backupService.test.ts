@@ -35,12 +35,12 @@ describe('backupService', () => {
         id: 'id1',
         name: 'name1',
         createdAt: snapshot.meta.createdAt,
-        source: 'googleDrive',
+        source: 'local',
       } as BackupLocation;
     });
 
     const adapter: IBackupStorageAdapter = {
-      source: 'googleDrive',
+      source: 'local',
       save,
       load: jest.fn(),
     };
@@ -53,7 +53,7 @@ describe('backupService', () => {
 
   it('restoreBackup throws on incompatible schemaVersion', async () => {
     const adapter: IBackupStorageAdapter = {
-      source: 'googleDrive',
+      source: 'local',
       save: jest.fn(),
       load: jest.fn(async () => ({
         meta: {
@@ -72,7 +72,7 @@ describe('backupService', () => {
         id: 'id',
         name: 'name',
         createdAt: new Date().toISOString(),
-        source: 'googleDrive',
+        source: 'local',
       }),
     ).rejects.toThrow(/호환되지 않는 백업/);
   });

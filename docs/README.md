@@ -41,7 +41,7 @@
 
 | 문서 | 설명 |
 |------|------|
-| [backup-restore.md](backup-restore.md) | Android 백업/복구 + Google Drive 연동 설계·구현 |
+| [backup-restore.md](backup-restore.md) | 로컬 백업/복구 설계·구현 (expo-file-system, sharing, document-picker) |
 
 ---
 
@@ -58,3 +58,7 @@
 | 문서 | 설명 |
 |------|------|
 | [PAST_IMPLEMENTATIONS.md](PAST_IMPLEMENTATIONS.md) | 유동비 월별 Phase 1 구현·리팩토링 요약 (참고용) |
+
+---
+
+**참고:** 프로젝트 루트 [CLAUDE.md](../CLAUDE.md)에 명령어·아키텍처·테스트·배포 요약이 정리되어 있습니다.

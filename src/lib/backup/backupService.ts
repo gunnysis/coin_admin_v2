@@ -1,3 +1,6 @@
+/**
+ * 백업/복구 서비스: 스냅샷 생성, 어댑터를 통한 저장/로드, schemaVersion 검증, DB 트랜잭션 복구.
+ */
 import { Platform } from 'react-native';
 import { getDatabase } from '../../database/db';
 import type { FixedMonthCost, VariableMonthExpense } from '../../types/expenses';

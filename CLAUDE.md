@@ -42,7 +42,7 @@ All amounts are stored as **KRW integers** in the database. Users can input in K
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`.
 
 ### Data Layer
-SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
+SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`); 로컬 파일 백업은 expo-file-system + expo-sharing, 복구는 expo-document-picker. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
 
 ## Key Constants
 
@@ -59,17 +59,17 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Testing
 
-- **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
+- **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
 - **testID:** `src/utils/test-utils.ts` — `getTestProps(id)` returns `data-testid` (web) / `testID` (native). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
 - **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
 
 ## Documentation
 
-- **Index:** `docs/README.md` — 7 docs: development (architecture + error handling), amount-currency, variable-expense-month, e2e-testing, plans (refactor + design), guides (previous month, PowerShell), PAST_IMPLEMENTATIONS.
+- **Index:** `docs/README.md` — 8 docs: development (architecture + error handling), amount-currency, variable-expense-month, e2e-testing, plans (refactor + design), backup-restore (로컬 백업/복구), guides (previous month, PowerShell), PAST_IMPLEMENTATIONS.
 
 ## Deployment
 
-- App version managed in `app.config.ts` (currently `2.2.2`)
+- App version managed in `app.config.ts` (currently `2.3.0`)
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`
 - Android: minSdk 24, targetSdk 34

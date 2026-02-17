@@ -1,4 +1,4 @@
-// Re-export from config
+// Re-export from config (single source of truth)
 export {
   PAGINATION,
   DATE_FORMAT,
@@ -9,10 +9,11 @@ export {
   EXCHANGE_RATE,
 } from '../config/constants';
 
-// Legacy exports for backward compatibility
-export const PAGE_SIZE = 10;
-export const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-export const DATE_FORMAT_PLACEHOLDER = 'YYYY-MM-DD';
+// Legacy aliases: config와 동기화 유지
+import { PAGINATION, DATE_FORMAT } from '../config/constants';
+export const PAGE_SIZE = PAGINATION.PAGE_SIZE;
+export const DATE_FORMAT_REGEX = DATE_FORMAT.REGEX;
+export const DATE_FORMAT_PLACEHOLDER = DATE_FORMAT.PLACEHOLDER;
 
 export { QUERY_KEYS } from '../config/queryKeys';
 

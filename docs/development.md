@@ -8,7 +8,7 @@
 
 ### lib vs utils
 
-- **`src/lib/`**: 범용·인프라용 유틸. 에러 타입/정규화(`errors`), 로거(`logger`), React Query 유틸(`react-query`), 스토리지(`storage`), DB 헬퍼(`db-utils`) 등 앱에 종속되지 않는 유틸. hooks·서비스 레이어에서 사용.
+- **`src/lib/`**: 범용·인프라용 유틸. 에러 타입/정규화(`errors`), 로거(`logger`), React Query 유틸(`react-query`), 스토리지(`storage`), DB 헬퍼(`db-utils`), **백업**(`backup/`: 스냅샷 타입, 어댑터 인터페이스, `backupService`, `LocalBackupAdapter`) 등 앱에 종속되지 않는 유틸. hooks·서비스 레이어에서 사용.
 - **`src/utils/`**: 앱 도메인 유틸. 날짜·금액 포맷(`date`, `format`, `amount`), 지출 폼 검증(`validation`), 반응형 계산(`responsive`), 에러 메시지 포맷(`errorHandler`), E2E용 `getTestProps`(`test-utils`) 등. 컴포넌트·훅에서 사용.
 
 포맷팅(금액, 날짜)은 **단일 소스**로 `utils/format.ts`, `utils/date.ts` 등에만 두고, `lib`에서는 재export하지 않습니다.
@@ -45,3 +45,4 @@
 | 새로고침 실패 | App / 핸들러 | 없음 (로딩만 해제) |
 | 환율 API 실패 | useExchangeRate | fallback 환율 |
 | 렌더/동기 예외 | ErrorBoundary | 폴백 UI + 로그 |
+| 백업/복구 실패 | BackupRestoreSection | 카드 내 에러 문구 |
