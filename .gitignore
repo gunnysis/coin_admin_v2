@@ -14,7 +14,7 @@ credentials/ios/
 src/utils/firebase.config.ts
 
 # backup
-backup/
+/backup/
 
 # dependencies
 node_modules/

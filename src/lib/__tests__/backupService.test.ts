@@ -2,6 +2,10 @@ import { exportBackup, restoreBackup, createCurrentSnapshot } from '../backup/ba
 import type { BackupSnapshot } from '../backup/types';
 import type { IBackupStorageAdapter, BackupLocation } from '../backup/storageAdapter';
 
+jest.mock('react-native', () => ({
+  Platform: { OS: 'android' },
+}));
+
 jest.mock('../../database/db', () => ({
   getDatabase: async () => ({
     getAllAsync: jest.fn().mockResolvedValue([]),
@@ -13,6 +17,15 @@ jest.mock('../../database/db', () => ({
 jest.mock('../backup/constants', () => ({
   BACKUP_SCHEMA_VERSION: 1,
   getBackupAppVersion: () => 'test-version',
+}));
+
+jest.mock('../logger', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 describe('backupService', () => {
@@ -47,10 +60,10 @@ describe('backupService', () => {
           schemaVersion: 999,
           appVersion: 'x',
           createdAt: new Date().toISOString(),
-          platform: 'android',
+          platform: 'android' as const,
         },
         database: { fixedExpenses: [], variableExpenses: [] },
-        settings: { defaultCurrency: 'KRW' },
+        settings: { defaultCurrency: 'KRW' as const },
       })),
     };
 
