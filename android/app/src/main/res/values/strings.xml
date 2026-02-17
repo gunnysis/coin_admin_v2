@@ -1,4 +1,4 @@
 <resources>
   <string name="app_name">코인관리자</string>
-  <string name="expo_runtime_version">2.2.2</string>
+  <string name="expo_runtime_version">2.3.0</string>
 </resources>
