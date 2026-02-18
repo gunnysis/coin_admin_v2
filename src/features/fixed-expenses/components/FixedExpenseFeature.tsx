@@ -1,5 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
+import { SPACING } from '@/constants/theme';
 import { TotalAmountCard } from '@/components/TotalAmountCard';
 import { ExpenseList } from '@/components/ExpenseList';
 import { AddButton } from '@/components/AddButton';
@@ -76,27 +77,29 @@ export const FixedExpenseFeature = React.memo<FixedExpenseFeatureProps>(({
   }, [editingFixedItem, handleAdd, handleUpdate, closeFixedModal]);
 
   return (
-    <View className="flex-1" style={containerStyle}>
+    <View className="flex-1">
       <TotalAmountCard
         totalAmount={totalAmount}
         isExpanded={isExpanded}
         onToggleExpand={toggleExpand}
         expenses={expenses}
       />
-      <ExpenseList
-        expenses={expenses}
-        isLoading={isLoading}
-        isInitLoading={isInitLoading}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onLoadMore={onLoadMore}
-        isDeleting={isDeleting}
-        bottomInset={bottomInset}
-      />
+      <View style={{ flex: 1, marginTop: SPACING.lg }}>
+        <ExpenseList
+          expenses={expenses}
+          isLoading={isLoading}
+          isInitLoading={isInitLoading}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+          isDeleting={isDeleting}
+          bottomInset={bottomInset}
+        />
+      </View>
       <AddButton
         onPress={() => openFixedModal()}
         disabled={isPending}

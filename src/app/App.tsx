@@ -1,11 +1,12 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Gear } from 'phosphor-react-native';
 import { useAppExpenseData } from '../hooks/useAppExpenseData';
 import { useAppContext } from '../contexts/AppContext';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { getContainerStyle, getResponsivePadding } from '../utils/responsive';
-import { SPACING } from '../constants/theme';
+import { SPACING, COLORS, SHADOWS, ICON_SIZES } from '../constants/theme';
 import { Typography } from '../components/ui/Typography';
 import { PhoneLayout } from '../components/layouts/PhoneLayout';
 import { TabletPortraitLayout } from '../components/layouts/TabletPortraitLayout';
@@ -79,10 +80,14 @@ export default function App() {
     [device, responsivePadding]
   );
 
-  // 헤더 컴포넌트
+  // 헤더 컴포넌트 (앱 크롬: white + border, 설정 버튼 44pt 터치 영역)
   const renderHeader = useCallback(
     () => (
-      <View className="bg-slate-50">
+      <View
+        className="bg-white border-b border-slate-200"
+        style={SHADOWS.sm}
+        accessibilityRole="header"
+      >
         <View
           className="flex-row items-center justify-between"
           style={{
@@ -90,20 +95,31 @@ export default function App() {
             paddingTop: device.isTablet ? SPACING['2xl'] : SPACING.xl,
             paddingBottom: device.isTablet ? SPACING.base : SPACING.md,
           }}
-          accessibilityRole="header"
         >
-          <Typography variant="h2" color="textPrimary" align="left" accessibilityRole="header">
+          <Typography variant="h2" color="textPrimary" align="left">
             월 지출 관리
           </Typography>
-          <Typography
-            variant="body2"
-            color="primary"
-            weight="semibold"
+          <Pressable
             onPress={() => setShowSettings(true)}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: SPACING.sm,
+              minHeight: 44,
+              minWidth: 44,
+              justifyContent: 'center',
+              paddingHorizontal: SPACING.sm,
+              paddingVertical: SPACING.sm,
+              opacity: pressed ? 0.7 : 1,
+            })}
             accessibilityRole="button"
+            accessibilityLabel="설정"
           >
-            설정
-          </Typography>
+            <Gear size={ICON_SIZES.base} color={COLORS.primary} weight="regular" />
+            <Typography variant="body2" color="primary" weight="semibold">
+              설정
+            </Typography>
+          </Pressable>
         </View>
       </View>
     ),

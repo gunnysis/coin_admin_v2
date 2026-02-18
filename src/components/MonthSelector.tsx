@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Typography } from './ui/Typography';
-import { SPACING } from '../constants/theme';
+import { SPACING, COLORS, SHADOWS } from '../constants/theme';
 import { useMonthNavigation } from '../hooks/useMonthNavigation';
 import { formatMonthToDisplay } from '../utils/date';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
@@ -198,29 +198,19 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
 
 const styles = StyleSheet.create({
   navigationButton: {
-    // 원형 배경으로 클릭 영역 명확화
-    backgroundColor: 'rgba(0, 0, 0, 0.03)', // 매우 연한 배경
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    backgroundColor: COLORS.gray100,
+    ...SHADOWS.sm,
   },
   buttonActive: {
     opacity: 1,
   },
   buttonDisabled: {
     opacity: 0.3,
-    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+    backgroundColor: COLORS.gray50,
   },
   currentMonthBadge: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    // primary 10% opacity (theme primary #2563eb)
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
   },
 });
 

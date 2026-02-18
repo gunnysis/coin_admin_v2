@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { SPACING } from '../../constants/theme';
 import { TotalAmountCard } from '../TotalAmountCard';
 import { ExpenseList } from '../ExpenseList';
 import { VariableExpenseList } from '../VariableExpenseList';
@@ -124,7 +125,10 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
         {activeTab === 'fixed' ? (
-          <View className="flex-1 flex-row" style={tabletLayoutStyles.grid}>
+          <View
+            className="flex-1 flex-row"
+            style={[tabletLayoutStyles.grid, { marginTop: SPACING.md }]}
+          >
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
               <TotalAmountCard
                 totalAmount={fixedExpenseData.totalAmount}
@@ -157,7 +161,10 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
             />
           </View>
         ) : (
-          <View className="flex-1 flex-row" style={tabletLayoutStyles.grid}>
+          <View
+            className="flex-1 flex-row"
+            style={[tabletLayoutStyles.grid, { marginTop: SPACING.md }]}
+          >
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
               <VariableTotalAmountCard
                 totalAmount={variableExpenseData.totalAmount}

@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
 import { Typography } from './Typography';
-import { SPACING } from '../../constants/theme';
+import { SPACING, COLORS, SHADOWS } from '../../constants/theme';
 import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
 import { getResponsiveValue } from '../../utils/responsive';
+
+const MIN_TOUCH_SIZE = 44;
 
 interface ActionButtonsProps {
   onEdit?: () => void;
@@ -25,7 +27,7 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
   onPressOut,
 }) => {
   const device = useDeviceDimensions();
-  const buttonSize = getResponsiveValue(device, 40, device.isTablet ? 48 : 40);
+  const buttonSize = getResponsiveValue(device, MIN_TOUCH_SIZE, device.isTablet ? 48 : MIN_TOUCH_SIZE);
   const buttonGap = getResponsiveValue(device, SPACING.sm, device.isTablet ? SPACING.base : SPACING.sm);
 
   return (
@@ -36,12 +38,16 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
           onPressIn={onPressIn}
           onPressOut={onPressOut}
           activeOpacity={0.8}
-          className="rounded-xl bg-amber-300 items-center justify-center shadow-md"
-          style={{
-            width: buttonSize,
-            height: buttonSize,
-            marginRight: buttonGap,
-          }}
+          className="rounded-xl items-center justify-center"
+          style={[
+            {
+              width: buttonSize,
+              height: buttonSize,
+              marginRight: buttonGap,
+              backgroundColor: COLORS.accentLight,
+            },
+            SHADOWS.sm,
+          ]}
           accessibilityLabel={`${itemName} 수정`}
           accessibilityRole="button"
           accessibilityHint="이 항목을 수정합니다"
@@ -55,13 +61,16 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
         onPressOut={onPressOut}
         disabled={isDeleting}
         activeOpacity={0.8}
-        className={`rounded-xl items-center justify-center shadow-md ${
-          isDeleting ? 'bg-slate-300 opacity-60' : 'bg-[#f43f5e]'
-        }`}
-        style={{
-          width: buttonSize,
-          height: buttonSize,
-        }}
+        className="rounded-xl items-center justify-center"
+        style={[
+          {
+            width: buttonSize,
+            height: buttonSize,
+            backgroundColor: isDeleting ? COLORS.gray300 : COLORS.danger,
+            opacity: isDeleting ? 0.6 : 1,
+          },
+          SHADOWS.sm,
+        ]}
         accessibilityLabel={`${itemName} 삭제`}
         accessibilityRole="button"
         accessibilityState={{ disabled: isDeleting }}

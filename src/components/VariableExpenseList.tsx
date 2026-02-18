@@ -76,7 +76,7 @@ export const VariableExpenseList = React.memo<VariableExpenseListProps>(({
   const renderFooter = useCallback(() => {
     if (isFetchingNextPage) {
       return (
-        <View className="py-4 items-center">
+        <View style={{ paddingVertical: SPACING.base, alignItems: 'center' }}>
           <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       );
@@ -84,7 +84,7 @@ export const VariableExpenseList = React.memo<VariableExpenseListProps>(({
 
     if (hasNextPage && onLoadMore) {
       return (
-        <View className="py-4 items-center">
+        <View style={{ paddingVertical: SPACING.base, alignItems: 'center' }}>
           <Button
             variant="primary"
             size="md"
@@ -101,7 +101,7 @@ export const VariableExpenseList = React.memo<VariableExpenseListProps>(({
 
     if (expenses.length > 0) {
       return (
-        <View className="py-4 items-center">
+        <View style={{ paddingVertical: SPACING.base, alignItems: 'center' }}>
           <Typography variant="body2" color="textTertiary">
             모든 데이터를 불러왔습니다
           </Typography>
@@ -134,11 +134,13 @@ export const VariableExpenseList = React.memo<VariableExpenseListProps>(({
   return (
     <View className="flex-1">
       {!isTabletLandscape && (
-        <Typography 
-          variant="h3" 
-          color="textPrimary" 
-          className="mb-4"
-          style={{ marginHorizontal: device.isTablet ? 0 : responsivePadding }}
+        <Typography
+          variant="h3"
+          color="textPrimary"
+          style={{
+            marginBottom: SPACING.base,
+            marginHorizontal: device.isTablet ? 0 : responsivePadding,
+          }}
         >
           월 유동비 항목
         </Typography>

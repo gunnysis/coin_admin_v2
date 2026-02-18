@@ -1,10 +1,13 @@
 import React, { useCallback, useState } from 'react';
 import { Modal, Pressable, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import { Button } from '../../../components/ui/Button';
 import { Typography } from '../../../components/ui/Typography';
 import { Card } from '../../../components/ui/Card';
 import { getTestProps } from '../../../utils/test-utils';
+import { SPACING, RADIUS, SHADOWS } from '../../../constants/theme';
+import { expenseKeys } from '../../../config/queryKeys';
 import { LocalBackupAdapter } from '../../../lib/backup/localBackupAdapter';
 import { exportBackup, restoreBackup } from '../../../lib/backup/backupService';
 import type { BackupLocation } from '../../../lib/backup/storageAdapter';
@@ -13,6 +16,7 @@ import { logger } from '../../../lib/logger';
 const localAdapter = new LocalBackupAdapter();
 
 export const BackupRestoreSection: React.FC = () => {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedBackup, setSelectedBackup] = useState<BackupLocation | null>(null);
@@ -82,6 +86,10 @@ export const BackupRestoreSection: React.FC = () => {
     setErrorMessage(null);
     try {
       await restoreBackup(localAdapter, toRestore);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: expenseKeys.fixed.all() }),
+        queryClient.invalidateQueries({ queryKey: expenseKeys.variable.all() }),
+      ]);
     } catch (error) {
       logger.error('Restore failed', error, {
         scope: 'backup/local',
@@ -93,7 +101,7 @@ export const BackupRestoreSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedBackup]);
+  }, [selectedBackup, queryClient]);
 
   const closeConfirmModal = useCallback(() => {
     setShowConfirmModal(false);
@@ -133,7 +141,7 @@ export const BackupRestoreSection: React.FC = () => {
       {errorMessage ? (
         <Typography
           variant="caption"
-          color="error"
+          color="danger"
           accessibilityRole="alert"
           {...getTestProps('backup-error-message')}
         >
@@ -148,33 +156,40 @@ export const BackupRestoreSection: React.FC = () => {
         onRequestClose={closeConfirmModal}
       >
         <Pressable
-          className="flex-1 bg-black/30 justify-center px-6"
+          className="flex-1 bg-black/30 justify-center"
+          style={{ paddingHorizontal: SPACING.lg }}
           onPress={closeConfirmModal}
         >
           <Pressable
-            className="bg-white rounded-2xl p-4"
+            className="bg-white"
+            style={{
+              borderRadius: RADIUS.card,
+              padding: SPACING.lg,
+              ...SHADOWS.md,
+            }}
             onPress={e => e.stopPropagation()}
           >
-            <Typography variant="h4" weight="semibold" className="mb-2">
+            <Typography variant="h4" weight="semibold" style={{ marginBottom: SPACING.sm }}>
               이 백업으로 복구할까요?
             </Typography>
             {selectedBackup && (
               <>
                 <Typography variant="body">{selectedBackup.name}</Typography>
-                <Typography variant="caption" color="textSecondary" className="mt-1">
+                <Typography variant="caption" color="textSecondary" style={{ marginTop: SPACING.xs }}>
                   생성일: {selectedBackup.createdAt}
                 </Typography>
               </>
             )}
-            <Typography variant="body2" color="textSecondary" className="mt-3">
+            <Typography variant="body2" color="textSecondary" style={{ marginTop: SPACING.md }}>
               기존 데이터는 모두 삭제되고, 선택한 백업 시점의 상태로 완전히 되돌아갑니다.
             </Typography>
-            <View className="flex-row justify-end gap-3 mt-4">
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: SPACING.md, marginTop: SPACING.base }}>
               <Button size="sm" variant="outline" onPress={closeConfirmModal}>
                 취소
               </Button>
               <Button
                 size="sm"
+                variant="danger"
                 {...getTestProps('backup-restore-confirm-button')}
                 onPress={handleConfirmRestore}
               >

@@ -96,16 +96,14 @@ export const AddButton = React.memo<AddButtonProps>(({
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          className={`
-            rounded-full bg-white border-2 
-            items-center justify-center
-            ${disabled ? 'opacity-50 border-slate-400' : 'border-[#2563eb]'}
-          `}
+          className="rounded-full bg-white border-2 items-center justify-center"
           style={{
             width: buttonSize,
             height: buttonSize,
             borderWidth,
             backgroundColor: COLORS.surface,
+            borderColor: disabled ? COLORS.gray400 : COLORS.primary,
+            opacity: disabled ? 0.5 : 1,
           }}
           disabled={disabled}
           activeOpacity={1}

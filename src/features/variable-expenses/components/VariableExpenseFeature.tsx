@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { View } from 'react-native';
+import { SPACING } from '@/constants/theme';
 import { VariableExpenseList } from '@/components/VariableExpenseList';
 import { AddButton } from '@/components/AddButton';
 import { AddVariableExpenseModal } from '@/components/AddVariableExpenseModal';
@@ -76,27 +77,29 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
   }, [editingVariableItem, handleAdd, handleUpdate, closeVariableModal]);
 
   return (
-    <View className="flex-1" style={containerStyle}>
+    <View className="flex-1">
       <VariableTotalAmountCard
         totalAmount={totalAmount}
         isExpanded={isVariableExpanded}
         onToggleExpand={toggleVariableExpanded}
         expenses={expenses}
       />
-      <VariableExpenseList
-        expenses={expenses}
-        isLoading={isLoading}
-        isInitLoading={isInitLoading}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        onDelete={handleDelete}
-        onEdit={handleEdit}
-        hasNextPage={hasNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        onLoadMore={onLoadMore}
-        isDeleting={isDeleting}
-        bottomInset={bottomInset}
-      />
+      <View style={{ flex: 1, marginTop: SPACING.lg }}>
+        <VariableExpenseList
+          expenses={expenses}
+          isLoading={isLoading}
+          isInitLoading={isInitLoading}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+          isDeleting={isDeleting}
+          bottomInset={bottomInset}
+        />
+      </View>
       <AddButton
         onPress={() => openVariableModal()}
         disabled={isPending}

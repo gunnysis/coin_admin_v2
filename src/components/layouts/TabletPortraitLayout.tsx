@@ -2,6 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { SPACING } from '../../constants/theme';
 import { TabNavigation } from '../TabNavigation';
 import { FixedExpenseFeature } from '../../features/fixed-expenses/components/FixedExpenseFeature';
 import { VariableExpenseFeature } from '../../features/variable-expenses/components/VariableExpenseFeature';
@@ -39,37 +40,39 @@ export const TabletPortraitLayout = React.memo<TabletPortraitLayoutProps>(({
         {renderHeader()}
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'fixed' ? (
-          <FixedExpenseFeature
-            expenses={fixedExpenseData.expenses}
-            totalAmount={fixedExpenseData.totalAmount}
-            isLoading={fixedExpenseData.isLoading}
-            isInitLoading={fixedExpenseData.isInitLoading}
-            refreshing={fixedExpenseData.refreshing}
-            hasNextPage={fixedExpenseData.hasNextPage}
-            isFetchingNextPage={fixedExpenseData.isFetchingNextPage}
-            isDeleting={fixedExpenseData.isDeleting}
-            onRefresh={fixedExpenseData.onRefresh}
-            onLoadMore={fixedExpenseData.onLoadMore}
-            bottomInset={bottomInset}
-            containerStyle={containerStyle}
-          />
-        ) : (
-          <VariableExpenseFeature
-            expenses={variableExpenseData.expenses}
-            totalAmount={variableExpenseData.totalAmount}
-            isLoading={variableExpenseData.isLoading}
-            isInitLoading={variableExpenseData.isInitLoading}
-            refreshing={variableExpenseData.refreshing}
-            hasNextPage={variableExpenseData.hasNextPage}
-            isFetchingNextPage={variableExpenseData.isFetchingNextPage}
-            isDeleting={variableExpenseData.isDeleting}
-            onRefresh={variableExpenseData.onRefresh}
-            onLoadMore={variableExpenseData.onLoadMore}
-            bottomInset={bottomInset}
-            containerStyle={containerStyle}
-          />
-        )}
+        <View style={{ flex: 1, marginTop: SPACING.md }}>
+          {activeTab === 'fixed' ? (
+            <FixedExpenseFeature
+              expenses={fixedExpenseData.expenses}
+              totalAmount={fixedExpenseData.totalAmount}
+              isLoading={fixedExpenseData.isLoading}
+              isInitLoading={fixedExpenseData.isInitLoading}
+              refreshing={fixedExpenseData.refreshing}
+              hasNextPage={fixedExpenseData.hasNextPage}
+              isFetchingNextPage={fixedExpenseData.isFetchingNextPage}
+              isDeleting={fixedExpenseData.isDeleting}
+              onRefresh={fixedExpenseData.onRefresh}
+              onLoadMore={fixedExpenseData.onLoadMore}
+              bottomInset={bottomInset}
+              containerStyle={containerStyle}
+            />
+          ) : (
+            <VariableExpenseFeature
+              expenses={variableExpenseData.expenses}
+              totalAmount={variableExpenseData.totalAmount}
+              isLoading={variableExpenseData.isLoading}
+              isInitLoading={variableExpenseData.isInitLoading}
+              refreshing={variableExpenseData.refreshing}
+              hasNextPage={variableExpenseData.hasNextPage}
+              isFetchingNextPage={variableExpenseData.isFetchingNextPage}
+              isDeleting={variableExpenseData.isDeleting}
+              onRefresh={variableExpenseData.onRefresh}
+              onLoadMore={variableExpenseData.onLoadMore}
+              bottomInset={bottomInset}
+              containerStyle={containerStyle}
+            />
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );

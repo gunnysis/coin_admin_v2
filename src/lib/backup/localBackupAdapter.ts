@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { BACKUP_SCHEMA_VERSION } from './constants';
 import type { BackupLocation, IBackupStorageAdapter } from './storageAdapter';
@@ -104,6 +104,26 @@ export class LocalBackupAdapter implements IBackupStorageAdapter {
       const res = await fetch(location.id);
       if (!res.ok) throw new Error('백업 파일을 읽을 수 없습니다.');
       content = await res.text();
+    } else if (Platform.OS !== 'web' && !location.id.startsWith('file://')) {
+      // Android 등에서 Document Picker가 content:// URI를 반환할 수 있음.
+      // readAsStringAsync는 file:// 또는 특정 SAF만 지원하므로, content://는 캐시로 복사 후 읽기.
+      const dir = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+      if (!dir) {
+        throw new Error('백업 파일을 읽을 수 있는 디렉터리를 사용할 수 없습니다. 기기 또는 앱을 재시작한 뒤 다시 시도해 주세요.');
+      }
+      const tempUri = `${dir}coin-admin-restore-temp-${Date.now()}.json`;
+      try {
+        await FileSystem.copyAsync({ from: location.id, to: tempUri });
+        content = await FileSystem.readAsStringAsync(tempUri, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+      } finally {
+        try {
+          await FileSystem.deleteAsync(tempUri, { idempotent: true });
+        } catch {
+          // 임시 파일 삭제 실패는 무시
+        }
+      }
     } else {
       content = await FileSystem.readAsStringAsync(location.id, {
         encoding: FileSystem.EncodingType.UTF8,

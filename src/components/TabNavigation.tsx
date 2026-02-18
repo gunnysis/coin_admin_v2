@@ -70,10 +70,11 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
       className="bg-white border-b border-slate-200 relative"
       style={{ paddingHorizontal: responsivePadding }}
     >
-      <View className="flex-row relative">
+      <View className="flex-row relative" style={{ paddingVertical: SPACING.base }}>
         <TouchableOpacity
           onPress={() => handleTabPress('fixed')}
-          className="flex-1 py-4 items-center"
+          className="flex-1 items-center justify-center"
+          style={{ minHeight: 44 }}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="고정비 탭"
@@ -93,7 +94,8 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
         
         <TouchableOpacity
           onPress={() => handleTabPress('variable')}
-          className="flex-1 py-4 items-center"
+          className="flex-1 items-center justify-center"
+          style={{ minHeight: 44 }}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="유동비 탭"
