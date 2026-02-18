@@ -39,17 +39,17 @@ Features live in `src/features/{domain}/components/`. Each feature component (e.
 All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
 
 ### Responsive Layouts
-Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`.
+Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`. **Padding:** horizontal padding is applied once at the layout container (`getContainerStyle(device)`); feature roots do not re-apply it. Content area has `marginTop: SPACING.md` below the tab bar; between total-amount card and list use `SPACING.lg`. Theme spacing: `src/constants/theme.ts` (SPACING, RADIUS, SHADOWS).
 
 ### Data Layer
-SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`); 로컬 파일 백업은 expo-file-system + expo-sharing, 복구는 expo-document-picker. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
+SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`). Use **`expo-file-system/legacy`** for `documentDirectory`, `cacheDirectory`, `writeAsStringAsync`, `readAsStringAsync`, `copyAsync` (SDK 54+ default export is the new File/Paths API). 로컬 백업: expo-file-system (legacy) + expo-sharing; 복구: expo-document-picker. On Android, `load()` copies `content://` URIs to cache via `copyAsync` then reads (legacy `readAsStringAsync` supports only `file://` or specific SAF). After restore, invalidate `expenseKeys.fixed.all()` and `expenseKeys.variable.all()`. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
 
 ## Key Constants
 
 - **Query keys:** `src/config/queryKeys.ts` — factory: `databaseKeys`, `expenseKeys`, `exchangeRateKeys`. Legacy `QUERY_KEYS` re-exported from `src/constants/index.ts`.
 - **Categories:** `EXPENSE_CATEGORIES` in `src/constants/index.ts` — 7 predefined Korean categories (식비, 교통비, 쇼핑, 의료, 교육, 오락, 기타)
 - **Config:** `src/config/constants.ts` — pagination, date format, animation, timing, error/success messages, exchange rate settings
-- **Theme/design:** `src/constants/theme.ts` — semantic colors (slate, expense, income), radius, shadows. UI: Card, Button, Typography, InputField in `src/components/ui/`.
+- **Theme/design:** `src/constants/theme.ts` — SPACING (8pt grid), COLORS (primary, expense/danger, income, slate), RADIUS, SHADOWS, ICON_SIZES. UI: Card, Button, Typography, InputField in `src/components/ui/`. Use theme constants instead of hardcoded px/colors. **Touch targets:** minimum 44pt for interactive elements (e.g. header settings, close, tabs, action buttons). **App chrome:** main header and settings header use `bg-white` + `border-b border-slate-200`; settings close and main "설정" use Pressable + Phosphor icon (X, Gear) and 44pt hit area.
 
 ## Type Conventions
 
@@ -62,6 +62,11 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 - **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
 - **testID:** `src/utils/test-utils.ts` — `getTestProps(id)` returns `data-testid` (web) / `testID` (native). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
 - **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
+
+## Settings & Backup UI
+
+- **Settings screen:** `src/features/settings/components/SettingsScreen.tsx` — SafeAreaView, `getResponsivePadding(device)` for horizontal padding, close button with Phosphor X + "닫기" and 44pt touch area. Sections use Card; spacing via SPACING.
+- **Backup/restore:** `BackupRestoreSection.tsx` — error messages use `color="danger"` (Typography has no `error`). Restore confirm modal uses RADIUS.card, SPACING.lg, SHADOWS.md; confirm button `variant="danger"`. After successful restore, queryClient invalidates fixed and variable expense queries.
 
 ## Documentation
 
