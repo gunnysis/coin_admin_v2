@@ -11,7 +11,7 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 
 | 구분 | 내용 |
 |------|------|
-| **대상** | Expo 웹 앱 (`npm run web` → localhost:8081) |
+| **대상** | Expo 웹 앱 (`npm run web` → 8081, `npm run test:e2e` 시 `web:e2e` → 8082) |
 | **도구** | Playwright (Chromium 기준, 필요 시 WebKit/Firefox 확장) |
 | **선택자** | 접근성 라벨(`accessibilityLabel`) → DOM `aria-label` / `role` 기반 (`getByRole`, `getByLabelText`). 보조로 `getTestProps(id)`로 부여한 `data-testid`/`testID` 사용 가능 (`getByTestId`) |
 | **CI** | `npm run web` 기동 후 `npx playwright test` 실행 (동일 머신 또는 별도 job) |
@@ -38,7 +38,7 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 ## 디렉터리 및 실행
 
 - **경로**: `e2e/` (Playwright 설정 및 스펙)
-- **설정**: `playwright.config.ts` — 서버 기동 포함. `playwright.run.config.ts` — 서버 기동 없이 `E2E_BASE_URL`(기본 8081)로 접속.
+- **설정**: `playwright.config.ts` — 서버 기동 포함(포트 **8082** 사용, 8081 충돌 방지). `playwright.run.config.ts` — 서버 기동 없이 `E2E_BASE_URL`(기본 8081)로 접속.
 
 ### 실행 방법
 
@@ -46,7 +46,7 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
   1. 터미널 1: `npm run web:clear` 또는 `npm run web`  
   2. 브라우저에서 `http://localhost:8081` 이 에러 없이 로드되는지 확인  
   3. 터미널 2: `npm run test:e2e:run`  
-- **방법 B (한 번에)**: `npm run test:e2e` — 웹 서버 자동 기동 후 Playwright 실행 (8081 포트가 비어 있어야 함).  
+- **방법 B (한 번에)**: `npm run test:e2e` — **8082** 포트로 `npm run web:e2e` 자동 기동 후 Playwright 실행 (8081 사용 중이어도 무방).  
 - 포트가 다르면: `E2E_BASE_URL=http://localhost:<포트> npm run test:e2e:run` (예: `E2E_BASE_URL=http://localhost:8082 npm run test:e2e:run`).
 
 ### 실패 시 확인 (체크리스트)

@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "web:clear": "expo start --web --clear",
+    "web:e2e": "expo start --web --port 8082",
     "test": "jest",
     "test:e2e": "playwright test",
     "test:e2e:run": "playwright test -c playwright.run.config.ts"
