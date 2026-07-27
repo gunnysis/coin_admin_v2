@@ -6,6 +6,8 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  // 수동 다크 모드 제어: ThemeContext가 nativewind colorScheme.set()으로 동기화
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

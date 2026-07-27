@@ -84,7 +84,7 @@ export default function App() {
   const renderHeader = useCallback(
     () => (
       <View
-        className="bg-white border-b border-slate-200"
+        className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
         style={SHADOWS.sm}
         accessibilityRole="header"
       >

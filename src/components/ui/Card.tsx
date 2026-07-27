@@ -36,9 +36,9 @@ export const Card = React.memo<CardProps>(({
   accessibilityRole,
 }) => {
   const variantClasses = {
-    default: 'bg-white border border-slate-100',
-    elevated: 'bg-white border border-slate-100',
-    outlined: 'bg-white border border-slate-200',
+    default: 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800',
+    elevated: 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800',
+    outlined: 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
   };
 
   const shadowStyle = variant === 'elevated' ? SHADOWS.sm : undefined;

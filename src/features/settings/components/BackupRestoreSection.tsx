@@ -161,7 +161,7 @@ export const BackupRestoreSection: React.FC = () => {
           onPress={closeConfirmModal}
         >
           <Pressable
-            className="bg-white"
+            className="bg-white dark:bg-slate-800"
             style={{
               borderRadius: RADIUS.card,
               padding: SPACING.lg,

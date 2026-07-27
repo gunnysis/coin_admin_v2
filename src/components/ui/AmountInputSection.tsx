@@ -3,7 +3,8 @@ import { View, TextInput, Keyboard, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Typography } from './Typography';
 import { InputField } from './InputField';
-import { SPACING, COLORS, RADIUS, TYPOGRAPHY } from '../../constants/theme';
+import { SPACING, RADIUS, TYPOGRAPHY, SHADOWS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getTestProps } from '../../utils/test-utils';
 import type { AmountCurrency } from '../../types';
 
@@ -43,6 +44,7 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
     ref
   ) => {
     const isKrw = currency === 'KRW';
+    const { colors } = useTheme();
 
     const label = useMemo(() => (isKrw ? '금액 (원)' : '금액 (달러)'), [isKrw]);
     const placeholder = useMemo(() => (isKrw ? '예: 500,000' : '예: 100'), [isKrw]);
@@ -67,17 +69,15 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
     const accessibilityHint = useMemo(
       () =>
         isKrw
-          ? `${amountHintContext}을 원으로 입력하세요. 달러로 입력하려면 아래 달러로 입력을 탭하세요.`
-          : `${amountHintContext}을 달러로 입력하면 원으로 변환되어 저장됩니다. 원화로 입력하려면 원으로 입력을 탭하세요.`,
+          ? `${amountHintContext}을 원으로 입력하세요. 통화는 원/달러 세그먼트에서 전환할 수 있습니다.`
+          : `${amountHintContext}을 달러로 입력하면 원으로 변환되어 저장됩니다. 통화는 원/달러 세그먼트에서 전환할 수 있습니다.`,
       [isKrw, amountHintContext]
     );
-
-    const linkColor = isDisabled ? COLORS.textTertiary : COLORS.primary;
 
     return (
       <View
         style={{
-          backgroundColor: COLORS.gray50,
+          backgroundColor: colors.gray50,
           borderRadius: RADIUS.base,
           padding: SPACING.base,
           marginBottom: SPACING.base,
@@ -100,38 +100,63 @@ export const AmountInputSection = forwardRef<TextInput, AmountInputSectionProps>
           {...getTestProps('amount-input')}
         />
 
-        <Pressable
-          onPress={handleToggle}
-          disabled={isDisabled}
-          hitSlop={{ top: SPACING.sm, bottom: SPACING.sm, left: SPACING.sm, right: SPACING.sm }}
-          {...getTestProps('currency-toggle')}
-          style={({ pressed }) => ({
+        <View
+          style={{
             marginTop: SPACING.sm,
-            paddingVertical: SPACING.sm,
-            paddingHorizontal: SPACING.sm,
-            minHeight: MIN_TOUCH_TARGET,
-            justifyContent: 'center',
-            opacity: pressed ? 0.85 : 1,
-          })}
-          accessibilityRole="button"
-          accessibilityLabel={isKrw ? '달러로 입력' : '원으로 입력'}
-          accessibilityHint={
-            isKrw
-              ? '탭하면 달러 금액을 입력할 수 있습니다. 저장 시 원화로 변환됩니다.'
-              : '탭하면 원화 금액을 직접 입력할 수 있습니다.'
-          }
-          accessibilityState={{ disabled: isDisabled }}
+            flexDirection: 'row',
+            borderRadius: RADIUS.button,
+            backgroundColor: colors.gray200,
+            padding: 2,
+          }}
+          {...getTestProps('currency-toggle')}
         >
-          <Typography
-            variant="caption"
-            style={{
-              color: linkColor,
-              fontWeight: TYPOGRAPHY.fontWeight.medium,
-            }}
+          <Pressable
+            onPress={() => !isKrw && handleToggle()}
+            disabled={isDisabled}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: SPACING.sm,
+              paddingHorizontal: SPACING.md,
+              minHeight: MIN_TOUCH_TARGET,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: RADIUS.button - 2,
+              backgroundColor: isKrw ? colors.surface : 'transparent',
+              opacity: pressed ? 0.9 : 1,
+              ...(isKrw && SHADOWS.sm),
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="원으로 입력"
+            accessibilityState={{ disabled: isDisabled, selected: isKrw }}
           >
-            {isKrw ? '달러로 입력' : '원으로 입력'}
-          </Typography>
-        </Pressable>
+            <Typography variant="caption" weight="medium" style={{ color: isKrw ? colors.primary : colors.textSecondary }}>
+              원
+            </Typography>
+          </Pressable>
+          <Pressable
+            onPress={() => isKrw && handleToggle()}
+            disabled={isDisabled}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: SPACING.sm,
+              paddingHorizontal: SPACING.md,
+              minHeight: MIN_TOUCH_TARGET,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: RADIUS.button - 2,
+              backgroundColor: !isKrw ? colors.surface : 'transparent',
+              opacity: pressed ? 0.9 : 1,
+              ...(!isKrw && SHADOWS.sm),
+            })}
+            accessibilityRole="button"
+            accessibilityLabel="달러로 입력"
+            accessibilityState={{ disabled: isDisabled, selected: !isKrw }}
+          >
+            <Typography variant="caption" weight="medium" style={{ color: !isKrw ? colors.primary : colors.textSecondary }}>
+              달러
+            </Typography>
+          </Pressable>
+        </View>
       </View>
     );
   }

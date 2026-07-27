@@ -11,6 +11,10 @@ import { TYPOGRAPHY } from '../constants/theme';
 import { VariableExpenseVisualization } from './VariableExpenseVisualization';
 import { MonthSelector } from './MonthSelector';
 import { useHaptics } from '../hooks/useHaptics';
+import { useAppContext } from '../contexts/AppContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useMonthComparison } from '../hooks/useMonthComparison';
+import { useCountUpAmount } from '../hooks/useCountUpAmount';
 import {
   createRotateAnimation,
   createHeightAnimation,
@@ -45,7 +49,11 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
   expenses = [],
 }) => {
   const device = useDeviceDimensions();
+  const { colors } = useTheme();
   const { triggerHaptic } = useHaptics();
+  const { selectedVariableMonth } = useAppContext();
+  const { comparison, previousTotal } = useMonthComparison(selectedVariableMonth);
+  const displayAmount = useCountUpAmount(totalAmount);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const heightAnim = useRef(new Animated.Value(0)).current;
 
@@ -127,7 +135,7 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
                 style={{
                   width: 40,
                   height: 40,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  backgroundColor: colors.primarySubtle,
                 }}
                 activeOpacity={0.7}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -153,7 +161,7 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
             style={{ fontSize: adjustedTotalSize }}
             accessibilityLabel={`총액 ${formatCurrency(totalAmount)}원`}
           >
-            {formatCurrency(totalAmount)}
+            {formatCurrency(displayAmount)}
           </Typography>
           {expenses.length > 0 && (
             <Typography 
@@ -164,6 +172,43 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
             >
               총 {expenses.length}개 항목
             </Typography>
+          )}
+          {comparison && (previousTotal > 0 || totalAmount > 0) && (
+            <View className="mt-2" accessibilityRole="text">
+              <View
+                style={{
+                  flexDirection: 'row',
+                  height: 6,
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  backgroundColor: colors.gray200,
+                  marginBottom: SPACING.xs,
+                }}
+                accessibilityLabel={`전월 ${formatCurrency(previousTotal)}원, 이번 달 ${formatCurrency(totalAmount)}원`}
+              >
+                <View
+                  style={{
+                    flex: previousTotal + totalAmount > 0 ? previousTotal : 1,
+                    backgroundColor: colors.gray400,
+                  }}
+                />
+                <View
+                  style={{
+                    flex: previousTotal + totalAmount > 0 ? totalAmount : 1,
+                    backgroundColor: colors.primary,
+                  }}
+                />
+              </View>
+              {!comparison.isEqual && (
+                <Typography
+                  variant="caption"
+                  style={{ color: comparison.isIncrease ? colors.expense : colors.income }}
+                  accessibilityLabel={`전월 대비 ${comparison.diff >= 0 ? '+' : ''}${formatCurrency(comparison.diff)}원, ${comparison.percentage}%`}
+                >
+                  전월 대비 {comparison.diff >= 0 ? '+' : ''}{formatCurrency(comparison.diff)}원 ({comparison.percentage >= 0 ? '+' : ''}{comparison.percentage}%)
+                </Typography>
+              )}
+            </View>
           )}
         </View>
 

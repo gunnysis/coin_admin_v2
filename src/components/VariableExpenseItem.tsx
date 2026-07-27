@@ -55,7 +55,7 @@ export const VariableExpenseItem = React.memo<VariableExpenseItemProps>(({
       <Card
         variant="elevated"
         padding={device.isTablet ? "lg" : "base"}
-        className="border border-slate-100"
+        className="border border-slate-100 dark:border-slate-800"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1" style={{ marginRight: SPACING.md }}>
@@ -64,7 +64,7 @@ export const VariableExpenseItem = React.memo<VariableExpenseItemProps>(({
                 {item.name}
               </Typography>
               {item.category && (
-                <View className="px-2 py-0.5 bg-slate-100 rounded-md">
+                <View className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-md">
                   <Typography variant="caption" color="primary" weight="medium">
                     {item.category}
                   </Typography>

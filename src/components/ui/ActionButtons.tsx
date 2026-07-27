@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
 import { Typography } from './Typography';
 import { SPACING, COLORS, SHADOWS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
 import { getResponsiveValue } from '../../utils/responsive';
 
@@ -27,6 +28,7 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
   onPressOut,
 }) => {
   const device = useDeviceDimensions();
+  const { colors } = useTheme();
   const buttonSize = getResponsiveValue(device, MIN_TOUCH_SIZE, device.isTablet ? 48 : MIN_TOUCH_SIZE);
   const buttonGap = getResponsiveValue(device, SPACING.sm, device.isTablet ? SPACING.base : SPACING.sm);
 
@@ -66,7 +68,7 @@ export const ActionButtons = React.memo<ActionButtonsProps>(({
           {
             width: buttonSize,
             height: buttonSize,
-            backgroundColor: isDeleting ? COLORS.gray300 : COLORS.danger,
+            backgroundColor: isDeleting ? colors.gray300 : colors.danger,
             opacity: isDeleting ? 0.6 : 1,
           },
           SHADOWS.sm,

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Animated } from 'react-native';
 import { Typography } from '../ui/Typography';
 import { formatCurrency } from '../../utils/format';
-import { COLORS } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { ExpenseGroup } from '../../types/variableExpenses';
 import { createProgressAnimation, createInterpolate } from '../../utils/animations';
 
@@ -16,6 +16,7 @@ interface ExpenseGroupCardProps {
  * 금액 범위별 그룹을 시각화
  */
 export const ExpenseGroupCard = React.memo<ExpenseGroupCardProps>(({ group, index }) => {
+  const { colors } = useTheme();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export const ExpenseGroupCard = React.memo<ExpenseGroupCardProps>(({ group, inde
       </View>
       <View
         className="h-2 rounded-full overflow-hidden"
-        style={{ backgroundColor: COLORS.gray200 }}
+        style={{ backgroundColor: colors.gray200 }}
       >
         <Animated.View
           style={{

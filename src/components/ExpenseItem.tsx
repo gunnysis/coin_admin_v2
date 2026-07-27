@@ -57,7 +57,7 @@ export const ExpenseItem = React.memo<ExpenseItemProps>(({
       <Card
         variant="elevated"
         padding={device.isTablet ? "lg" : "base"}
-        className="border border-slate-100"
+        className="border border-slate-100 dark:border-slate-800"
       >
         <View className="flex-row items-center justify-between">
           <View className="flex-1" style={{ marginRight: SPACING.md }}>

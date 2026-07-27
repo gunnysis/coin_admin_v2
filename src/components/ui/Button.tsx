@@ -12,12 +12,12 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
   style?: TouchableOpacityProps['style'];
 }
 
-// Semantic: Primary(Brand) / Income(Positive) / Expense(Danger)
+// Semantic: Primary(Brand) / Income(Positive) / Expense(Danger) — tailwind.config 시맨틱 컬러 사용
 const variantClasses = {
-  primary: 'bg-[#2563eb]',   // blue-600
-  secondary: 'bg-[#14b8a6]', // teal-500 income
-  danger: 'bg-[#f43f5e]',    // rose-500 expense
-  outline: 'bg-transparent border-2 border-[#2563eb]',
+  primary: 'bg-primary',
+  secondary: 'bg-income',
+  danger: 'bg-expense',
+  outline: 'bg-transparent border-2 border-primary',
 };
 
 const sizeClasses = {

@@ -8,6 +8,7 @@ import { FixedExpenseFeature } from '../../features/fixed-expenses/components/Fi
 import { VariableExpenseFeature } from '../../features/variable-expenses/components/VariableExpenseFeature';
 import type { FixedExpenseLayoutData, VariableExpenseLayoutData } from '../../types';
 import { useAppContext } from '../../contexts/AppContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { DeviceDimensions } from '../../hooks/useDeviceDimensions';
 
 interface PhoneLayoutProps {
@@ -32,10 +33,11 @@ export const PhoneLayout = React.memo<PhoneLayoutProps>(({
   renderHeader,
 }) => {
   const { activeTab, setActiveTab } = useAppContext();
+  const { isDark } = useTheme();
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900" edges={['top', 'bottom', 'left', 'right']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View className="flex-1" style={containerStyle}>
         {renderHeader()}
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
@@ -53,6 +55,7 @@ export const PhoneLayout = React.memo<PhoneLayoutProps>(({
               isDeleting={fixedExpenseData.isDeleting}
               onRefresh={fixedExpenseData.onRefresh}
               onLoadMore={fixedExpenseData.onLoadMore}
+              refreshError={fixedExpenseData.refreshError}
               bottomInset={bottomInset}
               containerStyle={containerStyle}
             />
@@ -68,6 +71,7 @@ export const PhoneLayout = React.memo<PhoneLayoutProps>(({
               isDeleting={variableExpenseData.isDeleting}
               onRefresh={variableExpenseData.onRefresh}
               onLoadMore={variableExpenseData.onLoadMore}
+              refreshError={variableExpenseData.refreshError}
               bottomInset={bottomInset}
               containerStyle={containerStyle}
             />

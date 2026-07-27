@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useInitDatabase, useExpensesPaginated, useTotalAmount } from './useExpenses';
 import { useVariableExpensesPaginated, useVariableExpensesTotal } from './useVariableExpenses';
 import { useExpenseHandlers } from './useExpenseHandlers';
@@ -40,10 +40,16 @@ export function useAppExpenseData(
   const { handleRefresh: handleVariableRefresh, isDeleting: variableIsDeleting } =
     useVariableExpenseHandlers(selectedVariableMonth);
 
+  const [fixedRefreshError, setFixedRefreshError] = useState<Error | null>(null);
+  const [variableRefreshError, setVariableRefreshError] = useState<Error | null>(null);
+
   const onFixedRefresh = useCallback(async () => {
     setFixedRefreshing(true);
+    setFixedRefreshError(null);
     try {
       await handleFixedRefresh();
+    } catch (err) {
+      setFixedRefreshError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setFixedRefreshing(false);
     }
@@ -51,8 +57,11 @@ export function useAppExpenseData(
 
   const onVariableRefresh = useCallback(async () => {
     setVariableRefreshing(true);
+    setVariableRefreshError(null);
     try {
       await handleVariableRefresh();
+    } catch (err) {
+      setVariableRefreshError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setVariableRefreshing(false);
     }
@@ -69,6 +78,7 @@ export function useAppExpenseData(
     isDeleting: fixedIsDeleting,
     onRefresh: onFixedRefresh,
     onLoadMore: fetchNextPage,
+    refreshError: fixedRefreshError,
   };
 
   const variableExpenseData: VariableExpenseLayoutData = {
@@ -82,6 +92,7 @@ export function useAppExpenseData(
     isDeleting: variableIsDeleting,
     onRefresh: onVariableRefresh,
     onLoadMore: fetchVariableNextPage,
+    refreshError: variableRefreshError,
   };
 
   return { isInitLoading, fixedExpenseData, variableExpenseData };

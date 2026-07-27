@@ -7,6 +7,7 @@ import { Card } from './ui/Card';
 import { Typography } from './ui/Typography';
 import { SPACING } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { useCountUpAmount } from '../hooks/useCountUpAmount';
 import { getResponsiveMargin, getResponsiveFontSize } from '../utils/responsive';
 import { TYPOGRAPHY } from '../constants/theme';
 
@@ -28,6 +29,7 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
   expenses = [],
 }) => {
   const device = useDeviceDimensions();
+  const displayAmount = useCountUpAmount(totalAmount);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const heightAnim = useRef(new Animated.Value(0)).current;
   
@@ -132,7 +134,7 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
             style={{ fontSize: adjustedTotalSize }}
             accessibilityLabel={`총액 ${formatCurrency(totalAmount)}원`}
           >
-            {formatCurrency(totalAmount)}
+            {formatCurrency(displayAmount)}
           </Typography>
           {expenses.length > 0 && (
             <Typography 

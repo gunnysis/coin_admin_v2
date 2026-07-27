@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TextProps } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../../constants/theme';
 import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
+import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveFontSize } from '../../utils/responsive';
 
 type ColorKey =
@@ -20,7 +21,7 @@ type ColorKey =
 
 interface TypographyProps extends TextProps {
   /** Display(총액 등) / Heading / Body / Caption */
-  variant?: 'display' | 'h1' | 'h2' | 'h3' | 'body' | 'body2' | 'caption' | 'label';
+  variant?: 'display' | 'h1' | 'h2' | 'h3' | 'h4' | 'body' | 'body2' | 'caption' | 'label';
   color?: ColorKey;
   weight?: keyof typeof TYPOGRAPHY.fontWeight;
   align?: 'left' | 'center' | 'right';
@@ -39,12 +40,14 @@ export const Typography = React.memo<TypographyProps>(({
   ...props
 }) => {
   const device = useDeviceDimensions();
+  const { colors } = useTheme();
 
   const variantStyles = React.useMemo(() => {
     const baseDisplay = 32;
     const baseH1 = TYPOGRAPHY.fontSize['4xl'];
     const baseH2 = TYPOGRAPHY.fontSize['3xl'];
     const baseH3 = TYPOGRAPHY.fontSize['2xl'];
+    const baseH4 = TYPOGRAPHY.fontSize.lg;
     const baseBody = TYPOGRAPHY.fontSize.base;
     const baseBody2 = TYPOGRAPHY.fontSize.sm;
     const baseCaption = TYPOGRAPHY.fontSize.xs;
@@ -71,6 +74,11 @@ export const Typography = React.memo<TypographyProps>(({
         fontWeight: TYPOGRAPHY.fontWeight.semibold,
         lineHeight: getResponsiveFontSize(device, baseH3) * TYPOGRAPHY.lineHeight.normal,
       },
+      h4: {
+        fontSize: getResponsiveFontSize(device, baseH4),
+        fontWeight: TYPOGRAPHY.fontWeight.semibold,
+        lineHeight: getResponsiveFontSize(device, baseH4) * TYPOGRAPHY.lineHeight.normal,
+      },
       body: {
         fontSize: getResponsiveFontSize(device, baseBody),
         fontWeight: TYPOGRAPHY.fontWeight.normal,
@@ -94,7 +102,7 @@ export const Typography = React.memo<TypographyProps>(({
     };
   }, [device]);
 
-  const colorValue = COLORS[color as keyof typeof COLORS] ?? COLORS.textPrimary;
+  const colorValue = colors[color as keyof typeof COLORS] ?? colors.textPrimary;
 
   return (
     <Text

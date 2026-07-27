@@ -1,8 +1,11 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Alert } from 'react-native';
 import { SPACING } from '@/constants/theme';
+import { formatError } from '@/utils/errorHandler';
 import { TotalAmountCard } from '@/components/TotalAmountCard';
 import { ExpenseList } from '@/components/ExpenseList';
+import { SkeletonCard } from '@/components/ui/SkeletonCard';
+import { SkeletonList } from '@/components/ui/SkeletonList';
 import { AddButton } from '@/components/AddButton';
 import { AddExpenseModal } from '@/components/AddExpenseModal';
 import { FixedMonthCost, AddExpenseFormData } from '@/types';
@@ -20,6 +23,7 @@ interface FixedExpenseFeatureProps {
   isDeleting: boolean;
   onRefresh: () => void;
   onLoadMore: () => void;
+  refreshError?: Error | null;
   bottomInset: number;
   containerStyle: { paddingHorizontal: number };
 }
@@ -39,9 +43,16 @@ export const FixedExpenseFeature = React.memo<FixedExpenseFeatureProps>(({
   isDeleting,
   onRefresh,
   onLoadMore,
+  refreshError,
   bottomInset,
   containerStyle,
 }) => {
+  useEffect(() => {
+    if (refreshError) {
+      Alert.alert('새로고침 실패', formatError(refreshError).userMessage);
+    }
+  }, [refreshError]);
+
   const {
     isExpanded,
     toggleExpand,
@@ -78,27 +89,35 @@ export const FixedExpenseFeature = React.memo<FixedExpenseFeatureProps>(({
 
   return (
     <View className="flex-1">
-      <TotalAmountCard
-        totalAmount={totalAmount}
-        isExpanded={isExpanded}
-        onToggleExpand={toggleExpand}
-        expenses={expenses}
-      />
-      <View style={{ flex: 1, marginTop: SPACING.lg }}>
-        <ExpenseList
+      {isInitLoading ? (
+        <SkeletonCard height={120} />
+      ) : (
+        <TotalAmountCard
+          totalAmount={totalAmount}
+          isExpanded={isExpanded}
+          onToggleExpand={toggleExpand}
           expenses={expenses}
-          isLoading={isLoading}
-          isInitLoading={isInitLoading}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          onLoadMore={onLoadMore}
-          isDeleting={isDeleting}
-          bottomInset={bottomInset}
         />
+      )}
+      <View style={{ flex: 1, marginTop: SPACING.lg }}>
+        {isInitLoading ? (
+          <SkeletonList />
+        ) : (
+          <ExpenseList
+            expenses={expenses}
+            isLoading={isLoading}
+            isInitLoading={isInitLoading}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={onLoadMore}
+            isDeleting={isDeleting}
+            bottomInset={bottomInset}
+          />
+        )}
       </View>
       <AddButton
         onPress={() => openFixedModal()}

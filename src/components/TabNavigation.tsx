@@ -67,7 +67,7 @@ export const TabNavigation = React.memo<TabNavigationProps>(({
 
   return (
     <View 
-      className="bg-white border-b border-slate-200 relative"
+      className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 relative"
       style={{ paddingHorizontal: responsivePadding }}
     >
       <View className="flex-row relative" style={{ paddingVertical: SPACING.base }}>

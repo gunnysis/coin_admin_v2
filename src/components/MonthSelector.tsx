@@ -1,7 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import { Typography } from './ui/Typography';
-import { SPACING, COLORS, SHADOWS } from '../constants/theme';
+import { SPACING, SHADOWS } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 import { useMonthNavigation } from '../hooks/useMonthNavigation';
 import { formatMonthToDisplay } from '../utils/date';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
@@ -9,6 +12,8 @@ import { getResponsiveFontSize, getResponsiveValue } from '../utils/responsive';
 import { TYPOGRAPHY } from '../constants/theme';
 import { useHaptics } from '../hooks/useHaptics';
 import { getTestProps } from '../utils/test-utils';
+
+const SWIPE_THRESHOLD = 50;
 
 // 상수 정의 - UX/UI 최적화
 const MIN_TOUCH_SIZE = 48; // 44px → 48px로 확대 (더 쉬운 터치)
@@ -35,6 +40,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
   compact = false,
 }) => {
   const device = useDeviceDimensions();
+  const { colors } = useTheme();
   const { triggerHaptic } = useHaptics();
   const {
     selectedMonth,
@@ -60,6 +66,18 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
     triggerHaptic('light');
     goToNextMonth();
   }, [goToNextMonth, triggerHaptic]);
+
+  const panGesture = useMemo(() => {
+    return Gesture.Pan()
+      .minDistance(SWIPE_THRESHOLD)
+      .onEnd((e) => {
+        if (e.translationX > SWIPE_THRESHOLD && canGoPrevious) {
+          runOnJS(handlePreviousMonth)();
+        } else if (e.translationX < -SWIPE_THRESHOLD && canGoNext) {
+          runOnJS(handleNextMonth)();
+        }
+      });
+  }, [canGoPrevious, canGoNext, handlePreviousMonth, handleNextMonth]);
 
   const fontSize = useMemo(
     () => getResponsiveFontSize(device, compact ? TYPOGRAPHY.fontSize.lg : TYPOGRAPHY.fontSize.xl),
@@ -94,13 +112,14 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
   );
 
   return (
-    <View
-      className="flex-row items-center justify-between"
-      style={containerStyle}
-      accessibilityRole="toolbar"
-      accessibilityLabel="월 선택 도구"
-      {...getTestProps('month-selector')}
-    >
+    <GestureDetector gesture={panGesture}>
+      <View
+        className="flex-row items-center justify-between"
+        style={containerStyle}
+        accessibilityRole="toolbar"
+        accessibilityLabel="월 선택 도구"
+        {...getTestProps('month-selector')}
+      >
       {/* 이전 달 버튼 */}
       <TouchableOpacity
         onPress={handlePreviousMonth}
@@ -109,6 +128,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         style={[
           buttonStyle,
           styles.navigationButton,
+          { backgroundColor: canGoPrevious ? colors.gray100 : colors.gray50 },
           canGoPrevious ? styles.buttonActive : styles.buttonDisabled,
         ]}
         activeOpacity={0.6}
@@ -156,7 +176,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
           {isCurrentMonth && (
             <View
               className="ml-2 px-2 py-0.5 rounded-full"
-              style={styles.currentMonthBadge}
+              style={{ backgroundColor: colors.primarySubtle }}
             >
               <Typography variant="caption" color="primary" weight="medium">
                 현재
@@ -174,6 +194,7 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         style={[
           buttonStyle,
           styles.navigationButton,
+          { backgroundColor: canGoNext ? colors.gray100 : colors.gray50 },
           canGoNext ? styles.buttonActive : styles.buttonDisabled,
         ]}
         activeOpacity={0.6}
@@ -193,12 +214,12 @@ export const MonthSelector = React.memo<MonthSelectorProps>(({
         </Typography>
       </TouchableOpacity>
     </View>
+    </GestureDetector>
   );
 });
 
 const styles = StyleSheet.create({
   navigationButton: {
-    backgroundColor: COLORS.gray100,
     ...SHADOWS.sm,
   },
   buttonActive: {
@@ -206,11 +227,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.3,
-    backgroundColor: COLORS.gray50,
-  },
-  currentMonthBadge: {
-    // primary 10% opacity (theme primary #2563eb)
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
   },
 });
 

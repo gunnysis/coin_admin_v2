@@ -23,7 +23,7 @@ import { Typography } from './ui/Typography';
 import { InputField } from './ui/InputField';
 import { Button } from './ui/Button';
 import { AmountInputSection } from './ui/AmountInputSection';
-import { SPACING } from '../constants/theme';
+import { SPACING, COLORS } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
 import { useExchangeRate } from '../hooks/useExchangeRate';
 import { useAmountWithCurrency } from '../hooks/useAmountWithCurrency';
@@ -107,7 +107,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setStartDate(getTodayDateString());
       setValidationErrors({});
       const focusDelay = device.isTablet ? MODAL_ANIMATION_DURATION + 100 : MODAL_ANIMATION_DURATION;
-      setTimeout(() => nameInputRef.current?.focus(), focusDelay);
+      setTimeout(() => amountInputRef.current?.focus(), focusDelay);
     }
   }, [visible, editingItem, device.isTablet]);
 
@@ -297,7 +297,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       >
         <Pressable
           className="flex-1"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          style={{ backgroundColor: COLORS.overlay }}
           onPress={handleBackdropPress}
           accessible={false}
         >
@@ -306,7 +306,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             onPress={(e) => e.stopPropagation()}
           >
             <View
-              className={`bg-white ${device.isTablet ? 'rounded-3xl max-h-[85%] w-[90%]' : 'rounded-t-3xl'} max-h-[90%] w-full`}
+              className={`bg-white dark:bg-slate-800 ${device.isTablet ? 'rounded-3xl max-h-[85%] w-[90%]' : 'rounded-t-3xl'} max-h-[90%] w-full`}
               style={{
                 paddingBottom: Math.max(insets.bottom, SPACING.base),
                 maxWidth: device.isTablet ? 600 : undefined,
@@ -377,11 +377,30 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                   <Typography variant="label" color="textSecondary" className="mb-1">
                     결제일 ({DATE_FORMAT_PLACEHOLDER})
                   </Typography>
+                  {Platform.OS === 'web' ? (
+                    <TextInput
+                      value={startDate}
+                      onChangeText={(text) => {
+                        setStartDate(text);
+                        const d = new Date(text);
+                        if (!isNaN(d.getTime())) setSelectedDate(d);
+                        validateField('startDate', text);
+                      }}
+                      placeholder={DATE_FORMAT_PLACEHOLDER}
+                      placeholderTextColor={COLORS.textTertiary}
+                      editable={!isPending}
+                      className={`bg-slate-100 dark:bg-slate-700 rounded-xl p-4 border min-h-[56px] ${
+                        validationErrors.startDate ? 'border-expense' : 'border-transparent'
+                      } ${isPending ? 'opacity-50' : ''}`}
+                      accessibilityLabel="결제일 입력"
+                      {...getTestProps('date-picker')}
+                    />
+                  ) : (
                   <TouchableOpacity
                     onPress={openDatePicker}
                     disabled={isPending}
                     activeOpacity={0.7}
-                    className={`bg-slate-100 rounded-xl p-4 flex-row items-center justify-between border min-h-[56px] ${
+                    className={`bg-slate-100 dark:bg-slate-700 rounded-xl p-4 flex-row items-center justify-between border min-h-[56px] ${
                       validationErrors.startDate ? 'border-expense' : 'border-transparent'
                     } ${isPending ? 'opacity-50' : ''}`}
                     accessibilityLabel="결제일 선택"
@@ -407,6 +426,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                       )}
                     </View>
                   </TouchableOpacity>
+                  )}
                   
                   {validationErrors.startDate && (
                     <Typography variant="caption" color="danger" className="mt-1">
@@ -428,7 +448,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
                   {/* iOS 날짜 선택기 */}
                   {showDatePicker && Platform.OS === 'ios' && (
-                    <View className="mt-4 bg-slate-50 rounded-xl p-4">
+                    <View className="mt-4 bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
                       <View className="flex-row items-center justify-between mb-4">
                         <Typography variant="h3" color="textPrimary">
                           날짜 선택

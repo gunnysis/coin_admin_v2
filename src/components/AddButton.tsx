@@ -2,8 +2,9 @@ import React, { useRef, useEffect } from 'react';
 import { View, TouchableOpacity, Platform, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Typography } from './ui/Typography';
-import { SPACING, SHADOWS, COLORS } from '../constants/theme';
+import { SPACING, SHADOWS } from '../constants/theme';
 import { useDeviceDimensions } from '../hooks/useDeviceDimensions';
+import { useTheme } from '../contexts/ThemeContext';
 import { getResponsiveValue } from '../utils/responsive';
 import { getTestProps } from '../utils/test-utils';
 
@@ -19,6 +20,7 @@ export const AddButton = React.memo<AddButtonProps>(({
   bottomInset = 0,
 }) => {
   const device = useDeviceDimensions();
+  const { colors } = useTheme();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   
@@ -101,8 +103,8 @@ export const AddButton = React.memo<AddButtonProps>(({
             width: buttonSize,
             height: buttonSize,
             borderWidth,
-            backgroundColor: COLORS.surface,
-            borderColor: disabled ? COLORS.gray400 : COLORS.primary,
+            backgroundColor: colors.surface,
+            borderColor: disabled ? colors.gray400 : colors.primary,
             opacity: disabled ? 0.5 : 1,
           }}
           disabled={disabled}

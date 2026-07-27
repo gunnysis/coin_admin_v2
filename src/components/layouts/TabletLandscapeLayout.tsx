@@ -1,12 +1,16 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Alert } from 'react-native';
+import { formatError } from '../../utils/errorHandler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SPACING } from '../../constants/theme';
 import { TotalAmountCard } from '../TotalAmountCard';
 import { ExpenseList } from '../ExpenseList';
+import { SkeletonCard } from '../ui/SkeletonCard';
+import { SkeletonList } from '../ui/SkeletonList';
 import { VariableExpenseList } from '../VariableExpenseList';
 import { VariableTotalAmountCard } from '../VariableTotalAmountCard';
+import { MonthTransitionBanner } from '../MonthTransitionBanner';
 import { AddButton } from '../AddButton';
 import { AddExpenseModal } from '../AddExpenseModal';
 import { AddVariableExpenseModal } from '../AddVariableExpenseModal';
@@ -14,6 +18,7 @@ import { TabNavigation } from '../TabNavigation';
 import type { FixedMonthCost, VariableMonthExpense, AddExpenseFormData, AddVariableExpenseFormData } from '../../types';
 import type { FixedExpenseLayoutData, VariableExpenseLayoutData } from '../../types';
 import { useAppContext } from '../../contexts/AppContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useExpenseHandlers } from '../../hooks/useExpenseHandlers';
 import { useVariableExpenseHandlers } from '../../hooks/useVariableExpenseHandlers';
 import { DeviceDimensions } from '../../hooks/useDeviceDimensions';
@@ -58,6 +63,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
     closeVariableModal,
     selectedVariableMonth,
   } = useAppContext();
+  const { isDark } = useTheme();
   const {
     handleDelete: handleFixedDelete,
     handleAdd: handleFixedAdd,
@@ -116,9 +122,22 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
     },
     [editingVariableItem, handleVariableAdd, handleVariableUpdate, closeVariableModal]
   );
+
+  useEffect(() => {
+    if (fixedExpenseData.refreshError) {
+      Alert.alert('새로고침 실패', formatError(fixedExpenseData.refreshError).userMessage);
+    }
+  }, [fixedExpenseData.refreshError]);
+
+  useEffect(() => {
+    if (variableExpenseData.refreshError) {
+      Alert.alert('새로고침 실패', formatError(variableExpenseData.refreshError).userMessage);
+    }
+  }, [variableExpenseData.refreshError]);
+
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1 bg-slate-50 dark:bg-slate-900" edges={['top', 'bottom', 'left', 'right']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
       <View className="flex-1" style={containerStyle}>
         {renderHeader()}
@@ -130,14 +149,21 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
             style={[tabletLayoutStyles.grid, { marginTop: SPACING.md }]}
           >
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
-              <TotalAmountCard
-                totalAmount={fixedExpenseData.totalAmount}
-                isExpanded={isExpanded}
-                onToggleExpand={toggleExpand}
-                expenses={fixedExpenseData.expenses}
-              />
+              {fixedExpenseData.isInitLoading ? (
+                <SkeletonCard height={120} />
+              ) : (
+                <TotalAmountCard
+                  totalAmount={fixedExpenseData.totalAmount}
+                  isExpanded={isExpanded}
+                  onToggleExpand={toggleExpand}
+                  expenses={fixedExpenseData.expenses}
+                />
+              )}
             </View>
             <View className="flex-1" style={tabletLayoutStyles.rightColumn}>
+              {fixedExpenseData.isInitLoading ? (
+                <SkeletonList />
+              ) : (
               <ExpenseList
                 expenses={fixedExpenseData.expenses}
                 isLoading={fixedExpenseData.isLoading}
@@ -153,6 +179,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
                 bottomInset={bottomInset}
                 isTabletLandscape={true}
               />
+              )}
             </View>
             <AddButton
               onPress={() => openFixedModal()}
@@ -166,14 +193,22 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
             style={[tabletLayoutStyles.grid, { marginTop: SPACING.md }]}
           >
             <View className="flex-1" style={tabletLayoutStyles.leftColumn}>
+              <MonthTransitionBanner month={selectedVariableMonth} />
+              {variableExpenseData.isInitLoading ? (
+                <SkeletonCard height={120} />
+              ) : (
               <VariableTotalAmountCard
                 totalAmount={variableExpenseData.totalAmount}
                 isExpanded={isVariableExpanded}
                 onToggleExpand={toggleVariableExpanded}
                 expenses={variableExpenseData.expenses}
               />
+              )}
             </View>
             <View className="flex-1" style={tabletLayoutStyles.rightColumn}>
+              {variableExpenseData.isInitLoading ? (
+                <SkeletonList />
+              ) : (
               <VariableExpenseList
                 expenses={variableExpenseData.expenses}
                 isLoading={variableExpenseData.isLoading}
@@ -189,6 +224,7 @@ export const TabletLandscapeLayout = React.memo<TabletLandscapeLayoutProps>(({
                 bottomInset={bottomInset}
                 isTabletLandscape={true}
               />
+              )}
             </View>
             <AddButton
               onPress={() => openVariableModal()}

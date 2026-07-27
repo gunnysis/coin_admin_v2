@@ -66,6 +66,36 @@ export const COLORS = {
   shadow: 'rgba(0, 0, 0, 0.08)',
   shadowLight: 'rgba(0, 0, 0, 0.04)',
   shadowDark: 'rgba(0, 0, 0, 0.12)',
+
+  // Overlay & Subtle (모달 배경, primary 10% 배지 등 — 단일 소스)
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  primarySubtle: 'rgba(37, 99, 235, 0.1)', // primary(blue-600) 10%
+} as const;
+
+/** 다크 모드용 색상 (배경·표면·텍스트 반전) */
+export const COLORS_DARK = {
+  ...COLORS,
+  background: '#0f172a',
+  surface: '#1e293b',
+  surfaceElevated: '#334155',
+  textPrimary: '#f8fafc',
+  textSecondary: '#cbd5e1',
+  textTertiary: '#94a3b8',
+  border: '#334155',
+  borderLight: '#1e293b',
+  borderDark: '#475569',
+  gray50: '#0f172a',
+  gray100: '#1e293b',
+  gray200: '#334155',
+  gray300: '#475569',
+  gray400: '#64748b',
+  gray500: '#94a3b8',
+  gray600: '#cbd5e1',
+  gray700: '#e2e8f0',
+  gray800: '#f1f5f9',
+  gray900: '#f8fafc',
+  overlay: 'rgba(0, 0, 0, 0.6)',
+  primarySubtle: 'rgba(59, 130, 246, 0.18)', // primaryLight(blue-500) 18% — 다크 표면 대비 확보
 } as const;
 
 // 8pt Grid (4/8 배수)

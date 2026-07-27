@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Typography } from './Typography';
-import { SPACING, COLORS } from '../../constants/theme';
+import { SPACING } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface ExchangeRateHintProps {
   /** USD 선택 시에만 표시 */
@@ -25,13 +26,14 @@ export function ExchangeRateHint({
   isLoading = false,
   isFallback = false,
 }: ExchangeRateHintProps) {
+  const { colors } = useTheme();
   if (!show) return null;
 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: SPACING.sm, gap: SPACING.sm }}>
       {isLoading ? (
         <>
-          <ActivityIndicator size="small" color={COLORS.gray500} />
+          <ActivityIndicator size="small" color={colors.gray500} />
           <Typography variant="caption" color="textTertiary">
             환율 불러오는 중…
           </Typography>

@@ -1,10 +1,14 @@
-import React, { useCallback } from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { View, Alert } from 'react-native';
 import { SPACING } from '@/constants/theme';
+import { formatError } from '@/utils/errorHandler';
 import { VariableExpenseList } from '@/components/VariableExpenseList';
 import { AddButton } from '@/components/AddButton';
 import { AddVariableExpenseModal } from '@/components/AddVariableExpenseModal';
 import { VariableTotalAmountCard } from '@/components/VariableTotalAmountCard';
+import { MonthTransitionBanner } from '@/components/MonthTransitionBanner';
+import { SkeletonCard } from '@/components/ui/SkeletonCard';
+import { SkeletonList } from '@/components/ui/SkeletonList';
 import { VariableMonthExpense, AddVariableExpenseFormData } from '@/types';
 import { useAppContext } from '@/contexts/AppContext';
 import { useVariableExpenseHandlers } from '@/hooks/useVariableExpenseHandlers';
@@ -20,6 +24,7 @@ interface VariableExpenseFeatureProps {
   isDeleting: boolean;
   onRefresh: () => void;
   onLoadMore: () => void;
+  refreshError?: Error | null;
   bottomInset: number;
   containerStyle: { paddingHorizontal: number };
 }
@@ -39,9 +44,16 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
   isDeleting,
   onRefresh,
   onLoadMore,
+  refreshError,
   bottomInset,
   containerStyle,
 }) => {
+  useEffect(() => {
+    if (refreshError) {
+      Alert.alert('새로고침 실패', formatError(refreshError).userMessage);
+    }
+  }, [refreshError]);
+
   const {
     isVariableModalVisible,
     editingVariableItem,
@@ -78,27 +90,36 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
 
   return (
     <View className="flex-1">
-      <VariableTotalAmountCard
-        totalAmount={totalAmount}
-        isExpanded={isVariableExpanded}
-        onToggleExpand={toggleVariableExpanded}
-        expenses={expenses}
-      />
-      <View style={{ flex: 1, marginTop: SPACING.lg }}>
-        <VariableExpenseList
+      <MonthTransitionBanner month={selectedVariableMonth} />
+      {isInitLoading ? (
+        <SkeletonCard height={120} />
+      ) : (
+        <VariableTotalAmountCard
+          totalAmount={totalAmount}
+          isExpanded={isVariableExpanded}
+          onToggleExpand={toggleVariableExpanded}
           expenses={expenses}
-          isLoading={isLoading}
-          isInitLoading={isInitLoading}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          onLoadMore={onLoadMore}
-          isDeleting={isDeleting}
-          bottomInset={bottomInset}
         />
+      )}
+      <View style={{ flex: 1, marginTop: SPACING.lg }}>
+        {isInitLoading ? (
+          <SkeletonList />
+        ) : (
+          <VariableExpenseList
+            expenses={expenses}
+            isLoading={isLoading}
+            isInitLoading={isInitLoading}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={onLoadMore}
+            isDeleting={isDeleting}
+            bottomInset={bottomInset}
+          />
+        )}
       </View>
       <AddButton
         onPress={() => openVariableModal()}
