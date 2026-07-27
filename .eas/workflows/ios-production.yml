@@ -6,8 +6,21 @@
 name: iOS Production Build and Submit
 
 jobs:
+  checks:
+    name: Pre-build checks
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Version/config sync check
+        run: npm run sync:version:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npx jest --ci
+
   build_ios:
     name: Build iOS
+    needs: [checks]
     type: build
     params:
       platform: ios

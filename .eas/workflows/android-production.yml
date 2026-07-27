@@ -1,6 +1,7 @@
 # Android 프로덕션 빌드 후 Play Store 제출
 # GitHub main 브랜치 push 시 자동 실행 (Expo 대시보드에서 저장소 연결 필요)
 # 수동 실행: npx eas-cli@latest workflow:run android-production.yml
+# 빌드 전 checks job이 실패하면 빌드·제출이 실행되지 않는다 (push = 무검증 배포 방지)
 name: Android Production Build and Submit
 
 on:
@@ -8,8 +9,21 @@ on:
     branches: [main]
 
 jobs:
+  checks:
+    name: Pre-build checks
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Version/config sync check
+        run: npm run sync:version:check
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npx jest --ci
+
   build_android:
     name: Build Android
+    needs: [checks]
     type: build
     params:
       platform: android
