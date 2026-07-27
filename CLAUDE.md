@@ -90,6 +90,7 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 - **CNG(prebuild) 체제:** `android/`·`ios/`는 저장소에 없음(.gitignore) — 네이티브는 app.config.ts에서 생성(EAS 빌드 시 자동 prebuild, 로컬은 `expo run:android`). **네이티브 커스텀은 config plugin으로만** — android/ 직접 수정은 다음 prebuild에서 소실됨.
 - App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 후 **`npm run sync:version` 실행** — package.json 전파 + `runtimeVersion: MARKETING_VERSION` 연결 검사 + 로컬 prebuild 산출물(존재 시) 정합 검사. CI·EAS 워크플로 checks job의 `sync:version:check`가 게이트. versionCode/buildNumber는 EAS 원격 관리(autoIncrement). 상세: [docs/development/config-sync.md](docs/development/config-sync.md).
+- **Node 버전 단일 소스는 `.nvmrc`(정확한 핀, 예: 24.18.0 — 메이저만 지정 금지):** GitHub CI는 `node-version-file: ".nvmrc"` 참조, EAS 워크플로 `tools.node`는 동일 값(sync 게이트가 정합 검사). lockfile 재생성·검증은 `.nvmrc` Node의 내장 npm 기준 — 로컬·CI npm이 갈라지면 `npm ci` lockfile 검증이 CI에서만 실패한다(2026-07 사고, config-sync.md 참고).
 - `src/locales/ko.json`은 네이티브 앱 이름 현지화용(app.config.ts `locales`) — 런타임 i18n 아님.
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`

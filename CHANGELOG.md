@@ -6,6 +6,7 @@
 
 ## [Unreleased]
 
+- **CI npm ci EUSAGE 실패 디버깅·근본 해결 + 재발 방지 설계:** 원인 — CI가 `node-version: "24"`(메이저만)로 최신 마이너(Node 24.18, npm 11.16)를 받는 동안 로컬은 npm 11.6이어서, npm 11.16의 강화된 lockfile 검증(optional 패키지 peerDependencies 기록 요구)이 로컬 재현 불가한 실패를 유발. 해결 — CI와 동일 npm으로 재현 후 lockfile 재생성(`@emnapi/*` 최상위 항목 추가), npm 11.6/11.16/12 3중 검증. 예방 — **Node 버전 단일 소스를 `.nvmrc` 정확 핀(24.18.0)으로 통일**: GitHub CI는 `node-version-file` 참조, EAS 워크플로 `tools.node`는 동일 값, `sync:version:check` 게이트에 Node 버전 정합 검사 4종 추가(핀 형식·CI 파일 참조·EAS 값 일치·engines 하한)
 - **CI/CD 점검·개선:** ① **워크플로 제출 실패 근본 원인 해결** — eas.json이 gitignore된 로컬 키 경로(serviceAccountKeyPath·ascApiKeyPath)를 지정해 클라우드 제출이 파일 부재로 실패(빌드 43 제출 실패의 원인). 경로 제거로 EAS 서버 저장 크레덴셜 사용(공식 방식) ② Android 워크플로에 paths 필터(docs·md 제외)와 concurrency(구 런 취소) ③ GitHub CI에 pull_request 트리거(머지 전 검증)·concurrency·권한 최소화(contents: read)·timeout-minutes
 - **CNG(prebuild) 전환 — bare 드리프트 부류의 근본 해결:** `android/`를 저장소에서 제거(.gitignore `/android` `/ios`), 네이티브는 app.config.ts 단일 소스에서 생성(EAS 빌드 시 자동 prebuild). versionName 불일치·portrait 고정·statusBar 사장 설정·locale 오염 같은 "선언 ≠ 네이티브" 문제 부류가 구조적으로 소멸. dev/preview의 Android packageName 접미사도 이제 적용(동시 설치 가능). sync 스크립트를 "저장소 검사 + 로컬 생성물 조건부 검사"로 재편(+`[object Object]` 오염 검사)
 - **배포 안전장치 — push=무검증 배포 해소:** EAS 워크플로(android·ios)에 pre-build checks job(sync check·typecheck·jest) 추가 — 검사 실패 시 빌드·스토어 제출 중단

@@ -19,10 +19,11 @@ concurrency:
   cancel_in_progress: true
   group: ${{ workflow.filename }}-${{ github.ref }}
 
-# package.json engines(>=22.13)와 정합하는 Node로 checks job 실행
+# Node 버전 단일 소스는 .nvmrc — 값이 갈라지면 sync:version:check가 실패한다.
+# 정확한 버전 핀(메이저만 지정 금지): 내장 npm이 바뀌면 lockfile 검증이 로컬과 갈라짐
 defaults:
   tools:
-    node: "24"
+    node: "24.18.0"
 
 jobs:
   checks:

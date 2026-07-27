@@ -114,6 +114,58 @@ if (/runtimeVersion: MARKETING_VERSION\b/.test(appConfig)) {
 }
 
 // ---------------------------------------------------------------------------
+// [1.5] Node 버전 단일 소스 검사 — .nvmrc(정확한 핀) ↔ GitHub CI ↔ EAS 워크플로 ↔ engines
+//
+// 배경(2026-07): CI가 node-version "24"(메이저만)로 최신 마이너를 떠다니다 내장 npm이
+// 로컬(11.6)과 갈라져(11.16), npm 11.16의 강화된 lockfile 검증(optional 패키지의
+// peerDependencies 기록 요구)에 로컬에서 재현되지 않는 npm ci EUSAGE 실패가 발생.
+// 예방: Node를 정확한 버전으로 핀하고 모든 소비처가 같은 값을 쓰도록 게이트한다.
+// lockfile 재생성·검증도 .nvmrc Node의 내장 npm으로 수행한다(docs/development/config-sync.md).
+// ---------------------------------------------------------------------------
+{
+  const nvmrc = read('.nvmrc').trim();
+  if (!/^\d+\.\d+\.\d+$/.test(nvmrc)) {
+    drift++;
+    console.error(`  DRIFT .nvmrc ("${nvmrc}") — 정확한 버전 핀(x.y.z) 필요. 메이저만 지정하면 CI npm이 로컬과 갈라짐`);
+  } else {
+    console.log(`  OK    .nvmrc (Node ${nvmrc} 핀)`);
+  }
+
+  // GitHub CI: setup-node가 .nvmrc를 참조해야 함 (인라인 node-version은 소스 이원화)
+  const ciYml = read('.github/workflows/ci.yml');
+  if (/node-version-file:\s*["']?\.nvmrc["']?/.test(ciYml) && !/^\s*node-version:/m.test(ciYml)) {
+    console.log('  OK    .github/workflows/ci.yml (node-version-file: .nvmrc)');
+  } else {
+    drift++;
+    console.error('  DRIFT .github/workflows/ci.yml — setup-node는 node-version-file: ".nvmrc"만 사용할 것');
+  }
+
+  // EAS 워크플로: tools.node가 .nvmrc와 동일한 정확 버전이어야 함
+  for (const wf of readdirSync(resolve(root, '.eas/workflows')).filter((f) => f.endsWith('.yml'))) {
+    const file = `.eas/workflows/${wf}`;
+    const nodeVer = extract(read(file), /node:\s*["']?([\d.]+)["']?/, `${file}의 tools.node`);
+    if (nodeVer === nvmrc) {
+      console.log(`  OK    ${file} (tools.node = ${nodeVer})`);
+    } else {
+      drift++;
+      console.error(`  DRIFT ${file} (tools.node = ${nodeVer}, 기대값 ${nvmrc} — .nvmrc와 동기화할 것)`);
+    }
+  }
+
+  // engines.node 최소 요건을 핀 버전이 충족하는지
+  const enginesNode = extract(read('package.json'), /"node":\s*">=(\d+\.\d+\.\d+)"/, 'package.json engines.node');
+  const toNums = (v) => v.split('.').map(Number);
+  const [a, b] = [toNums(nvmrc), toNums(enginesNode)];
+  const satisfies = a[0] !== b[0] ? a[0] > b[0] : a[1] !== b[1] ? a[1] > b[1] : a[2] >= b[2];
+  if (satisfies) {
+    console.log(`  OK    package.json (engines.node >=${enginesNode} ⊇ ${nvmrc})`);
+  } else {
+    drift++;
+    console.error(`  DRIFT package.json (engines.node >=${enginesNode})가 .nvmrc ${nvmrc}보다 높음 — 둘 중 하나를 갱신할 것`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // [2] 로컬 네이티브 생성물 검사 (android/ 없으면 전체 건너뜀)
 // ---------------------------------------------------------------------------
 if (!exists('android')) {
