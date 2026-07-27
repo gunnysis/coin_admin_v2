@@ -89,7 +89,7 @@ export default () => {
     icon: envConfig.icon,
     scheme: APP_CONSTANTS.APP_SCHEME,
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
+    // newArchEnabled 키는 SDK 55에서 제거됨 — New Architecture 상시 활성
     // EAS Update 설정
     updates: {
       url: `https://u.expo.dev/${APP_CONSTANTS.EAS_PROJECT_ID}`,
@@ -135,7 +135,7 @@ export default () => {
       output: "single",
       favicon: ASSET_PATHS.FAVICON,
     },
-    plugins: ["expo-sqlite"],
+    plugins: ["expo-sqlite", "expo-font", "expo-sharing"],
     extra: {
       appEnv,
       eas: {
