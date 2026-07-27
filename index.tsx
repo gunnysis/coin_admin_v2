@@ -1,11 +1,16 @@
 import React from 'react';
 import { registerRootComponent } from 'expo';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import './global.css';
 
+import { initErrorReporting } from './src/lib/errorReporting';
 import App from './src/app/App';
+
+initErrorReporting();
 import { AppProvider } from './src/contexts/AppContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { createQueryClient } from './src/config/queryClient';
 
@@ -16,15 +21,19 @@ const queryClient = createQueryClient();
 // Context Provider와 Query Provider로 앱을 감싸서 전역 상태 관리
 const RootApp = () => {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <AppProvider>
-            <App />
-          </AppProvider>
+          <ThemeProvider>
+            <AppProvider>
+              <App />
+            </AppProvider>
+          </ThemeProvider>
         </SafeAreaProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 };
 

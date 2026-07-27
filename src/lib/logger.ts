@@ -1,16 +1,24 @@
 /**
  * 로깅 유틸리티
  * 개발/프로덕션 환경에 따라 다른 로깅 전략 적용
+ * 프로덕션 에러는 setErrorReporter로 등록한 리포터(Sentry 등)로 전송
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogContext {
+export interface LogContext {
   [key: string]: unknown;
 }
 
+export type ErrorReporter = (message: string, error?: unknown, context?: LogContext) => void;
+
 class Logger {
   private isDevelopment = __DEV__;
+  private errorReporter: ErrorReporter | null = null;
+
+  setErrorReporter(reporter: ErrorReporter | null): void {
+    this.errorReporter = reporter;
+  }
 
   private log(level: LogLevel, message: string, context?: LogContext): void {
     if (!this.isDevelopment && level === 'debug') {
@@ -38,9 +46,9 @@ class Logger {
       }
     }
 
-    // 프로덕션에서는 에러만 외부 서비스로 전송
     if (!this.isDevelopment && level === 'error') {
-      // TODO: 에러 리포팅 서비스 연동 (Sentry, Crashlytics 등)
+      const err = context?.error;
+      this.errorReporter?.(message, err, context);
     }
   }
 

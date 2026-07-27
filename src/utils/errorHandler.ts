@@ -67,12 +67,14 @@ export const formatError = (error: unknown): AppError => {
   };
 };
 
+import { logger } from '../lib/logger';
+
 /**
- * 에러 로깅 (개발 환경에서만)
+ * 에러 로깅 및 프로덕션 리포팅
+ * logger.error 호출로 콘솔 출력 + setErrorReporter(Sentry 등) 연동
  */
 export const logError = (error: unknown, context?: string) => {
-  if (__DEV__) {
-    console.error(`[${context || 'Error'}]`, error);
-  }
+  const ctx = context ?? 'Error';
+  logger.error(ctx, error, { context: ctx });
 };
 
