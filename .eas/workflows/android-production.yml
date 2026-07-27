@@ -1,0 +1,24 @@
+# Android 프로덕션 빌드 후 Play Store 제출
+# GitHub main 브랜치 push 시 자동 실행 (Expo 대시보드에서 저장소 연결 필요)
+# 수동 실행: npx eas-cli@latest workflow:run android-production.yml
+name: Android Production Build and Submit
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_android:
+    name: Build Android
+    type: build
+    params:
+      platform: android
+      profile: production
+
+  submit_android:
+    name: Submit to Play Store
+    type: submit
+    needs: [build_android]
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production

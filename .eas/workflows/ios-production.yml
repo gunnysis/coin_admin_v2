@@ -1,0 +1,25 @@
+# iOS 프로덕션 빌드 후 App Store Connect 제출
+# GitHub main 브랜치 push 시 자동 실행 (Expo 대시보드에서 저장소 연결 필요)
+# 수동 실행: npx eas-cli@latest workflow:run ios-production.yml
+# 전제: Apple App Store Connect API 키 등 iOS 제출 크레덴셜이 Expo 대시보드에 연결되어 있어야 함
+name: iOS Production Build and Submit
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_ios:
+    name: Build iOS
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit_ios:
+    name: Submit to App Store Connect
+    type: submit
+    needs: [build_ios]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
