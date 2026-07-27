@@ -2,6 +2,8 @@
 
 리팩토링 설계(금액/통화 분리, Query Key Factory, testID)와 디자인 향상 설계(컬러·타이포·카드·입력 UX·로드맵)를 한 문서로 정리합니다.
 
+> **상태 (2026-07):** Part 1(Phase 1–3) 및 Part 2 로드맵의 주요 항목 구현 완료. 미적용(선택): Bottom Sheet, Shared Element 전환, Donut 차트. 현황 상세: [improvements-roadmap.md](improvements-roadmap.md).
+
 ---
 
 # Part 1. 리팩토링 설계 (2024-05)
@@ -14,7 +16,7 @@
 
 ## Phase 1. 금액/통화 로직 분리 (SRP)
 
-[amount-currency.md](amount-currency.md) 설계 원칙을 코드 레벨에서 강제. UI는 "데이터 표시"만 담당.
+[amount-currency.md](../features/amount-currency.md) 설계 원칙을 코드 레벨에서 강제. UI는 "데이터 표시"만 담당.
 
 - **AmountInputSection**: Props만 받음 — `amount`, `currency`, `onChangeAmount`, `onToggleCurrency`, `errorMessage?`, `isDisabled?`. 환율(rate)은 상위에서 처리.
 - **useAmountWithCurrency**: `uiProps`(UI용) + `data`(저장용 `getAmountInKrw`) 반환 구조.
@@ -25,7 +27,7 @@
 
 ## Phase 3. E2E testID 전략
 
-`src/utils/test-utils.ts`의 `getTestProps(id)` — 웹 `data-testid`, 네이티브 `testID`. 주요 인터랙션 요소에 적용. E2E는 [e2e-testing.md](e2e-testing.md) 참고.
+`src/utils/test-utils.ts`의 `getTestProps(id)` — 웹 `data-testid`, 네이티브 `testID`. 주요 인터랙션 요소에 적용. E2E는 [e2e-testing.md](../testing/e2e-testing.md) 참고.
 
 ## 로드맵
 

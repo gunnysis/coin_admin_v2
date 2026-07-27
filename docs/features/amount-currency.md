@@ -6,7 +6,7 @@
 
 고정비·유동비 입력 시 **원(KRW)** 또는 **달러(USD)** 로 금액을 입력할 수 있으며, 달러 입력 시 **실시간 환율 API**로 원화로 변환한 뒤 DB에는 항상 **원(KRW) 정수**로만 저장됩니다.
 
-**설계 원칙**: 기본 통화는 **원(한국 원화)**. **금액 입력이 주인공**이고, 달러는 필요할 때만 "달러로 입력" 한 번 탭으로 전환. 사용자에게 환율 숫자는 보여주지 않고, 저장 시에만 원화 변환에 사용. 수정 시에도 달러 입력 가능하며, 추가와 동일하게 원화 변환하여 저장.
+**설계 원칙**: 기본 통화는 **원(한국 원화)**. **금액 입력이 주인공**이고, 통화는 **원 | 달러 Segmented Control**로 전환. 달러 선택 시 `ExchangeRateHint`가 현재 환율(예: "1 USD ≈ 1,350원", fallback 시 "기본 환율" 안내)을 표시하고, 저장 시 원화로 변환. 수정 시에도 달러 입력 가능하며, 추가와 동일하게 원화 변환하여 저장.
 
 **에러·안정성**: 금액 검증(빈 값/NaN/0 이하), 달러 제출 시 환율 로딩 차단, API 실패 시 fallback 환율 사용으로 저장 실패를 막음. 타입(AmountCurrency, number)과 단일 책임(훅/UI/검증 분리)으로 일관된 동작을 유지.
 
@@ -18,8 +18,8 @@
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  AmountInputSection (공통) — 한 블록 그룹핑                    │ │
 │  │  ├── InputField (금액) — 기본 원화, 입력 우선                 │ │
-│  │  └── "달러로 입력" / "원으로 입력" 단일 링크 (통화 전환)       │ │
-│  │  (환율은 UI에 표시하지 않음, 제출 시 변환에만 사용)            │ │
+│  │  ├── 원 | 달러 Segmented Control (통화 전환)                  │ │
+│  │  └── ExchangeRateHint — 달러 선택 시 환율/기본 환율 안내       │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 │  useAmountWithCurrency()  useExchangeRate()                        │
 └─────────────────────────────────────────────────────────────────┘
@@ -52,12 +52,13 @@
 | `src/utils/amount.ts` | `formatAmount`, `parseAmount`, `usdToKrw(usd, rate)` |
 | `src/hooks/useExchangeRate.ts` | 환율 조회 훅 |
 | `src/hooks/useAmountWithCurrency.ts` | 금액·통화 상태, `getAmountInKrw(rate)` |
-| `src/components/ui/AmountInputSection.tsx` | 금액 입력 + 통화 링크, 환율 비노출 |
+| `src/components/ui/AmountInputSection.tsx` | 금액 입력 + 원/달러 Segmented Control |
+| `src/components/ui/ExchangeRateHint.tsx` | 달러 선택 시 환율 안내(로딩/환율/기본 환율) |
 
 ## UX/UI 정리
 
-- **기본**: 금액 입력 필드가 주인공. 기본 통화 원(KRW). 통화 전환은 "달러로 입력"/"원으로 입력" 단일 링크, 44pt 터치 영역, 햅틱.
-- **환율 비노출**: 저장 시에만 변환 사용. 수정 모드도 동일.
+- **기본**: 금액 입력 필드가 주인공. 기본 통화 원(KRW). 통화 전환은 원 | 달러 Segmented Control, 44pt 터치 영역, 햅틱. 모달 오픈 시 금액 필드 자동 포커스.
+- **환율 표시**: 달러 선택 시에만 `ExchangeRateHint` 노출(로딩 중 / "1 USD ≈ n원" / fallback 시 "기본 환율"). 저장 시 변환에 사용. 수정 모드도 동일.
 
 ## API 사양
 
@@ -78,6 +79,6 @@
 
 ## 관련 문서
 
-- [개발 가이드](development.md) — 아키텍처·에러 처리
-- [설계·계획](plans.md) — 리팩토링·디자인
-- [프로젝트 README](../README.md) — 개발 가이드·접근성
+- [개발 가이드](../development/architecture.md) — 아키텍처·에러 처리
+- [설계·계획](../planning/plans.md) — 리팩토링·디자인
+- [프로젝트 README](../../README.md) — 개발 가이드·접근성

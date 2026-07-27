@@ -25,8 +25,8 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 
 ## 제한 사항
 
-- **웹 빌드**: `metro.config.js`에 `resolver.assetExts`에 `wasm`을 추가해 두었으므로 `expo-sqlite` 웹 번들이 가능함. 배포 시 웹 서버에 `Cross-Origin-Embedder-Policy`, `Cross-Origin-Opener-Policy` 헤더가 필요할 수 있음([Expo SQLite 웹 설정](https://docs.expo.dev/versions/latest/sdk/sqlite#web-setup)).
-- **날짜 선택**: 웹에서는 `DateTimePicker`가 렌더되지 않아 결제일/지출일을 선택할 수 없음. 따라서 E2E에서는 "이름·금액만 입력 시 추가하기 비활성화" 등 검증만 포함하며, 실제 저장까지의 전체 플로우는 네이티브 또는 웹용 날짜 입력 추가 후 확장 가능.
+- **웹 빌드**: `metro.config.js`에 `resolver.assetExts`에 `wasm`을 추가해 두었으므로 `expo-sqlite` 웹 번들이 가능함. 배포 시 웹 서버에 **COOP/COEP** 헤더가 필요할 수 있음 → [웹 배포](#웹-배포) 참고.
+- **날짜 선택**: 웹에서는 고정비/유동비 모달에 **텍스트 날짜 입력**(`YYYY-MM-DD`)이 노출되므로, E2E에서 결제일/지출일 입력 후 저장 플로우까지 검증 가능.
 - **첫 실행**: Playwright 브라우저 미설치 시 `npx playwright install`(또는 `npx playwright install chromium`) 한 번 실행 필요.
 
 ## 비범위(현재)
@@ -59,7 +59,7 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 ### 웹 E2E 범위 및 한계
 
 - **웹에서 검증하는 것**: 로드, 탭 전환, 모달 열기, 이름·금액 입력, 버튼 활성화(날짜 기본값 오늘 적용 시) 등 **웹에서 존재하는 시나리오만**.
-- **웹에서 하지 않는 것**: 날짜 선택기 조작(웹에서는 미렌더), "날짜 미선택 시 비활성화"처럼 **웹에서는 발생하지 않는 상태** 검증.
+- **웹에서 하는 것**: 결제일/지출일은 텍스트 필드(`data-testid="date-picker"`)로 `YYYY-MM-DD` 입력 가능. 이름·금액·날짜 입력 후 저장 플로우 E2E 포함.
 - **선택자**: `accessibilityLabel` → DOM `aria-label` / `role` 기준. RN Web 차이로 `aria-selected` 등은 플랫폼별로 다를 수 있음. 탭 전환은 "탭 클릭 후 다른 탭 보임" 등으로 검증.
 - **testID**: `src/utils/test-utils.ts`의 `getTestProps(id)`로 주요 요소에 `data-testid`(웹)/`testID`(네이티브)가 부여됨. E2E에서 `page.getByTestId('amount-input')`, `page.getByTestId('currency-toggle')`, `page.getByTestId('tab-fixed')` 등으로 보조 사용 가능.
 - **고정비/유동비 모달**: 제출 버튼은 `getByRole('button', { name: '추가하기' })` 로만 대상 (화면의 FAB "항목 추가"와 구분).
@@ -68,6 +68,22 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 
 - Metro가 "Error while reading cache, falling back to a full crawl" 및 "Unable to deserialize cloned data"를 출력하면 디스크 캐시가 손상되었거나 Node/V8 버전 불일치일 수 있음. **권장**: e2e 및 웹 개발 시 주기적으로 `npm run web:clear`(또는 `npx expo start --web --clear`) 사용.
 - 문제가 반복되면 Metro 파일맵 캐시를 수동 삭제: OS 임시 디렉터리(예: Windows `%TEMP%`, macOS/Linux `$TMPDIR`) 내 `metro-file-map-*` 파일을 삭제한 뒤 `npm run web:clear`로 웹을 다시 띄운다.
+
+## 웹 배포
+
+웹 앱을 정적 빌드하여 호스팅할 때 다음을 적용한다.
+
+1. **정적 빌드 절차**
+   - `npx expo export --platform web`로 `dist/`(또는 설정된 출력 디렉터리)에 정적 파일 생성.
+   - 생성된 파일을 웹 서버 또는 CDN에 업로드. 루트를 SPA로 서빙하려면 `index.html` 기준 fallback(예: Nginx `try_files`) 설정.
+
+2. **COOP/COEP 헤더**
+   - `expo-sqlite` 웹 번들(WASM) 사용 시 공유 배열 메모리 요구로 다음 헤더가 필요할 수 있음([Expo SQLite 웹 설정](https://docs.expo.dev/versions/latest/sdk/sqlite#web-setup)):
+     - `Cross-Origin-Opener-Policy: same-origin`
+     - `Cross-Origin-Embedder-Policy: require-corp`
+   - Nginx 예: `add_header Cross-Origin-Opener-Policy same-origin;` / `add_header Cross-Origin-Embedder-Policy require-corp;`
+   - 필요 시 에셋(worker, wasm)에 `Cross-Origin-Resource-Policy` 등 추가.
+   - 상세 절차·Nginx 예시는 [deploy-web.md](../deployment/deploy-web.md) 참고.
 
 ## 설계·작업 시 고려 사항
 

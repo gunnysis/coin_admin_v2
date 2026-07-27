@@ -1,7 +1,7 @@
 # 과거 구현·리팩토링 요약 (참고용)
 
 유동비 월별 관리 기능의 Phase 1 구현 내용과 이후 리팩토링(메모이제이션, 타입 등)을 한 문서로 모았습니다.  
-**현재 설계**: [variable-expense-month.md](variable-expense-month.md), [plans.md](plans.md)
+**현재 설계**: [variable-expense-month.md](../features/variable-expense-month.md), [plans.md](../planning/plans.md)
 
 ---
 

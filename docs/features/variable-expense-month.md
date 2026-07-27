@@ -1,6 +1,6 @@
 # 유동비 월별 관리 설계 (v2)
 
-최신 기술 스택·UX/UI 최적화를 반영한 유동비 월별 선택·캐싱·비교 설계. 사용 방법은 [guides.md](guides.md) 참고.
+최신 기술 스택·UX/UI 최적화를 반영한 유동비 월별 선택·캐싱·비교 설계. 사용 방법은 [guides.md](../user/guides.md) 참고.
 
 ## 개요
 유동비 기능의 월별 관리 시스템을 최신 기술 스택과 사용자 경험 최적화 패턴으로 재설계합니다.
@@ -76,13 +76,13 @@
 ### Phase 1: 핵심 (완료)
 - AppContext 월 선택, 월 유틸, MonthSelector(기본), 데이터 조회 월 파라미터, useMonthNavigation
 
-### Phase 2: UX 개선
-- 스와이프, 하단 시트, 월 전환 배너, 스켈레톤
+### Phase 2: UX 개선 (완료 — 하단 시트 제외)
+- 스와이프 월 변경(MonthSelector Pan 제스처), 월 전환 배너(MonthTransitionBanner), 스켈레톤(SkeletonCard/SkeletonList). 하단 시트 월 선택은 미구현(선택 과제).
 
-### Phase 3: 고급
-- 월별 비교 카드, 비교 차트, 통계 리포트
+### Phase 3: 고급 (부분 완료)
+- 월별 비교(완료): useMonthComparison + VariableTotalAmountCard의 전월/이번 달 비율 막대. 통계 리포트는 미구현.
 
 ## 관련 문서
 
-- [사용·환경 가이드](guides.md) — 지난달 보기 방법
-- [과거 구현 요약](PAST_IMPLEMENTATIONS.md) (참고용)
+- [사용·환경 가이드](../user/guides.md) — 지난달 보기 방법
+- [과거 구현 요약](../archive/past-implementations.md) (참고용)

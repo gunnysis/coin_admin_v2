@@ -15,11 +15,15 @@ npm start          # Start Expo dev server
 npm run android    # Run on Android
 npm run ios        # Run on iOS
 npm run web        # Run on web
+npm run web:clear  # Web with cleared Metro cache
+npm run web:e2e    # Web on port 8082 (pair with E2E_BASE_URL for test:e2e:run)
 npm test           # Run all Jest tests
 npx jest --testPathPattern="amount" # Run a single test file
-npm run test:e2e   # E2E: start web server + Playwright (max 3min). Port 8081 must be free.
+npm run test:e2e   # E2E: starts web server on port 8082 (web:e2e) + Playwright. 8081 may stay in use.
 npm run test:e2e:run  # E2E: run only (no server). Use after `npm run web` in another terminal. Override: E2E_BASE_URL=http://localhost:8082
 ```
+
+**CI:** `.github/workflows/ci.yml` runs `npm test` on push to main (pre-check before EAS builds).
 
 ## Architecture
 
@@ -30,26 +34,36 @@ Features live in `src/features/{domain}/components/`. Each feature component (e.
 - **`src/lib/`** — Infrastructure utilities (errors, logger, React Query helpers, storage, db-utils). Framework-agnostic, reusable across projects.
 - **`src/utils/`** — Domain-specific utilities (amount formatting, date formatting, responsive calculations). App-dependent, single source of truth for formatting.
 
+### App Entry & Providers
+Entry point is root `index.tsx` (not expo-router): `initErrorReporting()` runs first, then providers nest as GestureHandlerRootView → ErrorBoundary → QueryClientProvider → SafeAreaProvider → ThemeProvider → AppProvider → `src/app/App.tsx`.
+
 ### State Management
 - **Global UI state:** React Context (`AppContext`) for modals, selections, loading flags
+- **Theme:** `ThemeProvider`/`useTheme()` in `src/contexts/ThemeContext.tsx` — mode `light | dark | system`, persisted via `Storage` (key `app_theme`); resolves to `COLORS` / `COLORS_DARK` from `src/constants/theme.ts`. Use `useTheme().colors` for dynamic colors instead of importing `COLORS` directly in themed UI. ThemeContext syncs NativeWind via `colorScheme.set()` (tailwind.config `darkMode: 'class'`) — className styles MUST pair light classes with `dark:` variants (e.g. `bg-white dark:bg-slate-800`, `bg-slate-50 dark:bg-slate-900`, `border-slate-200 dark:border-slate-700`). Static `COLORS.*` in style props is only OK for mode-invariant tokens (primary/expense/income/overlay). StatusBar: `style={isDark ? 'light' : 'dark'}`.
 - **Server/async state:** TanStack React Query v5 with infinite scroll pagination (`useInfiniteQuery`, page size 10, staleTime/gcTime 1hr)
 - **Component state:** useState/useReducer for local concerns
 
 ### Currency & Amount Handling
-All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
+All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/features/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
 
 ### Responsive Layouts
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`. **Padding:** horizontal padding is applied once at the layout container (`getContainerStyle(device)`); feature roots do not re-apply it. Content area has `marginTop: SPACING.md` below the tab bar; between total-amount card and list use `SPACING.lg`. Theme spacing: `src/constants/theme.ts` (SPACING, RADIUS, SHADOWS).
 
+### Device UI & Safe Area (겹침/충돌 방지)
+디바이스 시스템 UI(상태바·노치·홈 인디케이터·키보드)와 앱 콘텐츠가 겹치거나 충돌하지 않도록 다음을 유지한다. 전체 화면은 `SafeAreaView` + `edges={['top','bottom','left','right']}` 사용(레이아웃·설정 화면). 하단 고정 요소(FAB, 리스트 하단 여백)는 `useSafeAreaInsets().bottom` 또는 상위에서 전달한 `bottomInset`을 반영한다. 새 모달·풀스크린 UI 추가 시 insets 적용 여부를 반드시 확인한다. Android는 `app.config.ts`에서 `statusBar.translucent: false`; 모달은 `KeyboardAvoidingView`와 `paddingBottom: Math.max(insets.bottom, SPACING.base)` 사용.
+
 ### Data Layer
 SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`). Use **`expo-file-system/legacy`** for `documentDirectory`, `cacheDirectory`, `writeAsStringAsync`, `readAsStringAsync`, `copyAsync` (SDK 54+ default export is the new File/Paths API). 로컬 백업: expo-file-system (legacy) + expo-sharing; 복구: expo-document-picker. On Android, `load()` copies `content://` URIs to cache via `copyAsync` then reads (legacy `readAsStringAsync` supports only `file://` or specific SAF). After restore, invalidate `expenseKeys.fixed.all()` and `expenseKeys.variable.all()`. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
+
+### Error Reporting
+`src/lib/errorReporting.ts` — production-only Sentry init (`@sentry/react-native`), gated on `EXPO_PUBLIC_SENTRY_DSN`; wires `logger.setErrorReporter()` so `logger.error` calls reach Sentry. No-op in dev or without DSN. Release tag from `EXPO_PUBLIC_APP_VERSION`/`SENTRY_RELEASE`.
 
 ## Key Constants
 
 - **Query keys:** `src/config/queryKeys.ts` — factory: `databaseKeys`, `expenseKeys`, `exchangeRateKeys`. Legacy `QUERY_KEYS` re-exported from `src/constants/index.ts`.
 - **Categories:** `EXPENSE_CATEGORIES` in `src/constants/index.ts` — 7 predefined Korean categories (식비, 교통비, 쇼핑, 의료, 교육, 오락, 기타)
 - **Config:** `src/config/constants.ts` — pagination, date format, animation, timing, error/success messages, exchange rate settings
-- **Theme/design:** `src/constants/theme.ts` — SPACING (8pt grid), COLORS (primary, expense/danger, income, slate), RADIUS, SHADOWS, ICON_SIZES. UI: Card, Button, Typography, InputField in `src/components/ui/`. Use theme constants instead of hardcoded px/colors. **Touch targets:** minimum 44pt for interactive elements (e.g. header settings, close, tabs, action buttons). **App chrome:** main header and settings header use `bg-white` + `border-b border-slate-200`; settings close and main "설정" use Pressable + Phosphor icon (X, Gear) and 44pt hit area.
+- **Theme/design:** `src/constants/theme.ts` — SPACING (8pt grid), COLORS (primary, expense/danger, income, slate), RADIUS, SHADOWS, ICON_SIZES. UI: Card, Button, Typography, InputField, SkeletonCard/SkeletonList (loading placeholders) in `src/components/ui/`. Count-up amount animation: `useCountUpAmount` (used by total-amount cards). Use theme constants instead of hardcoded px/colors. **Touch targets:** minimum 44pt for interactive elements (e.g. header settings, close, tabs, action buttons). **App chrome:** main header and settings header use `bg-white dark:bg-slate-800` + `border-b border-slate-200 dark:border-slate-700`; settings close and main "설정" use Pressable + Phosphor icon (X, Gear) and 44pt hit area.
 
 ## Type Conventions
 
@@ -61,20 +75,24 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 - **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
 - **testID:** `src/utils/test-utils.ts` — `getTestProps(id)` returns `data-testid` (web) / `testID` (native). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
-- **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`). Web only; date picker not rendered on web so full save flow is limited. See `docs/e2e-testing.md`.
+- **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server on port 8082); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`, default 8081). Web only; date input renders as a text field (`YYYY-MM-DD`, testID `date-picker`) so the full save flow is testable. See `docs/testing/e2e-testing.md`.
 
 ## Settings & Backup UI
 
-- **Settings screen:** `src/features/settings/components/SettingsScreen.tsx` — SafeAreaView, `getResponsivePadding(device)` for horizontal padding, close button with Phosphor X + "닫기" and 44pt touch area. Sections use Card; spacing via SPACING.
+- **Settings screen:** `src/features/settings/components/SettingsScreen.tsx` — SafeAreaView (edges top/bottom/left/right), `getResponsivePadding(device)` for horizontal padding, ScrollView `paddingBottom: SPACING['2xl'] + insets.bottom`, close button with Phosphor X + "닫기" and 44pt touch area. Sections use Card; spacing via SPACING.
 - **Backup/restore:** `BackupRestoreSection.tsx` — error messages use `color="danger"` (Typography has no `error`). Restore confirm modal uses RADIUS.card, SPACING.lg, SHADOWS.md; confirm button `variant="danger"`. After successful restore, queryClient invalidates fixed and variable expense queries.
 
 ## Documentation
 
-- **Index:** `docs/README.md` — 8 docs: development (architecture + error handling), amount-currency, variable-expense-month, e2e-testing, plans (refactor + design), backup-restore (로컬 백업/복구), guides (previous month, PowerShell), PAST_IMPLEMENTATIONS.
+- **Index:** `docs/README.md` — topic folders, each with its own `README.md` index (per GitLab docs folder-structure guide): `user/` (guides), `development/` (architecture, safe-area-device-ui, troubleshooting), `features/` (amount-currency, variable-expense-month, backup-restore), `testing/` (e2e-testing), `deployment/` (production-deployment, eas-android-workflows, deploy-web), `planning/` (plans, improvements-roadmap, upgrade-modernization), `archive/` (past-implementations). File names: lowercase-with-dashes.
 
 ## Deployment
 
-- App version managed in `app.config.ts` (currently `2.3.0`)
+- App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 (`runtimeVersion`도 이 값을 따름 — OTA는 동일 버전 빌드에만 적용).
+- `src/locales/ko.json`은 네이티브 앱 이름 현지화용(app.config.ts `locales`) — 런타임 i18n 아님.
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`
 - Android: minSdk 24, targetSdk 34
+- **EAS Build/Submit:** `eas.json`에 build(development/preview/production) 및 submit(production/preview) 프로필 정의. Android 프로덕션 빌드는 `image: "latest"` 명시.
+- **프로덕션 배포 체크리스트 및 EAS Secrets:** [docs/deployment/production-deployment.md](docs/deployment/production-deployment.md).
+- **EAS Workflows:** `.eas/workflows/android-production.yml`·`ios-production.yml` — **둘 다** main 브랜치 push 시 production 빌드 후 스토어 제출(Play/App Store Connect). GitHub 저장소가 Expo 대시보드에 연결되어 있으면 자동 실행 — **main 머지 = 배포**. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.

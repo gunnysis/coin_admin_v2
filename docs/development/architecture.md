@@ -1,6 +1,6 @@
 # 개발 가이드: 아키텍처·에러 처리
 
-폴더 역할(lib/utils/config)과 비동기·동기 에러 처리 위치 정리. 설계·계획은 [plans.md](plans.md) 참고.
+폴더 역할(lib/utils/config)과 비동기·동기 에러 처리 위치 정리. 설계·계획은 [plans.md](../planning/plans.md) 참고.
 
 ---
 
@@ -27,22 +27,26 @@
   모달 `handleSubmit`이 DB를 호출하고, 실패 시 `formatError`/`logError` 후 `Alert`로 사용자 노출. Feature 쪽 핸들러는 성공 시 모달 닫기, 에러 시 `throw` → 모달 `catch`에서 Alert. **에러 표시는 모달에서만.**
 
 - **Pull-to-refresh**  
-  에러 시 로딩 상태만 해제, 별도 Alert 없음. (필요 시 핸들러/App에서 Alert 추가 가능.)
+  에러 시 로딩 상태 해제 후 `Alert.alert('새로고침 실패', ...)`로 사용자에게 알림 (FixedExpenseFeature / VariableExpenseFeature).
 
 - **환율 API (달러 입력 시)**  
-  `useExchangeRate` 실패 시 fallback 환율(1,400원) 사용. 저장 가능. UI에서 "(기본 환율)" 표시 가능.
+  `useExchangeRate` 실패 시 fallback 환율(1,400원) 사용. 저장 가능. 달러 선택 시 `ExchangeRateHint`가 환율(로딩/1 USD ≈ n원/기본 환율 안내)을 표시.
 
 ### 동기 에러 (렌더/이벤트)
 
 - **ErrorBoundary**  
   루트에서 앱 전체 감쌈. 렌더 중 예외 → 폴백 UI + `console.error`. 비동기 에러는 잡지 않으므로 try/catch 필수.
 
+### 에러 리포팅 (프로덕션)
+
+- `src/lib/errorReporting.ts` — 프로덕션 빌드에서 `EXPO_PUBLIC_SENTRY_DSN`이 설정된 경우에만 Sentry 초기화(`@sentry/react-native`). `logger.setErrorReporter()`를 연결해 `logger.error` 호출이 Sentry로 전송된다. dev 또는 DSN 미설정 시 no-op. 상세: [프로덕션 배포](../deployment/production-deployment.md).
+
 ### 정리
 
 | 구분 | 처리 위치 | 사용자 노출 |
 |------|-----------|-------------|
 | 모달 제출 실패 | 모달 `catch` | Alert (formatError 메시지) |
-| 새로고침 실패 | App / 핸들러 | 없음 (로딩만 해제) |
+| 새로고침 실패 | Feature 컴포넌트 | Alert ("새로고침 실패") |
 | 환율 API 실패 | useExchangeRate | fallback 환율 |
 | 렌더/동기 예외 | ErrorBoundary | 폴백 UI + 로그 |
 | 백업/복구 실패 | BackupRestoreSection | 카드 내 에러 문구 |

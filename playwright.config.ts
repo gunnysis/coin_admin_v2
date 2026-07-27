@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * E2E 테스트 설정 — Expo 웹 앱 (test:e2e 시 8082 포트로 서버 기동)
- * @see docs/e2e-testing.md
+ * @see docs/testing/e2e-testing.md
  */
 const E2E_PORT = 8082;
 const E2E_BASE = `http://localhost:${E2E_PORT}`;
