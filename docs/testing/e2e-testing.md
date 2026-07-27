@@ -13,7 +13,7 @@ Expo 웹 빌드 대상 Playwright E2E 시나리오·실행 방법·제한 사항
 |------|------|
 | **대상** | Expo 웹 앱 (`npm run web` → 8081, `npm run test:e2e` 시 `web:e2e` → 8082) |
 | **도구** | Playwright (Chromium 기준, 필요 시 WebKit/Firefox 확장) |
-| **선택자** | 접근성 라벨(`accessibilityLabel`) → DOM `aria-label` / `role` 기반 (`getByRole`, `getByLabelText`). 보조로 `getTestProps(id)`로 부여한 `data-testid`/`testID` 사용 가능 (`getByTestId`) |
+| **선택자** | 접근성 라벨(`accessibilityLabel`) → DOM `aria-label` / `role` 기반 (`getByRole`, `getByLabelText`). 보조로 `getTestProps(id)`가 부여한 `testID` 사용 (`getByTestId` — react-native-web이 `data-testid`로 매핑. 웹 분기로 `data-testid`를 직접 넘기면 RNW 0.21+에서 DOM에 전달되지 않으므로 금지) |
 | **CI** | `npm run web` 기동 후 `npx playwright test` 실행 (동일 머신 또는 별도 job) |
 
 ## 시나리오
