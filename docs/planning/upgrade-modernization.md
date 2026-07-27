@@ -8,7 +8,7 @@
 - ✅ **Play 정책(2026-08-31, API 36) — 해소 확인 (2026-07-27)**: bare 워크플로에서 실제 빌드는 RN 버전 카탈로그의 **targetSdk 36**을 이미 사용 중이었음. app.config.ts의 `targetSdkVersion: 34`는 빌드에 적용되지 않는 죽은 설정이라 제거 (§2.1)
 - 🚨 **Apple 정책 시행 중** (2026-04-28~): iOS 제출은 Xcode 26/iOS 26 SDK 빌드 필수 — iOS 배포 재개 전 SDK 업그레이드가 사실상 선행 조건 (§2.2)
 - ⚠️ **운영 리스크**: main push 시 **Android·iOS 두 워크플로 모두** production 빌드+스토어 제출을 자동 실행 (`.eas/workflows/android-production.yml`, `ios-production.yml`) — 업그레이드 작업의 **머지가 곧 배포**이며, Apple 요건 미충족 상태에서는 iOS 제출이 자동으로 시도·거부될 수 있음 (§7)
-- Expo SDK 54 → **57** 업그레이드: 파괴적 변경은 **55**(New Arch 강제·Node·Xcode)와 **56**(expo/fetch 기본화·file-system 비동기화 등)에 나뉘어 있고, **57만 경량·비파괴적** — 한 버전씩 순차 검증 (§4)
+- ✅ **Expo SDK 54 → 57 업그레이드 완료 (2026-07-27)**: 55→56→57 순차 진행, 단계별 커밋 분리. RN 0.86 / React 19.2.3 / TS 6.0 / Reanimated 4.5 / Sentry 8.20. `android/`는 SDK 57 템플릿으로 prebuild 재생성(edge-to-edge 상시·상태바 투명·MARKETING_VERSION 2.6.0). 검증: tsc 0오류·Jest 36/36·Playwright E2E 13/13·expo-doctor 19/20(잔여 1건은 non-CNG 정보성)·로컬 gradle 빌드. 잔여: EAS 빌드·실기기 검증(§8 매트릭스) (§4)
 - New Architecture는 이미 `newArchEnabled: true`로 대응 완료 — 아키텍처 리스크 낮음 (§3)
 - NativeWind v4 + Tailwind v3.4 조합 **유지** — Tailwind v4는 NativeWind v5 stable 이후 별도 트랙 (§5.2)
 
@@ -18,11 +18,13 @@
 
 ### 1.1 플랫폼 코어
 
-| 영역 | 현재 (package.json / app.config.ts) | 최신 Stable (2026-07) | 판정 |
+> **2026-07-27 업그레이드 완료:** 아래 표의 "현재" 열은 업그레이드 전 기록이다. 현행: Expo **57.0.8** / RN **0.86.0** / React **19.2.3** / TS **6.0.3** — 최신 stable 도달.
+
+| 영역 | 업그레이드 전 | 최신 Stable (2026-07) | 판정 |
 |------|------|------|------|
-| Expo SDK | **54** (`expo@~54.0.27`) | **57** (2026-06-30, RN 0.86) | 지원 중이나 **지원 4개 버전 중 최하단** — SDK 58 출시 시 지원 종료 예상 |
-| React Native | **0.81.5** | **0.86.x** (2026-06-09) | 지원 종료 (최신 3개 minor만 유지: 0.86/0.85/0.84) |
-| React / react-dom | 19.1.0 | 19.2.x (SDK 57 동봉) | SDK 업그레이드 시 함께 상승 |
+| Expo SDK | 54 (`expo@~54.0.27`) | **57** (2026-06-30, RN 0.86) | ✅ 57.0.8 도달 |
+| React Native | 0.81.5 | **0.86.x** (2026-06-09) | ✅ 0.86.0 도달 |
+| React / react-dom | 19.1.0 | 19.2.x (SDK 57 동봉) | ✅ 19.2.3 도달 |
 | New Architecture | `newArchEnabled: true` ✅ | SDK 55+는 **강제** (옵션 자체 제거) | 이미 대응 완료 — 업그레이드 시 config 키만 제거 |
 | Android targetSdk | **34** (명시 고정) | Play 정책: 신규/업데이트 **API 36** (2026-08-31 기한) | 🚨 **긴급** — §2.1 |
 | iOS 빌드 도구 | (EAS `image: "latest"`) | Apple: **Xcode 26 / iOS 26 SDK** 필수 (2026-04-28~ 시행 중) | iOS 제출 시 SDK 업그레이드 선행 필요 — §2.2 |
@@ -161,8 +163,8 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 - [x] **2.** 미사용 의존성 제거 — react-native-chart-kit·expo-router 제거 (2026-07-27, §5.1)
 - [x] **3.** expo-file-system 신규 API 마이그레이션 — legacy import 0건, File/Paths 전환, content:// 분기는 picker `copyToCacheDirectory` 전제의 방어 오류로 단순화 (2026-07-27, §4.2). 잔여: 실기기 백업→공유→복구 수동 검증
 - [ ] **4.** CI 강화 — Node 24(Active LTS) 상향 ✅ 완료(2026-07-27) / expo-doctor 단계 추가 미완 (§4.1-2, §5.3)
-- [ ] **5.** SDK 54 → 55 업그레이드 + §8 매트릭스 검증 (§4.3)
-- [ ] **6.** SDK 55 → 56 → 57 순차 업그레이드 — 56에서 fetch·file-system 회귀 검증, 57 진입 전 Sentry 호환 확인 (§4.3, §1.2)
+- [x] **5.** SDK 54 → 55 업그레이드 완료 (2026-07-27) — newArchEnabled 키 제거, plugins에 expo-font·expo-sharing 추가 (§4.3)
+- [x] **6.** SDK 55 → 56 → 57 순차 업그레이드 완료 (2026-07-27) — 56: TS 6.0 전환(tsconfig baseUrl 제거·types 명시·ts-jest 상향), 57: Sentry 8.20([getsentry#6384](https://github.com/getsentry/sentry-react-native/issues/6384) closed 확인)·exclude 정리·datetimepicker 9.1. android/ prebuild 재생성(edge-to-edge 상시, statusBar 설정 사장 → app.config에서 제거, sync 스크립트 검사 교체). E2E에서 발견된 RNW data-testid 회귀는 testID 단일화로 근본 수정. 잔여: EAS preview 빌드 실기기 검증(§8), 특히 datetimepicker 9 네이티브 UI·edge-to-edge·백업/복구 (§4.3, §1.2)
 - [ ] **7.** (iOS 배포 재개 시) Xcode 26 빌드 검증 + App Store 제출 (§2.2)
 - [ ] **8.** (NativeWind v5 stable 이후) Tailwind v4 트랙 (§5.2)
 

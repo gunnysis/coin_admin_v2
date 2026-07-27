@@ -1,6 +1,6 @@
 # 버전·설정 동기화 설계 (config-sync)
 
-bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌드 값(네이티브 파일)" 드리프트의 전수 조사 결과와 동기화 체계. (조사·검증일: 2026-07-27, 빌드 43 AAB 매니페스트 덤프로 실측 확인)
+bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌드 값(네이티브 파일)" 드리프트의 전수 조사 결과와 동기화 체계. (조사·검증일: 2026-07-27, 빌드 43 AAB 매니페스트 덤프로 실측 확인. 같은 날 SDK 57 업그레이드로 `android/`를 prebuild 재생성 — 이 드리프트 게이트가 재생성 직후 statusBar 사장(edge-to-edge)을 실제로 검출해 검사 항목을 갱신함)
 
 ## 배경: 왜 드리프트가 생기는가
 
@@ -39,7 +39,7 @@ bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌�
 | URL scheme | `coinadmin` | manifest intent-filter `coinadmin` | ✓ |
 | 키보드 | `softwareKeyboardLayoutMode: "pan"` | `windowSoftInputMode="adjustPan"` | ✓ |
 | OTA 설정 | url·`ON_LOAD`·`fallbackToCacheTimeout: 0` | `EXPO_UPDATE_URL`·`CHECK_ON_LAUNCH ALWAYS`·`LAUNCH_WAIT_MS 0` | ✓ |
-| 상태바 배경 | `#ffffff` (UI_CONSTANTS) | styles.xml `statusBarColor #ffffff` | ✓ (런타임에는 expo-status-bar가 재제어) |
+| 상태바 | (설정 제거 — SDK 55+ edge-to-edge 상시) | styles.xml `statusBarColor` 투명 | ✓ (검사는 "투명 유지"로 교체. 스타일은 런타임 expo-status-bar 제어) |
 | 앱 이름 | `코인관리자` (production) | strings.xml `app_name` | ✓ |
 | SDK 버전 | (선언 제거됨) | RN 버전 카탈로그 공급: min 24 / target·compile 36 | ✓ (빌드 43 AAB 실측: `targetSdkVersion="36"`) |
 

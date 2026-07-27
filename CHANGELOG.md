@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-07-27
+
+- **Expo SDK 54 → 57 업그레이드 (RN 0.86, React 19.2.3):** 55→56→57 순차 진행·단계별 커밋. 주요 동반 변경 — TypeScript 6.0(tsconfig baseUrl 제거·`types` 명시·`*.css` 모듈 선언·ts-jest 상향), Reanimated 4.5·worklets 0.10, Sentry 8.20(SDK 57 지원 확인), datetimepicker 9.1, expo-system-ui 추가(Android 다크 모드 userInterfaceStyle), `expo.install.exclude` 정리(구버전을 붙잡던 3건 제거)
+- **android/ SDK 57 템플릿 재생성(prebuild --clean):** edge-to-edge 상시 활성(상태바·내비게이션바 투명) — 사장된 app.config `statusBar` 설정 제거, sync 스크립트 검사를 "상태바 투명 유지"로 교체
+- **버그 수정(E2E):** react-native-web 0.21에서 웹 분기 `data-testid` 임의 prop이 DOM에 전달되지 않아 날짜 입력 E2E 실패 → 전 플랫폼 `testID` 단일화(RNW가 data-testid로 매핑, 공식 경로)
+- 검증: tsc 0오류, Jest 36/36, Playwright E2E 13/13, expo-doctor 19/20(잔여 1건은 bare 정보성), 로컬 Android gradle 빌드
+
 - **버전·설정 동기화 체계 도입:** MARKETING_VERSION 단일 소스 → `npm run sync:version`이 android versionName·`expo_runtime_version`(OTA 런타임)·package.json version 전파, CI에 `sync:version:check` 드리프트 게이트 추가. 드리프트 수정: versionName 2.0.0 → 2.5.0, package.json 2.0.0 → 2.5.0. 이후 확장: 설정 드리프트 검사 8건(runtimeVersion 연결·화면 방향·키보드 모드·URL scheme·OTA URL/체크 정책·앱 이름·상태바 색 — 검사만, 수정은 사람 검토) 추가. 설계·인벤토리: docs/development/config-sync.md
 - **버그 수정(Android 화면 방향):** AndroidManifest `screenOrientation="portrait"` 고정으로 app.config `orientation: "default"`(가로/세로 지원)와 불일치 — 태블릿 가로 레이아웃이 Android에서 도달 불가였음. prebuild 생성값과 동일한 `"unspecified"`로 수정
 

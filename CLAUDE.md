@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **coin-admin** is a React Native Expo mobile app for personal finance management (Korean: 코인관리자). It tracks monthly fixed costs and daily variable expenses with dual-currency support (KRW/USD) and real-time exchange rate conversion.
 
-**Stack:** React Native 0.81.5, Expo 54, React 19, TypeScript 5.9 (strict), Nativewind/Tailwind for styling, TanStack React Query v5, Expo SQLite, Phosphor icons.
+**Stack:** React Native 0.86, Expo SDK 57, React 19.2, TypeScript 6.0 (strict), Nativewind v4/Tailwind v3.4 for styling, TanStack React Query v5, Expo SQLite, Phosphor icons.
 
 ## Commands
 
@@ -50,7 +50,7 @@ All amounts are stored as **KRW integers** in the database. Users can input in K
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`. **Padding:** horizontal padding is applied once at the layout container (`getContainerStyle(device)`); feature roots do not re-apply it. Content area has `marginTop: SPACING.md` below the tab bar; between total-amount card and list use `SPACING.lg`. Theme spacing: `src/constants/theme.ts` (SPACING, RADIUS, SHADOWS).
 
 ### Device UI & Safe Area (겹침/충돌 방지)
-디바이스 시스템 UI(상태바·노치·홈 인디케이터·키보드)와 앱 콘텐츠가 겹치거나 충돌하지 않도록 다음을 유지한다. 전체 화면은 `SafeAreaView` + `edges={['top','bottom','left','right']}` 사용(레이아웃·설정 화면). 하단 고정 요소(FAB, 리스트 하단 여백)는 `useSafeAreaInsets().bottom` 또는 상위에서 전달한 `bottomInset`을 반영한다. 새 모달·풀스크린 UI 추가 시 insets 적용 여부를 반드시 확인한다. Android는 `app.config.ts`에서 `statusBar.translucent: false`; 모달은 `KeyboardAvoidingView`와 `paddingBottom: Math.max(insets.bottom, SPACING.base)` 사용.
+디바이스 시스템 UI(상태바·노치·홈 인디케이터·키보드)와 앱 콘텐츠가 겹치거나 충돌하지 않도록 다음을 유지한다. 전체 화면은 `SafeAreaView` + `edges={['top','bottom','left','right']}` 사용(레이아웃·설정 화면). 하단 고정 요소(FAB, 리스트 하단 여백)는 `useSafeAreaInsets().bottom` 또는 상위에서 전달한 `bottomInset`을 반영한다. 새 모달·풀스크린 UI 추가 시 insets 적용 여부를 반드시 확인한다. Android는 SDK 55+부터 **edge-to-edge 상시 활성**(상태바·내비게이션바 투명, app.config `statusBar` 설정은 제거됨) — SafeAreaView/insets 처리가 겹침 방어선이며 상태바 스타일은 런타임 `expo-status-bar`가 제어. 모달은 `KeyboardAvoidingView`와 `paddingBottom: Math.max(insets.bottom, SPACING.base)` 사용.
 
 ### Data Layer
 SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`). Uses the **new expo-file-system `File`/`Paths` API** (`new File(Paths.document, name)`, `file.write()`, `await file.text()`) — do NOT reintroduce `expo-file-system/legacy` (removed 2026-07; deprecated, slated for removal in future SDKs). Write file-system calls with `await` even when currently sync (SDK 56 makes `copy()`/`move()` async). 로컬 백업: expo-file-system + expo-sharing; 복구: expo-document-picker (**`copyToCacheDirectory: true` 필수** — picker가 `file://` URI를 보장하므로 `content://` 처리가 불필요). After restore, invalidate `expenseKeys.fixed.all()` and `expenseKeys.variable.all()`. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
@@ -74,7 +74,7 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 ## Testing
 
 - **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
-- **testID:** `src/utils/test-utils.ts` — `getTestProps(id)` returns `data-testid` (web) / `testID` (native). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
+- **testID:** `src/utils/test-utils.ts` — `getTestProps(id)`는 전 플랫폼 `testID` 반환 (react-native-web이 DOM `data-testid`로 매핑 — 웹 분기로 'data-testid'를 직접 넘기면 RNW 0.21+에서 DOM에 전달되지 않으므로 금지). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
 - **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server on port 8082); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`, default 8081). Web only; date input renders as a text field (`YYYY-MM-DD`, testID `date-picker`) so the full save flow is testable. See `docs/testing/e2e-testing.md`.
 
 ## Settings & Backup UI
