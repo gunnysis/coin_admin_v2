@@ -5,6 +5,7 @@
 | 문서 | 설명 |
 |------|------|
 | [architecture.md](architecture.md) | 아키텍처(lib/utils/config 폴더 역할), 에러 처리(모달·환율·ErrorBoundary) |
+| [config-sync.md](config-sync.md) | 버전·설정 동기화 설계(단일 소스 MARKETING_VERSION, sync 스크립트, bare Android 드리프트 인벤토리) |
 | [safe-area-device-ui.md](safe-area-device-ui.md) | 디바이스 UI(노치·홈 인디케이터·키보드)와 겹침/충돌 방지 정책 |
 | [troubleshooting.md](troubleshooting.md) | 개발 환경 트러블슈팅(PowerShell npx 오류, Metro 캐시) |
 

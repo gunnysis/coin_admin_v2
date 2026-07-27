@@ -1,6 +1,6 @@
 {
   "name": "coin-admin",
-  "version": "2.0.0",
+  "version": "2.5.0",
   "main": "index.tsx",
   "engines": {
     "node": ">=22.13.0"
@@ -14,6 +14,8 @@
     "web:e2e": "expo start --web --port 8082",
     "test": "jest",
     "typecheck": "tsc --noEmit",
+    "sync:version": "node scripts/sync-app-version.mjs",
+    "sync:version:check": "node scripts/sync-app-version.mjs --check",
     "test:e2e": "playwright test",
     "test:e2e:run": "playwright test -c playwright.run.config.ts"
   },

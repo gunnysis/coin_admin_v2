@@ -92,8 +92,10 @@ android {
         applicationId 'com.gunny.coinadmin.android'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // versionCode는 EAS 원격 버전 관리(appVersionSource: remote, autoIncrement)가 빌드 시 덮어씀 — 아래 값은 로컬 빌드용 기본값
+        // versionName은 scripts/sync-app-version.mjs가 app.config.ts의 MARKETING_VERSION과 동기화 (직접 수정 금지)
         versionCode 1
-        versionName "2.0.0"
+        versionName "2.5.0"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }

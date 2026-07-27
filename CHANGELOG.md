@@ -6,6 +6,9 @@
 
 ## [Unreleased]
 
+- **버전·설정 동기화 체계 도입:** MARKETING_VERSION 단일 소스 → `npm run sync:version`이 android versionName·`expo_runtime_version`(OTA 런타임)·package.json version 전파, CI에 `sync:version:check` 드리프트 게이트 추가. 드리프트 수정: versionName 2.0.0 → 2.5.0, package.json 2.0.0 → 2.5.0. 설계·인벤토리: docs/development/config-sync.md
+- **버그 수정(Android 화면 방향):** AndroidManifest `screenOrientation="portrait"` 고정으로 app.config `orientation: "default"`(가로/세로 지원)와 불일치 — 태블릿 가로 레이아웃이 Android에서 도달 불가였음. prebuild 생성값과 동일한 `"unspecified"`로 수정
+
 - **레거시 정리:** expo-file-system/legacy → 신규 File/Paths API 마이그레이션(백업 모듈, SDK 55+ 대비), 미사용 의존성 제거(react-native-chart-kit·expo-router), 미사용 레거시 상수 제거(QUERY_KEYS, 테마 별칭 7종), 테스트 산출물(playwright-report) gitignore
 - **Play targetSdk 정책(2026-08-31) 해소 확인:** bare 워크플로에서 실제 빌드는 RN 카탈로그의 targetSdk 36을 이미 사용 — app.config.ts의 죽은 SDK 설정(34) 제거로 prebuild 회귀 위험 차단
 - **타입 부채 전체 해소 + CI 타입 게이트:** `tsc --noEmit` 오류 55 → 0. 잘못된 타입 사용 정정(InfiniteQuery 제네릭 미지정·존재하지 않는 타입명 import, SQLite `SQLiteBindParams`, React 19 `useRef` 필수 초기값, readonly 배열, AlertButton 리터럴 등). `npm run typecheck` 추가, CI에 Type check 단계 신설
