@@ -15,8 +15,6 @@ export const PAGE_SIZE = PAGINATION.PAGE_SIZE;
 export const DATE_FORMAT_REGEX = DATE_FORMAT.REGEX;
 export const DATE_FORMAT_PLACEHOLDER = DATE_FORMAT.PLACEHOLDER;
 
-export { QUERY_KEYS } from '../config/queryKeys';
-
 // 유동비 카테고리 목록
 export const EXPENSE_CATEGORIES = [
   '식비',

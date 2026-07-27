@@ -20,19 +20,12 @@ export const COLORS = {
   incomeLight: '#2dd4bf',
   incomeDark: '#0d9488',
 
-  // Legacy aliases (호환)
+  // Legacy aliases (호환 — 사용 중인 것만 유지, 미사용 별칭은 2026-07 정리)
   secondary: '#14b8a6', // income
-  secondaryLight: '#2dd4bf',
-  secondaryDark: '#0d9488',
   danger: '#f43f5e', // expense
-  dangerLight: '#fb7185',
-  dangerDark: '#e11d48',
   success: '#14b8a6', // income
-  accent: '#f59e0b',
   accentLight: '#fbbf24',
-  accentDark: '#d97706',
   warning: '#f59e0b',
-  warningLight: '#fbbf24',
 
   // Neutral (slate scale)
   gray50: '#f8fafc',

@@ -125,14 +125,14 @@ export default () => {
       },
       // 태블릿 최적화 설정
       supportsTablet: true,
-      // 갤럭시탭 S11 및 최신 태블릿 지원
-      minSdkVersion: 24, // Android 7.0 (Nougat)
-      targetSdkVersion: 34, // Android 14
-      compileSdkVersion: 34,
+      // SDK 버전: android/ 디렉터리가 체크인된 bare 워크플로이므로 여기의 값은 빌드에 적용되지 않음.
+      // 실제 값은 RN 버전 카탈로그(react-native/gradle/libs.versions.toml)가 공급 — SDK 54 기준 min 24 / target·compile 36.
+      // prebuild 재실행 시 구버전으로 되돌아가지 않도록 명시 고정을 제거함.
     },
     web: {
       bundler: "metro",
-      output: "static",
+      // 'static'은 expo-router 필수. 라우터 없는 단일 화면 앱이므로 SPA 출력 사용 (expo-router 제거에 따른 정합)
+      output: "single",
       favicon: ASSET_PATHS.FAVICON,
     },
     plugins: ["expo-sqlite"],

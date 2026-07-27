@@ -32,21 +32,3 @@ export const expenseKeys = {
 export const exchangeRateKeys = {
   all: () => ['exchangeRate', 'USD', 'KRW'] as const,
 };
-
-/**
- * 기존 QUERY_KEYS와의 호환을 위한 레거시 export
- * @deprecated expenseKeys, databaseKeys, exchangeRateKeys 사용 권장
- */
-export const QUERY_KEYS = {
-  DATABASE: databaseKeys.all(),
-  EXPENSES: expenseKeys.fixed.all(),
-  EXPENSES_PAGINATED: expenseKeys.fixed.lists(),
-  EXPENSES_COUNT: expenseKeys.fixed.count(),
-  EXPENSES_TOTAL: expenseKeys.fixed.total(),
-  VARIABLE_EXPENSES: expenseKeys.variable.all(),
-  VARIABLE_EXPENSES_PAGINATED: ['variableExpenses', 'paginated'] as const,
-  VARIABLE_EXPENSES_COUNT: ['variableExpenses', 'count'] as const,
-  VARIABLE_EXPENSES_TOTAL: ['variableExpenses', 'total'] as const,
-  VARIABLE_EXPENSES_MONTHLY: ['variableExpenses', 'monthly'] as const,
-  EXCHANGE_RATE: exchangeRateKeys.all(),
-} as const;
