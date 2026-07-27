@@ -14,7 +14,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   timeout: 60_000,
-  reporter: 'html',
+  // CI: html 리포트는 아티팩트로만(open 금지) + GitHub 어노테이션. 로컬: 실패 시 html 자동 오픈
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'html',
   use: {
     baseURL: E2E_BASE,
     trace: 'on-first-retry',

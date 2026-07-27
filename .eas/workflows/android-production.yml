@@ -8,6 +8,11 @@ on:
   push:
     branches: [main]
 
+# package.json engines(>=22.13)와 정합하는 Node로 checks job 실행
+defaults:
+  tools:
+    node: "24"
+
 jobs:
   checks:
     name: Pre-build checks
