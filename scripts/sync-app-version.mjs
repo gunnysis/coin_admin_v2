@@ -1,21 +1,26 @@
 #!/usr/bin/env node
 /**
- * 앱 버전 동기화 스크립트
+ * 앱 버전 동기화 + 설정 드리프트 게이트
  *
- * 단일 소스: app.config.ts의 MARKETING_VERSION
- * 전파 대상 (bare Android는 app.config 값이 빌드에 적용되지 않으므로 파일 동기화가 필요):
- *   1. android/app/build.gradle        → versionName          (Play 스토어·앱 정보에 노출되는 사용자 버전)
- *   2. android/.../values/strings.xml  → expo_runtime_version (EAS Update 런타임 버전 — app.config runtimeVersion과
- *                                                              불일치하면 프로덕션 바이너리가 OTA를 수신하지 못함)
- *   3. package.json                    → version              (저장소 메타데이터 정합)
+ * bare Android에서는 app.config.ts 값 대부분이 빌드에 적용되지 않으므로(네이티브 파일이 진실),
+ * 이 스크립트가 "선언(app.config.ts) ↔ 실제(android/)" 정합을 보장한다. 설계: docs/development/config-sync.md
  *
- * 참고: android versionCode / ios buildNumber는 EAS 원격 버전 관리(appVersionSource: remote,
- * autoIncrement)가 담당하므로 이 스크립트가 건드리지 않는다. iOS는 ios/ 미체크인(prebuild)이라
- * app.config의 version/runtimeVersion이 빌드 시 자동 적용된다.
+ * [1] 버전 전파 (fix 모드에서 자동 수정)
+ *     단일 소스: app.config.ts MARKETING_VERSION →
+ *       - android/app/build.gradle        versionName          (Play·앱 정보 노출 버전)
+ *       - android/.../values/strings.xml  expo_runtime_version (OTA 런타임 — 불일치 시 프로덕션 앱이 OTA 미수신)
+ *       - package.json                    version              (저장소 메타데이터)
+ *     versionCode/buildNumber는 EAS 원격 관리(appVersionSource: remote, autoIncrement)라 다루지 않음.
+ *     iOS는 ios/ 미체크인(prebuild)이라 app.config가 빌드 시 자동 적용됨.
+ *
+ * [2] 설정 드리프트 검사 (양 모드 공통, 검사만 — 자동 수정 없음)
+ *     버전과 달리 릴리스 루틴이 아닌 드문 변경이라 사람 검토가 필요하므로 오류로만 보고한다.
+ *       - runtimeVersion이 MARKETING_VERSION에 연결되어 있는지 (버전 전파의 전제)
+ *       - URL scheme / 화면 방향 / 키보드 모드 / OTA URL·체크 정책 / 앱 이름 / 상태바 색
  *
  * 사용법:
- *   node scripts/sync-app-version.mjs          # 드리프트를 MARKETING_VERSION 기준으로 수정
- *   node scripts/sync-app-version.mjs --check  # 드리프트가 있으면 exit 1 (CI 게이트)
+ *   node scripts/sync-app-version.mjs          # 버전 드리프트 수정 + 설정 드리프트 보고
+ *   node scripts/sync-app-version.mjs --check  # 수정 없이 검사만, 드리프트 시 exit 1 (CI 게이트)
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -24,63 +29,160 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const checkOnly = process.argv.includes('--check');
 
-const appConfig = readFileSync(resolve(root, 'app.config.ts'), 'utf8');
-const versionMatch = appConfig.match(/const MARKETING_VERSION = "(\d+\.\d+\.\d+)"/);
-if (!versionMatch) {
-  console.error('[sync-app-version] app.config.ts에서 MARKETING_VERSION을 찾지 못했습니다.');
-  process.exit(1);
-}
-const version = versionMatch[1];
+const read = (file) => readFileSync(resolve(root, file), 'utf8');
 
-/** @type {{ file: string, label: string, pattern: RegExp, replacement: string }[]} */
-const targets = [
+/** content에서 pattern의 1번 캡처를 추출. 못 찾으면 즉시 실패 (침묵 통과 방지). */
+function extract(content, pattern, what) {
+  const match = content.match(pattern);
+  if (!match) {
+    console.error(`[sync-app-version] ${what}을(를) 찾지 못했습니다. 패턴: ${pattern}`);
+    process.exit(1);
+  }
+  return match[1];
+}
+
+// ---------------------------------------------------------------------------
+// app.config.ts에서 선언 값 추출 (작은따옴표/큰따옴표 모두 허용)
+// ---------------------------------------------------------------------------
+const appConfig = read('app.config.ts');
+const cfg = {
+  version: extract(appConfig, /const MARKETING_VERSION = ["'](\d+\.\d+\.\d+)["']/, 'MARKETING_VERSION'),
+  scheme: extract(appConfig, /APP_SCHEME: ["']([\w-]+)["']/, 'APP_SCHEME'),
+  appName: extract(appConfig, /APP_NAME_BASE: ["'](.+?)["']/, 'APP_NAME_BASE'),
+  easProjectId: extract(appConfig, /EAS_PROJECT_ID: ["']([\w-]+)["']/, 'EAS_PROJECT_ID'),
+  statusBarColor: extract(appConfig, /STATUS_BAR_BACKGROUND: ["'](#[0-9a-fA-F]{6})["']/, 'STATUS_BAR_BACKGROUND'),
+  orientation: extract(appConfig, /orientation: ["'](\w+)["']/, 'orientation'),
+  keyboardMode: extract(appConfig, /softwareKeyboardLayoutMode: ["'](\w+)["']/, 'softwareKeyboardLayoutMode'),
+  checkAutomatically: extract(appConfig, /checkAutomatically: ["'](\w+)["']/, 'updates.checkAutomatically'),
+};
+
+let drift = 0;
+
+// ---------------------------------------------------------------------------
+// [1] 버전 전파 대상 (fix 모드에서 자동 수정)
+// ---------------------------------------------------------------------------
+const versionTargets = [
   {
     file: 'android/app/build.gradle',
     label: 'versionName',
-    pattern: /versionName "(\d+\.\d+\.\d+)"/,
-    replacement: `versionName "${version}"`,
+    pattern: /versionName ["'](\d+\.\d+\.\d+)["']/,
+    replacement: `versionName "${cfg.version}"`,
   },
   {
     file: 'android/app/src/main/res/values/strings.xml',
     label: 'expo_runtime_version',
     pattern: /<string name="expo_runtime_version">(\d+\.\d+\.\d+)<\/string>/,
-    replacement: `<string name="expo_runtime_version">${version}</string>`,
+    replacement: `<string name="expo_runtime_version">${cfg.version}</string>`,
   },
   {
+    // 최상위 version 키만 매칭하도록 줄 시작(들여쓰기 2칸)으로 앵커
     file: 'package.json',
     label: 'version',
-    pattern: /"version": "(\d+\.\d+\.\d+)"/,
-    replacement: `"version": "${version}"`,
+    pattern: /^  "version": "(\d+\.\d+\.\d+)"/m,
+    replacement: `  "version": "${cfg.version}"`,
   },
 ];
 
-let drift = 0;
-for (const { file, label, pattern, replacement } of targets) {
-  const path = resolve(root, file);
-  const content = readFileSync(path, 'utf8');
-  const match = content.match(pattern);
-  if (!match) {
-    console.error(`[sync-app-version] ${file}에서 ${label} 패턴을 찾지 못했습니다.`);
-    process.exit(1);
-  }
-  if (match[1] === version) {
-    console.log(`  OK    ${file} (${label} = ${version})`);
+for (const { file, label, pattern, replacement } of versionTargets) {
+  const content = read(file);
+  const current = extract(content, pattern, `${file}의 ${label}`);
+  if (current === cfg.version) {
+    console.log(`  OK    ${file} (${label} = ${cfg.version})`);
     continue;
   }
-  drift++;
   if (checkOnly) {
-    console.error(`  DRIFT ${file} (${label} = ${match[1]}, 기대값 ${version})`);
+    drift++;
+    console.error(`  DRIFT ${file} (${label} = ${current}, 기대값 ${cfg.version})`);
   } else {
-    writeFileSync(path, content.replace(pattern, replacement));
-    console.log(`  FIXED ${file} (${label}: ${match[1]} → ${version})`);
+    writeFileSync(resolve(root, file), content.replace(pattern, replacement));
+    console.log(`  FIXED ${file} (${label}: ${current} → ${cfg.version})`);
   }
 }
 
-if (checkOnly && drift > 0) {
+// ---------------------------------------------------------------------------
+// [2] 설정 드리프트 검사 (검사만 — 불일치는 사람이 검토 후 수정)
+// ---------------------------------------------------------------------------
+// app.config 값 → 네이티브 표현 매핑 (근거: @expo/config-plugins의 각 withXxx 플러그인)
+const ORIENTATION_MAP = { default: 'unspecified', portrait: 'portrait', landscape: 'landscape' };
+const KEYBOARD_MAP = { pan: 'adjustPan', resize: 'adjustResize' };
+const CHECK_ON_LAUNCH_MAP = {
+  ON_LOAD: 'ALWAYS',
+  ON_ERROR_RECOVERY: 'ERROR_RECOVERY_ONLY',
+  WIFI_ONLY: 'WIFI_ONLY',
+  NEVER: 'NEVER',
+};
+
+const invariants = [
+  {
+    file: 'app.config.ts',
+    label: 'runtimeVersion ← MARKETING_VERSION 연결',
+    expected: 'runtimeVersion: MARKETING_VERSION',
+    ok: (c) => /runtimeVersion: MARKETING_VERSION\b/.test(c),
+    hint: '이 연결이 끊기면 expo_runtime_version 전파의 전제가 깨짐 — 연결 복원 또는 스크립트의 runtimeVersion 소스를 갱신할 것',
+  },
+  {
+    file: 'android/app/src/main/AndroidManifest.xml',
+    label: `screenOrientation (orientation: "${cfg.orientation}")`,
+    expected: `android:screenOrientation="${ORIENTATION_MAP[cfg.orientation]}"`,
+    ok: (c) => c.includes(`android:screenOrientation="${ORIENTATION_MAP[cfg.orientation]}"`),
+    hint: 'prebuild 매핑(@expo/config-plugins Orientation.js) 기준',
+  },
+  {
+    file: 'android/app/src/main/AndroidManifest.xml',
+    label: `windowSoftInputMode (softwareKeyboardLayoutMode: "${cfg.keyboardMode}")`,
+    expected: `android:windowSoftInputMode="${KEYBOARD_MAP[cfg.keyboardMode]}"`,
+    ok: (c) => c.includes(`android:windowSoftInputMode="${KEYBOARD_MAP[cfg.keyboardMode]}"`),
+  },
+  {
+    file: 'android/app/src/main/AndroidManifest.xml',
+    label: `URL scheme (${cfg.scheme})`,
+    expected: `<data android:scheme="${cfg.scheme}"/>`,
+    ok: (c) => c.includes(`android:scheme="${cfg.scheme}"`),
+  },
+  {
+    file: 'android/app/src/main/AndroidManifest.xml',
+    label: 'EAS Update URL (프로젝트 ID)',
+    expected: `EXPO_UPDATE_URL = https://u.expo.dev/${cfg.easProjectId}`,
+    ok: (c) => c.includes(`android:value="https://u.expo.dev/${cfg.easProjectId}"`),
+  },
+  {
+    file: 'android/app/src/main/AndroidManifest.xml',
+    label: `OTA 체크 정책 (checkAutomatically: "${cfg.checkAutomatically}")`,
+    expected: `EXPO_UPDATES_CHECK_ON_LAUNCH = ${CHECK_ON_LAUNCH_MAP[cfg.checkAutomatically]}`,
+    ok: (c) =>
+      c.includes(
+        `android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="${CHECK_ON_LAUNCH_MAP[cfg.checkAutomatically]}"`
+      ),
+  },
+  {
+    file: 'android/app/src/main/res/values/strings.xml',
+    label: `앱 이름 (${cfg.appName})`,
+    expected: `<string name="app_name">${cfg.appName}</string>`,
+    ok: (c) => c.includes(`<string name="app_name">${cfg.appName}</string>`),
+  },
+  {
+    file: 'android/app/src/main/res/values/styles.xml',
+    label: `상태바 배경 (${cfg.statusBarColor})`,
+    expected: `android:statusBarColor = ${cfg.statusBarColor}`,
+    ok: (c) => c.includes(`<item name="android:statusBarColor">${cfg.statusBarColor}</item>`),
+  },
+];
+
+for (const { file, label, expected, ok, hint } of invariants) {
+  if (ok(read(file))) {
+    console.log(`  OK    ${file} (${label})`);
+    continue;
+  }
+  drift++;
+  console.error(`  DRIFT ${file} (${label}) — 기대: ${expected}${hint ? `\n        ${hint}` : ''}`);
+}
+
+// ---------------------------------------------------------------------------
+if (drift > 0) {
   console.error(
-    `\n[sync-app-version] ${drift}개 파일이 MARKETING_VERSION(${version})과 불일치합니다. ` +
-      '`npm run sync:version`을 실행해 동기화 후 커밋하세요.'
+    `\n[sync-app-version] ${drift}건 불일치. 버전 드리프트는 \`npm run sync:version\`으로 수정하고, ` +
+      '설정 드리프트는 docs/development/config-sync.md를 참고해 양쪽을 정합화한 뒤 커밋하세요.'
   );
   process.exit(1);
 }
-console.log(`[sync-app-version] 완료 — 기준 버전 ${version}`);
+console.log(`[sync-app-version] 완료 — 기준 버전 ${cfg.version}, 설정 검사 ${invariants.length}건 통과`);

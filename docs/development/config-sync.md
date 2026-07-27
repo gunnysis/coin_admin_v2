@@ -10,7 +10,7 @@ bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌�
 
 ## 1. 버전 동기화 (자동화됨)
 
-단일 소스는 [app.config.ts](../../app.config.ts)의 `MARKETING_VERSION`. `npm run sync:version`([scripts/sync-app-version.mjs](../../scripts/sync-app-version.mjs))이 아래를 전파하고, CI의 `sync:version:check` 단계가 드리프트 시 실패한다.
+단일 소스는 [app.config.ts](../../app.config.ts)의 `MARKETING_VERSION`. `npm run sync:version`([scripts/sync-app-version.mjs](../../scripts/sync-app-version.mjs))이 아래를 전파하고, CI의 `sync:version:check` 단계가 드리프트 시 실패한다. 스크립트는 `runtimeVersion: MARKETING_VERSION` 연결이 유지되는지도 검사한다(전파의 전제이므로, 연결이 끊기면 오류).
 
 | 값 | 파일 | 소비처 | 관리 |
 |----|------|--------|------|
@@ -30,7 +30,7 @@ bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌�
 
 ## 2. 네이티브 ↔ app.config 정합 점검 결과
 
-2026-07-27 전수 점검. 자동화 대상이 아닌 항목은 값 변경 시 양쪽을 함께 수정해야 한다.
+2026-07-27 전수 점검. 아래 항목은 **sync 스크립트가 검사(검사만, 자동 수정 없음)하며 CI가 게이트**한다 — 버전과 달리 릴리스 루틴이 아닌 드문 변경이라, 불일치가 검출되면 사람이 의도를 판단해 양쪽을 정합화한다. 네이티브 기대값 매핑(예: `orientation: "default"` → `screenOrientation="unspecified"`)은 `@expo/config-plugins`의 prebuild 동작 기준.
 
 | 항목 | app.config.ts | 네이티브(Android) | 상태 |
 |------|--------------|-------------------|------|
@@ -39,7 +39,7 @@ bare 워크플로에서 발생하는 "선언 값(app.config.ts) ≠ 실제 빌�
 | URL scheme | `coinadmin` | manifest intent-filter `coinadmin` | ✓ |
 | 키보드 | `softwareKeyboardLayoutMode: "pan"` | `windowSoftInputMode="adjustPan"` | ✓ |
 | OTA 설정 | url·`ON_LOAD`·`fallbackToCacheTimeout: 0` | `EXPO_UPDATE_URL`·`CHECK_ON_LAUNCH ALWAYS`·`LAUNCH_WAIT_MS 0` | ✓ |
-| 상태바 배경 | `#ffffff` (UI_CONSTANTS) | styles.xml `statusBarColor #ffffff` | ✓ (수동 동기화 지점 — 런타임에는 expo-status-bar가 재제어) |
+| 상태바 배경 | `#ffffff` (UI_CONSTANTS) | styles.xml `statusBarColor #ffffff` | ✓ (런타임에는 expo-status-bar가 재제어) |
 | 앱 이름 | `코인관리자` (production) | strings.xml `app_name` | ✓ |
 | SDK 버전 | (선언 제거됨) | RN 버전 카탈로그 공급: min 24 / target·compile 36 | ✓ (빌드 43 AAB 실측: `targetSdkVersion="36"`) |
 

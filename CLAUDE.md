@@ -88,7 +88,7 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Deployment
 
-- App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 후 **`npm run sync:version` 실행 필수** — bare Android의 versionName(build.gradle)·`expo_runtime_version`(strings.xml)·package.json version을 전파(직접 수정 금지). 불일치 시 Play 표기 버전이 틀리거나 프로덕션 앱이 OTA를 수신하지 못함. CI `sync:version:check`가 게이트. versionCode/buildNumber는 EAS 원격 관리(autoIncrement). 상세: [docs/development/config-sync.md](docs/development/config-sync.md).
+- App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 후 **`npm run sync:version` 실행 필수** — bare Android의 versionName(build.gradle)·`expo_runtime_version`(strings.xml)·package.json version을 전파(직접 수정 금지). 불일치 시 Play 표기 버전이 틀리거나 프로덕션 앱이 OTA를 수신하지 못함. CI `sync:version:check`가 게이트(설정 드리프트 검사 8건 포함 — 화면 방향·scheme·OTA 설정·앱 이름·상태바 색 등은 검사만 하고 수정은 사람 검토). versionCode/buildNumber는 EAS 원격 관리(autoIncrement). 상세: [docs/development/config-sync.md](docs/development/config-sync.md).
 - `src/locales/ko.json`은 네이티브 앱 이름 현지화용(app.config.ts `locales`) — 런타임 i18n 아님.
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`
