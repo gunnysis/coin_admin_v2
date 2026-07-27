@@ -422,7 +422,7 @@ export const getVariableMonthExpensesCount = async (month?: string): Promise<num
       params.push(month);
     }
     
-    const result = await db.getFirstAsync<{ count: number }>(query, params.length > 0 ? params : undefined);
+    const result = await db.getFirstAsync<{ count: number }>(query, params);
     return result?.count || 0;
   } catch (error) {
     console.error('유동비 개수 조회 중 오류:', error);
@@ -442,7 +442,7 @@ export const getVariableMonthExpensesTotal = async (month?: string): Promise<num
       params.push(month);
     }
     
-    const result = await db.getFirstAsync<{ total: number | null }>(query, params.length > 0 ? params : undefined);
+    const result = await db.getFirstAsync<{ total: number | null }>(query, params);
     return result?.total || 0;
   } catch (error) {
     console.error('유동비 총액 조회 중 오류:', error);

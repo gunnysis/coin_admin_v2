@@ -7,7 +7,7 @@ import {
   updateFixedMonthCost,
   getDatabase,
 } from '../database/db';
-import { FixedMonthCost, InfiniteQueryPage, InfiniteQueryData, AddExpenseFormData } from '../types';
+import { InfiniteQueryExpensePage, InfiniteQueryExpenseData, AddExpenseFormData } from '../types';
 import { PAGE_SIZE } from '../constants';
 import { databaseKeys, expenseKeys } from '../config/queryKeys';
 
@@ -26,7 +26,13 @@ export const useInitDatabase = () => {
 
 // 페이지네이션 방식 (더 보기 버튼)
 export const useExpensesPaginated = () => {
-  return useInfiniteQuery<InfiniteQueryPage, Error, InfiniteQueryData, string[], number>({
+  return useInfiniteQuery<
+    InfiniteQueryExpensePage,
+    Error,
+    InfiniteQueryExpenseData,
+    ReturnType<typeof expenseKeys.fixed.lists>,
+    number
+  >({
     queryKey: expenseKeys.fixed.lists(),
     queryFn: async ({ pageParam = 0 }) => {
       const data = await getFixedMonthCosts(PAGE_SIZE, pageParam);
@@ -70,19 +76,19 @@ export const useTotalAmount = () => {
 export const useDeleteExpense = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, number, { previousPages: InfiniteQueryData | undefined }>({
+  return useMutation<void, Error, number, { previousPages: InfiniteQueryExpenseData | undefined }>({
     mutationFn: deleteFixedMonthCost,
     onMutate: async (id) => {
       // 진행 중인 쿼리 취소
       await queryClient.cancelQueries({ queryKey: expenseKeys.fixed.all() });
 
       // 이전 데이터 백업
-      const previousPages = queryClient.getQueryData<InfiniteQueryData>(
+      const previousPages = queryClient.getQueryData<InfiniteQueryExpenseData>(
         expenseKeys.fixed.lists()
       );
 
       // 낙관적 업데이트: 즉시 UI에서 제거
-      queryClient.setQueryData<InfiniteQueryData>(
+      queryClient.setQueryData<InfiniteQueryExpenseData>(
         expenseKeys.fixed.lists(),
         (old) => {
           if (!old) return old;
@@ -146,7 +152,7 @@ export const useUpdateExpense = () => {
     void,
     Error,
     AddExpenseFormData & { id: number },
-    { previousPages: InfiniteQueryData | undefined; previousTotal: number | undefined }
+    { previousPages: InfiniteQueryExpenseData | undefined; previousTotal: number | undefined }
   >({
     mutationFn: ({ id, name, amount, start_date }) =>
       updateFixedMonthCost(id, name, amount, start_date),
@@ -155,13 +161,13 @@ export const useUpdateExpense = () => {
       await queryClient.cancelQueries({ queryKey: expenseKeys.fixed.all() });
 
       // 이전 데이터 백업
-      const previousPages = queryClient.getQueryData<InfiniteQueryData>(
+      const previousPages = queryClient.getQueryData<InfiniteQueryExpenseData>(
         expenseKeys.fixed.lists()
       );
       const previousTotal = queryClient.getQueryData<number>(expenseKeys.fixed.total());
 
       // 낙관적 업데이트: 즉시 UI에서 수정
-      queryClient.setQueryData<InfiniteQueryData>(
+      queryClient.setQueryData<InfiniteQueryExpenseData>(
         expenseKeys.fixed.lists(),
         (old) => {
           if (!old) return old;

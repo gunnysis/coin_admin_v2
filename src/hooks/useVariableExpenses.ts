@@ -10,8 +10,8 @@ import {
 } from '../database/db';
 import {
   VariableMonthExpense,
-  VariableExpenseInfiniteQueryPage,
-  VariableExpenseInfiniteQueryData,
+  InfiniteQueryVariablePage,
+  InfiniteQueryVariableData,
   AddVariableExpenseFormData,
 } from '../types';
 import { PAGE_SIZE } from '../constants';
@@ -31,10 +31,10 @@ export const useVariableExpensesPaginated = (month?: string) => {
   const targetMonth = month || getCurrentMonth();
   
   return useInfiniteQuery<
-    VariableExpenseInfiniteQueryPage,
+    InfiniteQueryVariablePage,
     Error,
-    VariableExpenseInfiniteQueryData,
-    (string | number)[],
+    InfiniteQueryVariableData,
+    ReturnType<typeof expenseKeys.variable.lists>,
     number
   >({
     queryKey: expenseKeys.variable.lists(targetMonth),
@@ -89,17 +89,17 @@ export const useDeleteVariableExpense = (month?: string) => {
   const queryClient = useQueryClient();
   const targetMonth = month || getCurrentMonth();
 
-  return useMutation<void, Error, number, { previousPages: VariableExpenseInfiniteQueryData | undefined }>({
+  return useMutation<void, Error, number, { previousPages: InfiniteQueryVariableData | undefined }>({
     mutationFn: deleteVariableMonthExpense,
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: expenseKeys.variable.all() });
 
-      const previousPages = queryClient.getQueryData<VariableExpenseInfiniteQueryData>(
+      const previousPages = queryClient.getQueryData<InfiniteQueryVariableData>(
         expenseKeys.variable.lists(targetMonth)
       );
 
       // 낙관적 업데이트
-      queryClient.setQueryData<VariableExpenseInfiniteQueryData>(
+      queryClient.setQueryData<InfiniteQueryVariableData>(
         expenseKeys.variable.lists(targetMonth),
         (old) => {
           if (!old) return old;
@@ -168,14 +168,14 @@ export const useUpdateVariableExpense = (month?: string) => {
     void,
     Error,
     AddVariableExpenseFormData & { id: number },
-    { previousPages: VariableExpenseInfiniteQueryData | undefined; previousTotal: number | undefined }
+    { previousPages: InfiniteQueryVariableData | undefined; previousTotal: number | undefined }
   >({
     mutationFn: ({ id, name, amount, spent_date, category, memo }) =>
       updateVariableMonthExpense(id, name, amount, spent_date, category, memo),
     onMutate: async (newData) => {
       await queryClient.cancelQueries({ queryKey: expenseKeys.variable.all() });
 
-      const previousPages = queryClient.getQueryData<VariableExpenseInfiniteQueryData>(
+      const previousPages = queryClient.getQueryData<InfiniteQueryVariableData>(
         expenseKeys.variable.lists(targetMonth)
       );
       const previousTotal = queryClient.getQueryData<number>(
@@ -183,7 +183,7 @@ export const useUpdateVariableExpense = (month?: string) => {
       );
 
       // 낙관적 업데이트
-      queryClient.setQueryData<VariableExpenseInfiniteQueryData>(
+      queryClient.setQueryData<InfiniteQueryVariableData>(
         expenseKeys.variable.lists(targetMonth),
         (old) => {
           if (!old) return old;

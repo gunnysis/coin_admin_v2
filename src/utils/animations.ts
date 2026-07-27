@@ -109,7 +109,8 @@ export const createInterpolate = <T extends string | number>(
 ): Animated.AnimatedInterpolation<T> => {
   return animValue.interpolate({
     inputRange,
-    outputRange,
+    // T는 string | number 중 하나로 고정되므로 배열은 균질 — RN 타입(string[] | number[])과 런타임상 동치
+    outputRange: outputRange as unknown as string[] | number[],
   });
 };
 

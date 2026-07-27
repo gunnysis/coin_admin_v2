@@ -2,7 +2,7 @@
  * 데이터베이스 유틸리티 함수
  */
 
-import { SQLiteDatabase } from 'expo-sqlite';
+import { SQLiteDatabase, SQLiteBindParams } from 'expo-sqlite';
 
 /**
  * 트랜잭션 실행 헬퍼
@@ -23,10 +23,10 @@ export const executeTransaction = async <T>(
  */
 export const executeBatch = async (
   db: SQLiteDatabase,
-  queries: Array<{ sql: string; args?: unknown[] }>
+  queries: Array<{ sql: string; args?: SQLiteBindParams }>
 ): Promise<void> => {
   for (const query of queries) {
-    await db.runAsync(query.sql, query.args || []);
+    await db.runAsync(query.sql, query.args ?? []);
   }
 };
 
@@ -36,10 +36,10 @@ export const executeBatch = async (
 export const safeQuery = async <T>(
   db: SQLiteDatabase,
   sql: string,
-  args?: unknown[]
+  args?: SQLiteBindParams
 ): Promise<T[]> => {
   try {
-    const result = await db.getAllAsync<T>(sql, args);
+    const result = await db.getAllAsync<T>(sql, args ?? []);
     return result;
   } catch (error) {
     throw new Error(`Query failed: ${sql} - ${error}`);

@@ -49,7 +49,7 @@ export class Storage {
    */
   static async getAllKeys(): Promise<string[]> {
     try {
-      return await AsyncStorage.getAllKeys();
+      return [...(await AsyncStorage.getAllKeys())];
     } catch (error) {
       throw new Error(`Failed to get all keys: ${error}`);
     }

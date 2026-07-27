@@ -34,7 +34,7 @@ export const useErrorHandler = () => {
           [
             { text: '확인', style: 'default' },
             ...(appError.recoverable && onRetry
-              ? [{ text: '다시 시도', style: 'default', onPress: onRetry }]
+              ? [{ text: '다시 시도', style: 'default' as const, onPress: onRetry }]
               : []),
           ]
         );
