@@ -81,8 +81,8 @@ export default () => {
     name: envConfig.appName,
     slug: APP_CONSTANTS.APP_SLUG,
     version: MARKETING_VERSION,
-    // OTA 업데이트 대상 구분용. Bare 워크플로에서는 정책 미지원 → 수동으로 버전 문자열 지정
-    // MARKETING_VERSION과 맞춰 두면 같은 앱 버전 빌드에만 OTA가 적용됨
+    // OTA 업데이트 대상 구분용. MARKETING_VERSION과 맞춰 두면 같은 앱 버전 빌드에만 OTA가 적용됨
+    // (sync 스크립트가 이 연결을 검사하므로 리터럴로 바꾸지 말 것 — docs/development/config-sync.md)
     runtimeVersion: MARKETING_VERSION,
     orientation: "default", // 가로/세로 모두 지원
     icon: envConfig.icon,
@@ -120,9 +120,8 @@ export default () => {
       // statusBar 설정은 SDK 55+에서 제거됨 — edge-to-edge 상시 활성(상태바 투명), 스타일은 런타임 expo-status-bar가 제어
       // 태블릿 최적화 설정
       supportsTablet: true,
-      // SDK 버전: android/ 디렉터리가 체크인된 bare 워크플로이므로 여기의 값은 빌드에 적용되지 않음.
-      // 실제 값은 RN 버전 카탈로그(react-native/gradle/libs.versions.toml)가 공급 — SDK 54 기준 min 24 / target·compile 36.
-      // prebuild 재실행 시 구버전으로 되돌아가지 않도록 명시 고정을 제거함.
+      // SDK 버전: 명시하지 않음 — CNG(prebuild)에서 RN 버전 카탈로그(react-native/gradle/libs.versions.toml)가
+      // 공급하는 기본값 사용 (SDK 57 기준 min 24 / target·compile 36). 고정하면 SDK 업그레이드 시 낡은 값 회귀 위험.
     },
     web: {
       bundler: "metro",

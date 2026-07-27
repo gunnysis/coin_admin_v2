@@ -88,11 +88,12 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Deployment
 
-- App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 후 **`npm run sync:version` 실행 필수** — bare Android의 versionName(build.gradle)·`expo_runtime_version`(strings.xml)·package.json version을 전파(직접 수정 금지). 불일치 시 Play 표기 버전이 틀리거나 프로덕션 앱이 OTA를 수신하지 못함. CI `sync:version:check`가 게이트(설정 드리프트 검사 8건 포함 — 화면 방향·scheme·OTA 설정·앱 이름·상태바 색 등은 검사만 하고 수정은 사람 검토). versionCode/buildNumber는 EAS 원격 관리(autoIncrement). 상세: [docs/development/config-sync.md](docs/development/config-sync.md).
+- **CNG(prebuild) 체제:** `android/`·`ios/`는 저장소에 없음(.gitignore) — 네이티브는 app.config.ts에서 생성(EAS 빌드 시 자동 prebuild, 로컬은 `expo run:android`). **네이티브 커스텀은 config plugin으로만** — android/ 직접 수정은 다음 prebuild에서 소실됨.
+- App version은 [app.config.ts](app.config.ts)의 MARKETING_VERSION이 단일 소스. 배포 전 갱신 후 **`npm run sync:version` 실행** — package.json 전파 + `runtimeVersion: MARKETING_VERSION` 연결 검사 + 로컬 prebuild 산출물(존재 시) 정합 검사. CI·EAS 워크플로 checks job의 `sync:version:check`가 게이트. versionCode/buildNumber는 EAS 원격 관리(autoIncrement). 상세: [docs/development/config-sync.md](docs/development/config-sync.md).
 - `src/locales/ko.json`은 네이티브 앱 이름 현지화용(app.config.ts `locales`) — 런타임 i18n 아님.
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`
-- Android: minSdk 24, target/compileSdk **36** — bare 워크플로(`android/` 체크인)이므로 RN 버전 카탈로그(`react-native/gradle/libs.versions.toml`)가 실제 값 공급. app.config.ts의 android SDK 키는 빌드에 적용되지 않아 제거됨
+- Android: minSdk 24, target/compileSdk **36** — RN 버전 카탈로그(`react-native/gradle/libs.versions.toml`)가 공급하는 기본값 사용. app.config.ts에 SDK 키를 고정하지 말 것(SDK 업그레이드 시 낡은 값 회귀 위험)
 - **EAS Build/Submit:** `eas.json`에 build(development/preview/production) 및 submit(production/preview) 프로필 정의. Android 프로덕션 빌드는 `image: "latest"` 명시.
 - **프로덕션 배포 체크리스트 및 EAS Secrets:** [docs/deployment/production-deployment.md](docs/deployment/production-deployment.md).
-- **EAS Workflows:** `.eas/workflows/android-production.yml`·`ios-production.yml` — **둘 다** main 브랜치 push 시 production 빌드 후 스토어 제출(Play/App Store Connect). GitHub 저장소가 Expo 대시보드에 연결되어 있으면 자동 실행 — **main 머지 = 배포**. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.
+- **EAS Workflows:** `.eas/workflows/android-production.yml`(main push 자동)·`ios-production.yml`(수동 전용) — production 빌드 후 스토어 제출. **main 머지 = Android 배포**이며, 빌드 전 **checks job**(sync check·typecheck·jest)이 실패하면 빌드·제출이 중단됨. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.

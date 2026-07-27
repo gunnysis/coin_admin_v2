@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+- **CNG(prebuild) 전환 — bare 드리프트 부류의 근본 해결:** `android/`를 저장소에서 제거(.gitignore `/android` `/ios`), 네이티브는 app.config.ts 단일 소스에서 생성(EAS 빌드 시 자동 prebuild). versionName 불일치·portrait 고정·statusBar 사장 설정·locale 오염 같은 "선언 ≠ 네이티브" 문제 부류가 구조적으로 소멸. dev/preview의 Android packageName 접미사도 이제 적용(동시 설치 가능). sync 스크립트를 "저장소 검사 + 로컬 생성물 조건부 검사"로 재편(+`[object Object]` 오염 검사)
+- **배포 안전장치 — push=무검증 배포 해소:** EAS 워크플로(android·ios)에 pre-build checks job(sync check·typecheck·jest) 추가 — 검사 실패 시 빌드·스토어 제출 중단
+- **CI에 웹 E2E job 추가:** Playwright(Chromium)로 Metro 웹 번들·런타임 회귀 검출(이번 업그레이드에서 실회귀 2건을 잡은 검증 체계의 상시화), 실패 시 리포트 아티팩트 업로드
+- `expo.install.exclude` 잔여 3건(Sentry 8.x·jest 30 트랙)의 유지 사유를 실측·문서화 (docs/development/config-sync.md)
+
 ## [2.6.0] - 2026-07-27
 
 - **Expo SDK 54 → 57 업그레이드 (RN 0.86, React 19.2.3):** 55→56→57 순차 진행·단계별 커밋. 주요 동반 변경 — TypeScript 6.0(tsconfig baseUrl 제거·`types` 명시·`*.css` 모듈 선언·ts-jest 상향), Reanimated 4.5·worklets 0.10, Sentry 8.20(SDK 57 지원 확인), datetimepicker 9.1, expo-system-ui 추가(Android 다크 모드 userInterfaceStyle), `expo.install.exclude` 정리(구버전을 붙잡던 3건 제거)

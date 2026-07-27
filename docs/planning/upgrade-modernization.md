@@ -164,6 +164,7 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 - [x] **3.** expo-file-system 신규 API 마이그레이션 — legacy import 0건, File/Paths 전환, content:// 분기는 picker `copyToCacheDirectory` 전제의 방어 오류로 단순화 (2026-07-27, §4.2). 잔여: 실기기 백업→공유→복구 수동 검증
 - [x] **4.** CI 강화 완료 (2026-07-27) — Node 24(Active LTS) 상향 + expo-doctor 단계 추가(non-blocking — bare 정보성 경고 1건이 상존하므로 경고용) (§4.1-2, §5.3)
 - [x] **5.** SDK 54 → 55 업그레이드 완료 (2026-07-27) — newArchEnabled 키 제거, plugins에 expo-font·expo-sharing 추가 (§4.3)
+- [x] **6-1.** CNG 전환 완료 (2026-07-27) — android/ 저장소 제거, EAS 빌드 시 자동 prebuild([공식](https://docs.expo.dev/workflow/continuous-native-generation/)). bare 드리프트 부류 근본 해결 + EAS 워크플로 pre-build checks job·CI 웹 E2E 추가. 상세: [config-sync](../development/config-sync.md)
 - [x] **6.** SDK 55 → 56 → 57 순차 업그레이드 완료 (2026-07-27) — 56: TS 6.0 전환(tsconfig baseUrl 제거·types 명시·ts-jest 상향), 57: Sentry 8.20([getsentry#6384](https://github.com/getsentry/sentry-react-native/issues/6384) closed 확인)·exclude 정리·datetimepicker 9.1. android/ prebuild 재생성(edge-to-edge 상시, statusBar 설정 사장 → app.config에서 제거, sync 스크립트 검사 교체). E2E에서 발견된 RNW data-testid 회귀는 testID 단일화로 근본 수정. 잔여: EAS preview 빌드 실기기 검증(§8), 특히 datetimepicker 9 네이티브 UI·edge-to-edge·백업/복구 (§4.3, §1.2)
 - [ ] **7.** (iOS 배포 재개 시) Xcode 26 빌드 검증 + App Store 제출 (§2.2)
 - [ ] **8.** (NativeWind v5 stable 이후) Tailwind v4 트랙 (§5.2)

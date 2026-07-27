@@ -25,7 +25,9 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native — CNG(prebuild): android/ios는 app.config.ts에서 생성되는 산출물 (docs/development/config-sync.md)
+/android
+/ios
 *.orig.*
 *.jks
 *.p8

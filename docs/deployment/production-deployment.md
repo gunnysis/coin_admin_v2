@@ -4,7 +4,7 @@
 
 ## 1. 배포 전 체크리스트
 
-- **버전:** 새 스토어 빌드 전 [app.config.ts](../../app.config.ts) 상단 `MARKETING_VERSION`을 갱신하고 **`npm run sync:version`을 실행**해 android versionName·`expo_runtime_version`·package.json을 함께 갱신한 뒤 커밋. CI의 `sync:version:check`가 누락을 차단한다. 상세: [버전·설정 동기화 설계](../development/config-sync.md).
+- **버전:** 새 스토어 빌드 전 [app.config.ts](../../app.config.ts) 상단 `MARKETING_VERSION`을 갱신하고 **`npm run sync:version`을 실행**한 뒤 커밋(CNG라 네이티브 버전은 prebuild가 app.config에서 생성 — 스크립트는 package.json 전파와 `runtimeVersion` 연결·로컬 생성물 정합을 검사). CI와 EAS 워크플로 checks job의 `sync:version:check`가 누락을 차단한다. 상세: [버전·설정 동기화 설계](../development/config-sync.md).
 - **테스트:** `npm test` 통과. (선택) `npm run test:e2e:run` 통과(웹 서버 기동 후 실행).
 - **EAS Secrets:** 프로덕션 빌드에서 Sentry를 사용할 경우, Expo 대시보드 → 프로젝트 → Secrets에 `EXPO_PUBLIC_SENTRY_DSN`을 설정한다. EAS Build 시 자동 주입된다. **production 프로필은 EAS Secrets에 의존**하며, `eas.json`의 production env에 DSN을 직접 넣지 말 것(보안).
 - **CI:** main push 시 GitHub Actions 등으로 테스트를 먼저 돌린다면, CI 통과 후 EAS 워크플로(빌드/제출)가 진행되도록 운영한다.
@@ -23,7 +23,7 @@
 
 ## 4. OTA (EAS Update)
 
-- **정책:** `runtimeVersion`은 [app.config.ts](../../app.config.ts)의 `MARKETING_VERSION`과 동일하게 두었으므로, **네이티브 코드/앱 버전이 바뀌지 않으면** 기존 프로덕션 빌드는 동일 채널의 OTA만 수신한다. bare Android 바이너리는 strings.xml의 `expo_runtime_version`을 사용하므로 `npm run sync:version`으로 반드시 함께 갱신해야 한다(불일치 시 프로덕션 앱이 OTA를 수신하지 못함).
+- **정책:** `runtimeVersion`은 [app.config.ts](../../app.config.ts)의 `MARKETING_VERSION`과 동일하게 두었으므로, **네이티브 코드/앱 버전이 바뀌지 않으면** 기존 프로덕션 빌드는 동일 채널의 OTA만 수신한다. CNG 전환으로 네이티브의 런타임 버전도 prebuild가 app.config에서 생성하므로 별도 수동 갱신은 없다(로컬에 오래된 android/가 남아 있으면 `sync:version:check`가 경고).
 - **JS/에셋만 변경:** `eas update --branch main --channel production`.
 - **네이티브/Expo SDK 변경 시:** `MARKETING_VERSION`을 올리고 새 스토어 빌드를 한 뒤, 해당 버전용 OTA를 같은 채널(`production`)에 푸시한다.
 
