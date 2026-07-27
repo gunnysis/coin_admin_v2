@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+- **레거시 정리:** expo-file-system/legacy → 신규 File/Paths API 마이그레이션(백업 모듈, SDK 55+ 대비), 미사용 의존성 제거(react-native-chart-kit·expo-router), 미사용 레거시 상수 제거(QUERY_KEYS, 테마 별칭 7종), 테스트 산출물(playwright-report) gitignore
+- **Play targetSdk 정책(2026-08-31) 해소 확인:** bare 워크플로에서 실제 빌드는 RN 카탈로그의 targetSdk 36을 이미 사용 — app.config.ts의 죽은 SDK 설정(34) 제거로 prebuild 회귀 위험 차단
 - **타입 부채 전체 해소 + CI 타입 게이트:** `tsc --noEmit` 오류 55 → 0. 잘못된 타입 사용 정정(InfiniteQuery 제네릭 미지정·존재하지 않는 타입명 import, SQLite `SQLiteBindParams`, React 19 `useRef` 필수 초기값, readonly 배열, AlertButton 리터럴 등). `npm run typecheck` 추가, CI에 Type check 단계 신설
 - **다크 모드 전면 적용 (근본 수정):** 기존에는 팔레트·설정 UI만 있고 앱 본체(헤더·탭바·레이아웃·카드·모달·입력)는 라이트 고정이었음. ThemeContext ↔ NativeWind `colorScheme.set()` 연동(`darkMode: 'class'`), Typography를 `useTheme()` 기반으로 전환, 전 화면 `dark:` variant 적용, StatusBar 동적화
 - 디자인 시스템 정리: 색상 토큰 `overlay`·`primarySubtle` 신설(모달 배경·primary 10% 배지 rgba 하드코딩 및 파일 간 불일치 제거), Button hex 클래스 → 시맨틱 클래스(bg-primary 등), 인라인 그림자 → `SHADOWS.sm`

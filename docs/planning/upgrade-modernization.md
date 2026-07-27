@@ -5,7 +5,7 @@
 
 ## 요약 (TL;DR)
 
-- 🚨 **Play 정책 기한 2026-08-31**: targetSdk 34 → **36** 상향 필수. SDK 업그레이드 없이 즉시 가능 (§2.1)
+- ✅ **Play 정책(2026-08-31, API 36) — 해소 확인 (2026-07-27)**: bare 워크플로에서 실제 빌드는 RN 버전 카탈로그의 **targetSdk 36**을 이미 사용 중이었음. app.config.ts의 `targetSdkVersion: 34`는 빌드에 적용되지 않는 죽은 설정이라 제거 (§2.1)
 - 🚨 **Apple 정책 시행 중** (2026-04-28~): iOS 제출은 Xcode 26/iOS 26 SDK 빌드 필수 — iOS 배포 재개 전 SDK 업그레이드가 사실상 선행 조건 (§2.2)
 - ⚠️ **운영 리스크**: main push 시 **Android·iOS 두 워크플로 모두** production 빌드+스토어 제출을 자동 실행 (`.eas/workflows/android-production.yml`, `ios-production.yml`) — 업그레이드 작업의 **머지가 곧 배포**이며, Apple 요건 미충족 상태에서는 iOS 제출이 자동으로 시도·거부될 수 있음 (§7)
 - Expo SDK 54 → **57** 업그레이드: 파괴적 변경은 **55**(New Arch 강제·Node·Xcode)와 **56**(expo/fetch 기본화·file-system 비동기화 등)에 나뉘어 있고, **57만 경량·비파괴적** — 한 버전씩 순차 검증 (§4)
@@ -55,11 +55,11 @@
 - 기존 앱 노출 유지: API 35 이상 (미충족 시 Android 16+ 기기 신규 사용자에게 검색 미노출)
 - 연장 신청 시 2026-11-01까지 유예 가능
 
-**현재 문제:** [app.config.ts](../../app.config.ts)가 `targetSdkVersion: 34`, `compileSdkVersion: 34`로 **명시 고정**되어 있다. SDK 54의 RN은 이미 API 36을 타겟하므로, 명시 고정을 제거하거나 36으로 올리면 SDK 업그레이드 없이도 대응 가능하다.
+**✅ 해소 확인 (2026-07-27, 팩트체크):** 본 프로젝트는 `android/` 디렉터리가 체크인된 **bare 워크플로**라 app.config.ts의 android SDK 키는 빌드에 적용되지 않는다. 실제 값은 `expo-root-project` gradle 플러그인이 RN 버전 카탈로그(`node_modules/react-native/gradle/libs.versions.toml`)에서 읽으며, RN 0.81 카탈로그는 **minSdk 24 / target·compileSdk 36** — 즉 현재 빌드는 이미 API 36이다 (`android/gradle.properties`에 오버라이드 없음 확인). app.config.ts의 `targetSdkVersion: 34` 죽은 설정은 prebuild 재실행 시 34로 되돌릴 위험만 있어 **제거 완료**.
 
-**작업:**
+**잔여 작업:**
 
-1. `app.config.ts`에서 `targetSdkVersion: 36`, `compileSdkVersion: 36`으로 변경 (또는 명시 제거 후 SDK 기본값 사용)
+1. ~~app.config.ts SDK 버전 변경~~ → 죽은 설정 제거로 완료. 차기 스토어 제출 빌드의 Play Console 표기 targetSdk가 36인지 확인
 2. **Edge-to-edge 영향 검증:** targetSdk 35+에서 Android는 edge-to-edge를 강제한다. 현재 `statusBar.translucent: false` 설정과 충돌 여부를 실기기/에뮬레이터에서 확인 — [Safe Area 정책](../development/safe-area-device-ui.md)의 SafeAreaView/insets 처리가 방어선. (SDK 55+에서는 `edgeToEdgeEnabled` 옵션 자체가 제거되고 항상 활성)
 3. EAS production 빌드 → 내부 테스트 트랙 검증 → **단계적 출시(staged rollout)**로 제출 ([production-deployment](../deployment/production-deployment.md) 체크리스트 준수)
 
@@ -157,9 +157,9 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 
 ## 6. 실행 순서 요약 (우선순위·체크리스트)
 
-- [ ] **1. [긴급, ~2026-08-31]** targetSdk/compileSdk 36 + edge-to-edge 검증 + 단계적 출시 제출 (§2.1) — SDK 업그레이드와 독립적으로 즉시 가능
-- [ ] **2.** 미사용 의존성 제거 (§5.1)
-- [ ] **3.** expo-file-system 신규 API 마이그레이션 (§4.2)
+- [x] **1.** ~~targetSdk 36 상향~~ → **이미 충족 확인**(bare 워크플로, RN 카탈로그 36) + 죽은 설정 제거 (2026-07-27, §2.1). 잔여: 차기 제출 빌드에서 Play Console 표기 확인 + edge-to-edge 실기기 검증
+- [x] **2.** 미사용 의존성 제거 — react-native-chart-kit·expo-router 제거 (2026-07-27, §5.1)
+- [x] **3.** expo-file-system 신규 API 마이그레이션 — legacy import 0건, File/Paths 전환, content:// 분기는 picker `copyToCacheDirectory` 전제의 방어 오류로 단순화 (2026-07-27, §4.2). 잔여: 실기기 백업→공유→복구 수동 검증
 - [ ] **4.** CI 강화 — Node 24(Active LTS) 상향 ✅ 완료(2026-07-27) / expo-doctor 단계 추가 미완 (§4.1-2, §5.3)
 - [ ] **5.** SDK 54 → 55 업그레이드 + §8 매트릭스 검증 (§4.3)
 - [ ] **6.** SDK 55 → 56 → 57 순차 업그레이드 — 56에서 fetch·file-system 회귀 검증, 57 진입 전 Sentry 호환 확인 (§4.3, §1.2)
