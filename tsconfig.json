@@ -1,12 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
-  "esModuleInterop": true,
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
+    // TS 6.0부터 node_modules/@types 자동 포함이 제거되어 전역 타입(jest·process 등)은 명시 필요
+    "types": ["jest", "node"],
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     },
     "jsx": "react-native",
