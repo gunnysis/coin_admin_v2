@@ -7,6 +7,17 @@ name: Android Production Build and Submit
 on:
   push:
     branches: [main]
+    # 문서·GitHub CI만 바뀐 push는 스토어 배포를 트리거하지 않음 (versionCode·심사 낭비 방지)
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "!.github/**"
+
+# 새 push가 오면 진행 중인 구 배포 런을 취소 (최신 커밋만 배포)
+concurrency:
+  cancel_in_progress: true
+  group: ${{ workflow.filename }}-${{ github.ref }}
 
 # package.json engines(>=22.13)와 정합하는 Node로 checks job 실행
 defaults:

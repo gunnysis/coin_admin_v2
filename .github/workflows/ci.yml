@@ -1,14 +1,26 @@
-# main push 시 단위 테스트 실행. EAS 빌드 전 CI 확인용.
+# PR·main push 시 검증. main 머지 = EAS 배포이므로 PR 단계 검증이 1차 방어선,
+# EAS 워크플로의 pre-build checks job이 최종 게이트.
 name: CI
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# 같은 브랜치/PR의 이전 실행은 취소 (최신 커밋만 검증)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +52,7 @@ jobs:
   e2e:
     name: E2E (web)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 

@@ -12,14 +12,15 @@
 
 ## 2. Android
 
-- **자동:** `main` 브랜치 push 시 [.eas/workflows/android-production.yml](../../.eas/workflows/android-production.yml)이 실행된다(빌드 → Play Store 제출). Expo 대시보드에서 GitHub 저장소가 연결되어 있어야 한다.
+- **자동:** `main` 브랜치 push 시 [.eas/workflows/android-production.yml](../../.eas/workflows/android-production.yml)이 실행된다(checks → 빌드 → Play Store 제출. docs/·`*.md`만 변경된 push는 제외). Expo 대시보드에서 GitHub 저장소가 연결되어 있어야 한다.
+- **제출 크레덴셜:** Google Service Account 키는 **EAS 서버에 업로드**되어 있어야 한다(`npx eas-cli credentials -p android`). eas.json에 로컬 키 경로를 넣지 말 것 — 클라우드 제출이 실패한다. 상세: [eas-android-workflows](eas-android-workflows.md).
 - **수동:** `eas build --platform android --profile production` 후, 빌드 완료 시 `eas submit --latest --platform android --profile production`으로 Play Store에 제출. 채널은 `production`.
 - **빌드 상태 확인:** [Expo 대시보드](https://expo.dev) → 프로젝트 → Builds에서 진행 중/완료 확인.
 
 ## 3. iOS
 
 - **수동:** `eas build --platform ios --profile production` → `eas submit` (프로필 `production`). TestFlight/App Store 검토 대기.
-- **자동(선택):** iOS 워크플로를 사용할 경우 [.eas/workflows/ios-production.yml](../../.eas/workflows/ios-production.yml). **Apple App Store Connect API 키 등 iOS 제출 크레덴셜이 Expo 대시보드에 연결되어 있어야 한다.**
+- **자동(선택):** iOS 워크플로를 사용할 경우 [.eas/workflows/ios-production.yml](../../.eas/workflows/ios-production.yml)(수동 실행 전용). **App Store Connect API 키는 EAS 서버에 업로드되어 있어야 한다**(`npx eas-cli credentials -p ios`) — Android와 마찬가지로 eas.json의 로컬 키 경로(ascApiKeyPath)는 클라우드 제출에서 동작하지 않아 제거됨.
 
 ## 4. OTA (EAS Update)
 
