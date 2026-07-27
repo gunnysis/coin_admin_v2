@@ -1,6 +1,6 @@
 // =========================================================================
 // !! 중요: 새 배포 빌드 전 반드시 이 마케팅 버전을 업데이트하세요 !!
-const MARKETING_VERSION = "2.5.0"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
+const MARKETING_VERSION = "2.6.0"; // 현재 앱의 마케팅 버전을 여기에 정의합니다.
 // =========================================================================
 
 // 상수 정의
@@ -20,7 +20,6 @@ const ASSET_PATHS = {
 } as const;
 
 const UI_CONSTANTS = {
-  STATUS_BAR_BACKGROUND: "#ffffff",
   ADAPTIVE_ICON_BACKGROUND: "#ffffff",
 } as const;
 
@@ -118,11 +117,7 @@ export default () => {
       },
       package: envConfig.packageName,
       softwareKeyboardLayoutMode: "pan",
-      statusBar: {
-        backgroundColor: UI_CONSTANTS.STATUS_BAR_BACKGROUND,
-        barStyle: "dark-content",
-        translucent: false,
-      },
+      // statusBar 설정은 SDK 55+에서 제거됨 — edge-to-edge 상시 활성(상태바 투명), 스타일은 런타임 expo-status-bar가 제어
       // 태블릿 최적화 설정
       supportsTablet: true,
       // SDK 버전: android/ 디렉터리가 체크인된 bare 워크플로이므로 여기의 값은 빌드에 적용되지 않음.

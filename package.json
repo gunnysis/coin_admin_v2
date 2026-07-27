@@ -1,6 +1,6 @@
 {
   "name": "coin-admin",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "main": "index.tsx",
   "engines": {
     "node": ">=22.13.0"
@@ -37,6 +37,7 @@
     "expo-sharing": "~57.0.7",
     "expo-sqlite": "~57.0.1",
     "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
     "expo-updates": "~57.0.10",
     "nativewind": "^4.2.1",
     "phosphor-react-native": "^3.0.3",

@@ -1,5 +1,8 @@
 {
-  "app": {
-    "name": "코인관리자"
+  "ios": {
+    "CFBundleDisplayName": "코인관리자"
+  },
+  "android": {
+    "app_name": "코인관리자"
   }
 }

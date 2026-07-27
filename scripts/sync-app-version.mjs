@@ -50,7 +50,6 @@ const cfg = {
   scheme: extract(appConfig, /APP_SCHEME: ["']([\w-]+)["']/, 'APP_SCHEME'),
   appName: extract(appConfig, /APP_NAME_BASE: ["'](.+?)["']/, 'APP_NAME_BASE'),
   easProjectId: extract(appConfig, /EAS_PROJECT_ID: ["']([\w-]+)["']/, 'EAS_PROJECT_ID'),
-  statusBarColor: extract(appConfig, /STATUS_BAR_BACKGROUND: ["'](#[0-9a-fA-F]{6})["']/, 'STATUS_BAR_BACKGROUND'),
   orientation: extract(appConfig, /orientation: ["'](\w+)["']/, 'orientation'),
   keyboardMode: extract(appConfig, /softwareKeyboardLayoutMode: ["'](\w+)["']/, 'softwareKeyboardLayoutMode'),
   checkAutomatically: extract(appConfig, /checkAutomatically: ["'](\w+)["']/, 'updates.checkAutomatically'),
@@ -161,10 +160,12 @@ const invariants = [
     ok: (c) => c.includes(`<string name="app_name">${cfg.appName}</string>`),
   },
   {
+    // SDK 55+ edge-to-edge 상시 활성 — 상태바는 투명이어야 하며(스타일은 런타임 expo-status-bar 제어),
+    // 불투명 색으로 회귀하면 안 됨 (구 androidStatusBar 설정의 잔재 감지)
     file: 'android/app/src/main/res/values/styles.xml',
-    label: `상태바 배경 (${cfg.statusBarColor})`,
-    expected: `android:statusBarColor = ${cfg.statusBarColor}`,
-    ok: (c) => c.includes(`<item name="android:statusBarColor">${cfg.statusBarColor}</item>`),
+    label: '상태바 투명 (edge-to-edge)',
+    expected: 'android:statusBarColor = @android:color/transparent',
+    ok: (c) => c.includes('<item name="android:statusBarColor">@android:color/transparent</item>'),
   },
 ];
 
