@@ -34,3 +34,22 @@ npx : 이 시스템에서 스크립트를 실행할 수 없으므로 ... npx.ps1
 ## 2. Metro 캐시 손상 (Unable to deserialize cloned data)
 
 웹 번들 오류·캐시 손상 증상과 해결은 [E2E 테스트 문서의 Metro 캐시 섹션](../testing/e2e-testing.md#metro-캐시-unable-to-deserialize-cloned-data) 참고. 요약: `npm run web:clear` 실행, 반복 시 OS 임시 디렉터리의 `metro-file-map-*` 삭제.
+
+---
+
+## 3. Android 로컬 빌드: NDK "did not have a source.properties file" (CXX1101)
+
+### 증상
+
+```
+[CXX1101] NDK at C:\Users\<user>\AppData\Local\Android\Sdk\ndk\<버전> did not have a source.properties file
+```
+
+### 원인
+
+해당 버전 폴더가 **중단된 설치 잔재**(수 KB, `.installer` 마커만 존재)인 경우. Gradle/AGP는 폴더가 존재하면 설치된 것으로 간주해 재설치하지 않는다.
+
+### 해결
+
+1. 폴더 크기 확인: `du -sh <Sdk>/ndk/<버전>` — 정상 NDK는 수 GB
+2. 잔재라면 폴더 삭제 후 빌드 재실행 — Gradle이 필요한 NDK를 자동 재설치한다 (2026-07-27 SDK 57 업그레이드 검증 중 실제 발생·해결)

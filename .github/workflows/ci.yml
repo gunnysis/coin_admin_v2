@@ -29,3 +29,8 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+      # 의존성 호환성 진단 (SDK-패키지 버전 정합·config 검사). 네트워크 이슈 등
+      # 프로젝트 외적 요인으로 흔들릴 수 있어 실패해도 빌드는 막지 않는다(경고용).
+      - name: Expo doctor (non-blocking)
+        run: npx expo-doctor@latest || echo "::warning::expo-doctor reported issues"

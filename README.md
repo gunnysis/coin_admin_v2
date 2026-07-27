@@ -34,10 +34,10 @@ npm run web       # 웹 (기본 http://localhost:8081)
 ## 🛠 기술 스택
 
 ### 핵심 기술
-- **React Native** 0.81.5
-- **Expo** ~54.0.27
-- **TypeScript** 5.9.2
-- **React** 19.1.0
+- **React Native** 0.86
+- **Expo SDK** 57
+- **TypeScript** 6.0
+- **React** 19.2
 
 ### 스타일·상태·데이터
 - **Nativewind / Tailwind** — 스타일링. 시맨틱 컬러(primary/expense/income), slate 중성색, 8pt 그리드·radius(card/button/input)는 `src/constants/theme.ts` 및 `tailwind.config.js`에서 관리
