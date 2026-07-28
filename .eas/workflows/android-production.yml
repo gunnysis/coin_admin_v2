@@ -7,12 +7,16 @@ name: Android Production Build and Submit
 on:
   push:
     branches: [main]
-    # 문서·GitHub CI만 바뀐 push는 스토어 배포를 트리거하지 않음 (versionCode·심사 낭비 방지)
+    # 문서·GitHub CI·워크플로 정의만 바뀐 push는 스토어 배포를 트리거하지 않음 (versionCode·심사 낭비 방지)
+    # 주의: EAS 매처는 `!**/*.md`가 루트 파일(README.md 등)과 매치되지 않는다 — `!*.md` 병기 필수
+    # (2026-07-28 실측: docs 전용 push가 필터를 통과해 빌드 46이 제출된 사고. GitHub Actions와 다름)
     paths:
       - "**"
       - "!docs/**"
       - "!**/*.md"
+      - "!*.md"
       - "!.github/**"
+      - "!.eas/**"
 
 # 새 push가 오면 진행 중인 구 배포 런을 취소 (최신 커밋만 배포)
 concurrency:

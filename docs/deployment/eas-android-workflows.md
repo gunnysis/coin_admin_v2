@@ -10,7 +10,7 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 ## 트리거
 
 1. **GitHub 자동 실행**  
-   `main` 브랜치에 push하면 워크플로가 자동으로 실행된다. 단, **docs/·`*.md`만 변경된 push는 제외**(paths 필터 — versionCode·심사 낭비 방지)되고, 새 push가 오면 진행 중인 이전 런은 취소된다(concurrency).  
+   `main` 브랜치에 push하면 워크플로가 자동으로 실행된다. 단, **docs/·`*.md`(루트 포함)·`.github/`·`.eas/`만 변경된 push는 제외**(paths 필터 — versionCode·심사 낭비 방지)되고, 새 push가 오면 진행 중인 이전 런은 취소된다(concurrency). **paths 필터 주의:** EAS 매처는 GitHub Actions와 달리 `!**/*.md`가 루트 파일(README.md 등)과 매치되지 않는다 — `!*.md`를 병기해야 한다(2026-07-28 실측: docs 전용 push가 필터를 통과해 동일 코드의 빌드 46이 제출된 사고).  
    사용하려면 [Expo 대시보드](https://expo.dev) → 해당 프로젝트 → GitHub 설정에서 저장소를 연결하고 GitHub App을 설치해야 한다.
 
 2. **수동 실행**  
@@ -62,6 +62,7 @@ job이 장시간 `IN_PROGRESS`인데 `workflow:logs`가 **"No logs found"** 를 
 
 ### 검증 이력
 
+- **2026-07-28: paths 필터 루트 md 미적용 사고** — 문서 전용 커밋(README·CHANGELOG·docs/)이 필터를 통과해 빌드 46(fingerprint는 빌드 45와 동일)이 빌드·제출됨. 원인: EAS 매처에서 `**/*.md`가 루트 파일과 미매치. 조치: `!*.md`·`!.eas/**` 추가. 사용자 영향 없음(동일 코드) — versionCode 1개·심사 1회 낭비.
 - **2026-07-28: 재설계 후 첫 전 구간 성공** — checks(sync check·typecheck·jest, `tools.node` 핀) → CNG 자동 prebuild 빌드(**빌드 45**, versionName 2.6.0, SDK 57, targetSdk 36) → **EAS 저장 키로 Play 제출 성공**(빌드 43 제출 실패의 재발 없음). concurrency에 의한 구 런 취소, docs 제외 paths 필터도 동작 확인.
 
 ## 참고
