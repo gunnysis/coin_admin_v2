@@ -32,7 +32,7 @@ jobs:
   smoke:
     name: Release build + emulator launch
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -70,6 +70,12 @@ jobs:
         run: npx expo prebuild --platform android --no-install
         env:
           APP_ENV: production
+
+      # prebuild 기본 jvmargs(-Xmx2048m/Metaspace 512m)는 RN 0.86 + KSP에 부족 —
+      # 러너(16GB)에서 OutOfMemoryError: Metaspace로 실측 실패(2026-07-28 run 30340389452).
+      # properties 파일은 마지막 정의가 우선이므로 append로 상향 (CI 전용, EAS 빌드는 무관)
+      - name: Raise Gradle JVM memory
+        run: printf '\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n' >> android/gradle.properties
 
       - name: Build release APK
         run: cd android && chmod +x gradlew && ./gradlew :app:assembleRelease --no-daemon
