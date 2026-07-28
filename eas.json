@@ -79,7 +79,8 @@
       },
       "android": {
         "track": "production",
-        "releaseStatus": "completed"
+        "releaseStatus": "inProgress",
+        "rollout": 0.2
       }
     },
     "preview": {

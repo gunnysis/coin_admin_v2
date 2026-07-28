@@ -87,3 +87,32 @@ method com.facebook.react.modules.appearance.AppearanceModule.setColorScheme, pa
 1. `.github/workflows/android-smoke.yml` — main push 시 release APK 빌드 + 에뮬레이터 실행 + 프로세스 생존·FATAL 검사 (조기 경보; EAS 배포를 차단하지는 못함)
 2. 배포 전 체크리스트에 **로컬 릴리스 스모크 필수화** ([production-deployment.md](../deployment/production-deployment.md))
 3. 프로덕션 Sentry 연결(EAS env `EXPO_PUBLIC_SENTRY_DSN`) — 크래시 가시성 확보
+
+---
+
+## 5. 의존성 변경 시 lockfile은 CI와 같은 npm으로 (EUSAGE 재발 방지)
+
+### 증상
+
+로컬 `npm install` 후 CI의 `npm ci`만 실패:
+
+```
+npm error code EUSAGE
+npm error Missing: @emnapi/core@… from lock file
+```
+
+### 원인
+
+로컬 npm(예: 11.6)과 CI npm(.nvmrc Node 24.18.0 내장, 11.16)의 **lockfile 기록 규칙 차이**. npm 11.16+는 optional 패키지의 peerDependencies 최상위 기록을 요구한다. 2026-07 사고로 문서화됐고, 2026-07-28 nativewind 업그레이드 작업 중 로컬 11.6 install로 실제 재발했다.
+
+### 해결·예방 (관례)
+
+로컬 Node가 `.nvmrc`(24.18.0)와 다르면, **의존성을 바꾸는 모든 install은 CI와 같은 npm으로 실행**한다:
+
+```bash
+npx -y npm@11.16.0 install <pkg>   # 또는 npx -y npm@11.16.0 update <pkg>
+# 검증 (양쪽 모두 exit 0이어야 함):
+npx -y npm@11.16.0 ci --dry-run && npm ci --dry-run
+```
+
+근본 해결은 nvm-windows 등으로 로컬 Node를 24.18.0에 고정하는 것. 상세 배경: [config-sync.md](config-sync.md).

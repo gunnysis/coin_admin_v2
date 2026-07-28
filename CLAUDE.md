@@ -59,7 +59,7 @@ Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPort
 SQLite via expo-sqlite for offline persistence. React Query handles caching and pagination. Data interfaces use `PaginatedResponse<T>` and `InfiniteQueryPage<T>` patterns. **Backup/restore:** `src/lib/backup/` (snapshot types, `IBackupStorageAdapter`, `backupService`, `LocalBackupAdapter`). Uses the **new expo-file-system `File`/`Paths` API** (`new File(Paths.document, name)`, `file.write()`, `await file.text()`) — do NOT reintroduce `expo-file-system/legacy` (removed 2026-07; deprecated, slated for removal in future SDKs). Write file-system calls with `await` even when currently sync (SDK 56 makes `copy()`/`move()` async). 로컬 백업: expo-file-system + expo-sharing; 복구: expo-document-picker (**`copyToCacheDirectory: true` 필수** — picker가 `file://` URI를 보장하므로 `content://` 처리가 불필요). After restore, invalidate `expenseKeys.fixed.all()` and `expenseKeys.variable.all()`. Web build: `metro.config.js` has `resolver.assetExts` including `wasm` for expo-sqlite web bundle; COOP/COEP headers may be needed for deployment.
 
 ### Error Reporting
-`src/lib/errorReporting.ts` — production-only Sentry init (`@sentry/react-native`), gated on `EXPO_PUBLIC_SENTRY_DSN`; wires `logger.setErrorReporter()` so `logger.error` calls reach Sentry. No-op in dev or without DSN. Release tag from `EXPO_PUBLIC_APP_VERSION`/`SENTRY_RELEASE`.
+`src/lib/errorReporting.ts` — production-only Sentry init (`@sentry/react-native`), gated on `EXPO_PUBLIC_SENTRY_DSN`; wires `logger.setErrorReporter()` so `logger.error` calls reach Sentry. No-op in dev or without DSN. release/dist는 SDK 기본 통합이 네이티브에서 `bundleId@version+build`로 자동 파생 — 수동 release 설정 금지(빌드 번호가 빠져 약해짐).
 
 ## Key Constants
 

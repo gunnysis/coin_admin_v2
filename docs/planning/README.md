@@ -7,5 +7,6 @@
 | [plans.md](plans.md) | 리팩토링 설계(금액/통화·Query Key·testID) + 디자인 향상 설계(컬러·타이포·카드·로드맵) |
 | [improvements-roadmap.md](improvements-roadmap.md) | 개선사항 및 기능 개선 로드맵(4단계·적용 범위·관련 문서) |
 | [upgrade-modernization.md](upgrade-modernization.md) | Stable 버전·패키지 업그레이드, New Architecture, 스토어 정책(Play·Apple) 대응, 리스크·롤백·검증 설계 |
+| [security-and-hardening-review.md](security-and-hardening-review.md) | 취약점 전수 조사(audit 34건→근원 CVE 2건), 배포 안전장치(단계적 출시)·Sentry 관측성·의존성 업데이트 설계 및 결정 필요 사항 |
 
 완료된 구현 이력은 [archive](../archive/README.md) 참고.

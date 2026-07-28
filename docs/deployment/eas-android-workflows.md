@@ -24,11 +24,11 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 
 - **eas.json**  
   - `build.production`: Android AAB, `image: "latest"`, `channel: "production"`  
-  - `submit.production.android`: `track`, `releaseStatus` (서비스 계정 키 **경로는 넣지 않는다** — 아래 크레덴셜 참고)
+  - `submit.production.android`: `track`, `releaseStatus: "inProgress"` + `rollout: 0.2` — **단계적 출시(초기 20%)**, 확대·중단 절차는 [production-deployment.md](production-deployment.md) (서비스 계정 키 **경로는 넣지 않는다** — 아래 크레덴셜 참고)
 - **크레덴셜 (EAS 서버 저장 필수)**  
   Play 제출용 Google Service Account 키(JSON)는 **EAS 서버에 업로드**해 둔다: `npx eas-cli credentials -p android` → 프로필 선택 → *Google Service Account* → 키 업로드(로컬 `.key/` 파일 사용). 워크플로(클라우드) 제출은 EAS 저장 키로 인증한다 — eas.json에 gitignore된 로컬 경로(`serviceAccountKeyPath`)를 지정하면 **클라우드 제출이 파일 부재로 실패**한다(2026-07-27 빌드 43 제출 실패의 근본 원인, 경로 제거로 해결). 가이드: [Expo - Submit to Google Play](https://docs.expo.dev/submit/android/).
 - **Sentry(프로덕션 빌드)**  
-  프로덕션 빌드에서 Sentry를 사용할 경우: Expo 대시보드 → 프로젝트 → Secrets에 `EXPO_PUBLIC_SENTRY_DSN`을 추가한다. EAS Build 시 자동 주입된다. 보안상 `eas.json`의 production 프로필 env에 DSN을 직접 넣지 말 것.
+  `EXPO_PUBLIC_SENTRY_DSN`이 EAS production 환경변수로 등록되어 있어 빌드 시 자동 주입된다(2026-07-28 등록, `npx eas-cli env:list --environment production`으로 확인 — 빌드 47부터 유효). DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이며, `eas.json`에 직접 넣지는 말 것.
 
 ## EAS Update 채널
 

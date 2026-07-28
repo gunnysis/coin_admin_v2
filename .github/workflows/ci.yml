@@ -49,6 +49,11 @@ jobs:
       - name: Expo doctor (non-blocking)
         run: npx expo-doctor@latest || echo "::warning::expo-doctor reported issues"
 
+      # 프로덕션 그래프 신규 high+ 취약점 조기 경보 (비차단). 기준선·대응 원칙:
+      # docs/planning/security-and-hardening-review.md — audit fix --force는 절대 금지
+      - name: npm audit high+ (non-blocking)
+        run: npm audit --omit=dev --audit-level=high || echo "::warning::npm audit high+ 발견 — security-and-hardening-review.md 재평가"
+
   # 웹 E2E — Metro 웹 번들 + 런타임(sqlite wasm 포함) 회귀 검출.
   # 근거: web.output 설정 오류·react-native-web testID 회귀를 실제로 잡아낸 이력 (2026-07)
   e2e:

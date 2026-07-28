@@ -13,6 +13,9 @@
 - **chore(db): 프로덕션에 커밋돼 있던 디버그 계측 코드 제거** — `updateVariableMonthExpense` 내 `fetch('http://127.0.0.1:7242/ingest/…')` 잔재(v2 시절 유입)
 - **ci: Android 릴리스 스모크 워크플로 신설(android-smoke.yml)** — main push 시 release APK 빌드 + 에뮬레이터 실행 + 프로세스 생존·FATAL 검사. 단위/웹 E2E가 못 보는 네이티브 시작 크래시의 조기 경보(사고 재발 방지 설계)
 - **docs: 배포 전 체크리스트 강화** — 네이티브 릴리스 스모크 필수화, Sentry DSN(EAS env) 필수화(이번 사고에서 프로덕션 Sentry가 no-op이라 크래시 텔레메트리 전무했음)
+- **feat(deploy): Play 단계적 출시 도입** — eas.json submit을 `releaseStatus: inProgress` + `rollout: 0.2`로 전환(결함 빌드 전 사용자 즉시 도달 차단). 확대·중단 운영 절차는 production-deployment.md. 취약점 전수 조사·강화 설계: docs/planning/security-and-hardening-review.md (audit 34건 → 근원 CVE 2건, 실영향 0 확정·수용, **audit fix --force 금지** 명문화)
+- **refactor(sentry): 잉여 수동 release 로직 제거** — SDK 기본 통합이 네이티브에서 `bundleId@version+build`로 자동 태깅함을 실측 확인(수동 env 값은 빌드 번호가 빠져 오히려 약함). CI에 npm audit high+ 비차단 경고 스텝 추가
+- **chore(deps): SDK 비관리 마이너 업데이트** — @tanstack/react-query 5.90.16→5.101.4, phosphor-react-native 3.0.3→3.0.6, @playwright/test 1.58.2→1.62.0 (lockfile은 CI 동일 npm 11.16 기준, troubleshooting #5 관례 신설). `.idea/` gitignore 추가
 - **fix(cicd): EAS paths 필터 루트 `*.md` 미적용 수정** — 문서 전용 push가 필터(`!**/*.md`)를 통과해 동일 코드의 빌드 46이 자동 빌드·Play 제출된 사고(2026-07-28). EAS 매처는 GitHub Actions와 달리 `**/*.md`가 루트 파일과 매치되지 않음(실측). `!*.md` 병기 + 워크플로 정의 전용 push도 제외(`!.eas/**`)로 근본 수정
 
 ## [2.6.0] - 2026-07-27 (스토어 릴리스: 빌드 45, 2026-07-28 Play 제출)

@@ -61,3 +61,6 @@ test-results/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# IDE personal settings (JetBrains)
+.idea/
