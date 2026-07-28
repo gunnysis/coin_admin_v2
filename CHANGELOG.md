@@ -4,6 +4,14 @@
 
 형식은 [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/)를 따른다.
 
+## [2.6.2] - 2026-07-28 (2.6.1 롤아웃 100% 완료 후 배포 — 관측성 완성 릴리스)
+
+크래시 조사 효율을 완성하는 릴리스. 전용 Sentry 프로젝트(`gunnys/coin-admin`) 신설·DSN 교체(2.6.1까지는 실수로 gns-hermit-comm 프로젝트의 DSN이 사용됨)와 소스맵 자동 업로드를 도입한다.
+
+- **feat(sentry): 소스맵 자동 업로드** — app.config.ts에 `@sentry/react-native/expo` 플러그인(org `gunnys`/project `coin-admin`), metro.config.js를 `getSentryExpoConfig`로 전환(Debug ID 부여, expo-sqlite wasm assetExts 유지). 빌드 환경 `SENTRY_AUTH_TOKEN`(EAS secret, 2026-07-28 등록·sentry-cli 실측 검증) 필수 — 로컬 릴리스 스모크는 `.env.local` 토큰 또는 `SENTRY_DISABLE_AUTO_UPLOAD=true`
+- **fix(sentry): 크래시 보고 프로젝트 교정** — `EXPO_PUBLIC_SENTRY_DSN`을 전용 프로젝트 DSN으로 교체(EAS production). 이 빌드부터 크래시가 `gunnys/coin-admin`에 난독 해제 스택으로 수집됨(빌드 47은 구 DSN 인라인으로 gns-hermit-comm 프로젝트에 보고 — release 필터로 구분)
+- **chore(deps): uuid override `^11.1.1`** — 유일 소비자 `xcode@3.0.1`의 `uuid.v4()` API 호환 실측, 프로덕션 그래프 audit 13 moderate → 0건 (security-and-hardening-review 1-3 선택 항목 실행)
+
 ## [2.6.1] - 2026-07-28 (스토어 릴리스: 빌드 47, Play 제출 완료 — 첫 20% 단계적 출시)
 
 **긴급 수정 릴리스** — 2.6.0(빌드 45/46) 스토어 업데이트 후 실기기에서 앱이 실행 즉시 종료되는 시작 크래시 해결. 재설계 파이프라인(checks → CNG 빌드 → EAS 저장 키 제출) 완주, `inProgress + rollout 0.2` 첫 적용(심사 승인 후 Play Console에서 확대).

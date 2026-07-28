@@ -1,6 +1,6 @@
 {
   "name": "coin-admin",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "main": "index.tsx",
   "engines": {
     "node": ">=22.13.0"
@@ -64,6 +64,9 @@
     "typescript": "~6.0.3"
   },
   "private": true,
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
   "expo": {
     "install": {
       "exclude": [
