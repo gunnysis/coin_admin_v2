@@ -5,6 +5,7 @@ npm audit 전수 조사, 의존성 현황, 배포 안전장치·관측성 권장
 > **개정 이력**
 > - v1.1(2026-07-28): 팩트체크 2차 반영. ① uuid CVE는 소비자(`xcode`)가 v4()만 호출함을 실측 확인 → 빌드 타임 노출도 0 확정, override 권장 강등(1-1·1-3). ② Sentry release는 SDK가 네이티브에서 자동 파생함을 SDK 소스로 확인 → "릴리스 태깅 코드 수정" 권장 철회, 검증·단순화로 대체(3-2). ③ iOS 배포 이력 실측 — SDK 57 크래시 빌드는 iOS 미배포, 크래시 대응이 아닌 버전 격차 항목으로 재분류(3-3).
 > - v1.2(2026-07-28): **실행 반영.** 계획 1·2·3 완료 — eas.json 단계적 출시(rollout 0.2) + production-deployment.md 운영 절차, errorReporting 잉여 release 로직 제거, SDK 비관리 마이너 업데이트(react-query 5.101.4·phosphor 3.0.6·playwright 1.62.0, npm 11.16 lockfile), CI 감사 경고 스텝, `.idea/` gitignore, npm 관례 troubleshooting #5 문서화. 잔여: 계획 0(push, 사용자 결정), 빌드 47 배포 후 Sentry release 실측(4-1 체크), 계획 4(선택)·5(사용자 협조 필요).
+> - v1.3(2026-07-28): **계획 0 완료 — 빌드 47(2.6.1) Play 제출 성공(20% 단계적 출시 첫 적용, 심사 대기).** android-smoke 첫 실행이 Gradle Metaspace OOM으로 실패 → JVM 메모리 상향으로 근본 해결(커밋 99e9a0c). 소스맵 도입 절차 구체화(3-2-2 — 사용자 입력 3건), 업그레이드 검증 매트릭스에 단일 버전·릴리스 스모크 게이트 반영(upgrade-modernization §8). **uuid override(선택)는 롤아웃 진행 중 코드 push가 배포를 대체하므로 롤아웃 완료 후로 보류.**
 
 관련: [improvements-roadmap.md](improvements-roadmap.md) · [upgrade-modernization.md](upgrade-modernization.md) · [production-deployment.md](../deployment/production-deployment.md) · [troubleshooting.md #4](../development/troubleshooting.md)
 
@@ -89,7 +90,12 @@ async-storage 3.x, gesture-handler 3.x, tailwind 4 + NativeWind v5, TypeScript 7
 빌드 47부터 DSN이 유효하다(EAS env 등록·수신 검증 완료). 남은 격차:
 
 1. **(P0→검증만) 릴리스 태깅 — 추가 작업 불필요(팩트체크로 권장 철회)**: `@sentry/react-native`의 기본 통합 `nativeReleaseIntegration`이 release 미지정 시 **네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 파생**하고 dist도 빌드 번호로 채운다(실측: 설치본 `dist/js/integrations/release.js` — `event.release = ${id}@${version}+${build}`). 즉 빌드 47 이벤트는 자동으로 `com.gunny.coinadmin.android@2.6.1+47`로 태깅된다. `EXPO_PUBLIC_APP_VERSION`을 설정하면 오히려 **빌드 번호 없는 약한 release로 덮어써 악화**되므로 설정하지 말 것. 남는 작업: ① 빌드 47 첫 이벤트에서 release/dist 필드 실측 확인, ② (선택) errorReporting.ts의 `EXPO_PUBLIC_APP_VERSION`/`SENTRY_RELEASE` 수동 release 로직은 잉여이므로 제거해 단순화.
-2. **(P1) 소스맵·네이티브 심볼 업로드**: [Sentry Expo 공식 문서](https://docs.sentry.io/platforms/react-native/manual-setup/expo/) — `@sentry/react-native/expo` config 플러그인은 빌드 시 소스맵·디버그 심볼 자동 업로드용(네이티브 크래시 캡처 자체는 JS `Sentry.init`으로 네이티브 SDK가 함께 초기화되므로 플러그인 없이도 동작). 도입 시 `SENTRY_AUTH_TOKEN`을 EAS secret으로 등록해야 하며 CNG라 플러그인 추가만으로 prebuild에 반영됨. 없으면 JS 스택이 난독 상태로 옴 — 조사 효율 문제이지 수신 문제는 아님.
+2. **(P1) 소스맵·네이티브 심볼 업로드**: [Sentry Expo 공식 문서](https://docs.sentry.io/platforms/react-native/manual-setup/expo/) — `@sentry/react-native/expo` config 플러그인은 빌드 시 소스맵·디버그 심볼 자동 업로드용(네이티브 크래시 캡처 자체는 JS `Sentry.init`으로 네이티브 SDK가 함께 초기화되므로 플러그인 없이도 동작). 없으면 JS 스택이 난독 상태로 옴 — 조사 효율 문제이지 수신 문제는 아님.
+   **도입 절차(사용자 입력 3건 선행 — Claude의 Sentry 토큰으로는 해당 프로젝트가 조회되지 않아 대신 수행 불가):**
+   1. Sentry UI에서 **조직 slug·프로젝트 slug** 확인(프로젝트 Settings 화면 URL에 표시)
+   2. **Auth Token 발급**(Settings → Auth Tokens, `project:releases`·`org:read` 스코프) → `npx eas-cli env:set`으로 environment `production`, name `SENTRY_AUTH_TOKEN`, visibility **secret** 등록
+   3. 이후 코드 변경(요청 시 Claude가 수행): app.config.ts `plugins`에 `["@sentry/react-native/expo", { organization: "<org>", project: "<project>" }]` 추가 + metro.config.js를 `getSentryExpoConfig` 기반으로 전환(기존 wasm assetExts 커스텀 유지) → 로컬 릴리스 빌드로 토큰 부재/존재 양쪽 동작 검증 후 배포
+   **주의:** 이 변경은 코드 push라 EAS 프로덕션 배포를 트리거함 — **2.6.1 롤아웃 100% 완료 후** 다음 릴리스에 포함할 것.
 3. **(P1) 크래시 알림**: Sentry 프로젝트에 이메일 알림 룰(신규 이슈·급증) 확인 — 조직 설정상 UI 작업 필요(사용자).
 
 ### 3-3. iOS — 크래시 무관, 버전 격차 해소 항목으로 재분류 (P2)

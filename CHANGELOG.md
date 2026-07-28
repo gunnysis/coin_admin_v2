@@ -4,14 +4,14 @@
 
 형식은 [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/)를 따른다.
 
-## [2.6.1] - 2026-07-28
+## [2.6.1] - 2026-07-28 (스토어 릴리스: 빌드 47, Play 제출 완료 — 첫 20% 단계적 출시)
 
-**긴급 수정 릴리스** — 2.6.0(빌드 45/46) 스토어 업데이트 후 실기기에서 앱이 실행 즉시 종료되는 시작 크래시 해결.
+**긴급 수정 릴리스** — 2.6.0(빌드 45/46) 스토어 업데이트 후 실기기에서 앱이 실행 즉시 종료되는 시작 크래시 해결. 재설계 파이프라인(checks → CNG 빌드 → EAS 저장 키 제출) 완주, `inProgress + rollout 0.2` 첫 적용(심사 승인 후 Play Console에서 확대).
 
 - **fix(crash)!: 시작 즉시 크래시 근본 해결 — nativewind 4.2.1 → 4.2.6:** nativewind가 정확 고정한 중첩 `react-native-css-interop@0.2.1`이 테마 `'system'` 동기화 시 `Appearance.setColorScheme(null)`을 호출 → RN 0.82+ non-null 파라미터(`'unspecified'`로 대체됨)에서 NPE로 즉사. 에뮬레이터에 스토어 AAB(빌드 46) 설치로 크래시 재현·logcat 스택 확보 후 확정. 4.2.6이 수정판 css-interop 0.2.6을 고정(단일 사본 dedupe). 직접 import 없는 루트 devDependency `react-native-css-interop` 제거(이중 사본 유발원). 상세: [트러블슈팅 #4](docs/development/troubleshooting.md)
 - **fix(db): 월 필터 SQL 쌍따옴표 리터럴 수정** — `strftime("%Y-%m", …)` 5곳을 홑따옴표로. 쌍따옴표 문자열은 SQLite DQS 비표준 확장으로, DQS=0으로 빌드된 expo-sqlite 웹(wasm)에서 "no such column" 오류로 월별 유동비 조회·통계가 전부 실패하고 있었음(Android 네이티브는 DQS 기본값이라 동작 — 잠재 회귀 요인 제거)
 - **chore(db): 프로덕션에 커밋돼 있던 디버그 계측 코드 제거** — `updateVariableMonthExpense` 내 `fetch('http://127.0.0.1:7242/ingest/…')` 잔재(v2 시절 유입)
-- **ci: Android 릴리스 스모크 워크플로 신설(android-smoke.yml)** — main push 시 release APK 빌드 + 에뮬레이터 실행 + 프로세스 생존·FATAL 검사. 단위/웹 E2E가 못 보는 네이티브 시작 크래시의 조기 경보(사고 재발 방지 설계)
+- **ci: Android 릴리스 스모크 워크플로 신설(android-smoke.yml)** — main push 시 release APK 빌드 + 에뮬레이터 실행 + 프로세스 생존·FATAL 검사. 단위/웹 E2E가 못 보는 네이티브 시작 크래시의 조기 경보(사고 재발 방지 설계). 초기 2회 실측 실패의 근본 수정 포함: ① Gradle Metaspace OOM(prebuild 기본 jvmargs 부족 → `-Xmx4096m -XX:MaxMetaspaceSize=1024m` 상향), ② emulator-runner `script` 입력이 각 줄을 독립 `sh -c`로 실행(러너 소스 실측)해 변수 소실 → 스모크 로직을 `.github/scripts/android-emulator-smoke.sh` 단일 파일로 이전
 - **docs: 배포 전 체크리스트 강화** — 네이티브 릴리스 스모크 필수화, Sentry DSN(EAS env) 필수화(이번 사고에서 프로덕션 Sentry가 no-op이라 크래시 텔레메트리 전무했음)
 - **feat(deploy): Play 단계적 출시 도입** — eas.json submit을 `releaseStatus: inProgress` + `rollout: 0.2`로 전환(결함 빌드 전 사용자 즉시 도달 차단). 확대·중단 운영 절차는 production-deployment.md. 취약점 전수 조사·강화 설계: docs/planning/security-and-hardening-review.md (audit 34건 → 근원 CVE 2건, 실영향 0 확정·수용, **audit fix --force 금지** 명문화)
 - **refactor(sentry): 잉여 수동 release 로직 제거** — SDK 기본 통합이 네이티브에서 `bundleId@version+build`로 자동 태깅함을 실측 확인(수동 env 값은 빌드 번호가 빠져 오히려 약함). CI에 npm audit high+ 비차단 경고 스텝 추가
