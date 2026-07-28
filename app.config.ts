@@ -129,7 +129,23 @@ export default () => {
       output: "single",
       favicon: ASSET_PATHS.FAVICON,
     },
-    plugins: ["expo-sqlite", "expo-font", "expo-sharing"],
+    plugins: [
+      "expo-sqlite",
+      "expo-font",
+      "expo-sharing",
+      // 릴리스 빌드 시 소스맵을 Sentry에 업로드(난독 해제). 빌드 환경에 SENTRY_AUTH_TOKEN
+      // (EAS secret) 필수 — 없으면 업로드 단계가 빌드를 실패시킬 수 있음. 로컬 릴리스 스모크는
+      // .env.sentry-build-plugin에 토큰을 두거나 SENTRY_DISABLE_AUTO_UPLOAD=true로 우회
+      // (docs/planning/security-and-hardening-review.md 3-2-2)
+      [
+        "@sentry/react-native/expo",
+        {
+          url: "https://sentry.io/",
+          organization: "gunnys",
+          project: "coin-admin",
+        },
+      ],
+    ],
     extra: {
       appEnv,
       eas: {
