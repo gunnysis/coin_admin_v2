@@ -19,11 +19,14 @@ npm run web:clear  # Web with cleared Metro cache
 npm run web:e2e    # Web on port 8082 (pair with E2E_BASE_URL for test:e2e:run)
 npm test           # Run all Jest tests
 npx jest --testPathPattern="amount" # Run a single test file
+npm run typecheck  # tsc --noEmit (CI/EAS checks 게이트와 동일)
+npm run sync:version        # MARKETING_VERSION 전파 + 드리프트 수정
+npm run sync:version:check  # 드리프트 검사만 (CI·EAS checks 게이트)
 npm run test:e2e   # E2E: starts web server on port 8082 (web:e2e) + Playwright. 8081 may stay in use.
 npm run test:e2e:run  # E2E: run only (no server). Use after `npm run web` in another terminal. Override: E2E_BASE_URL=http://localhost:8082
 ```
 
-**CI:** `.github/workflows/ci.yml` runs `npm test` on push to main (pre-check before EAS builds).
+**CI:** `.github/workflows/ci.yml` — main push·PR 시 Test job(sync check·typecheck·jest)과 E2E job(Playwright, 웹)을 실행 (EAS 빌드 전 사전 검증). Node는 `.nvmrc` 핀을 `node-version-file`로 참조.
 
 ## Architecture
 
@@ -97,4 +100,4 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 - Android: minSdk 24, target/compileSdk **36** — RN 버전 카탈로그(`react-native/gradle/libs.versions.toml`)가 공급하는 기본값 사용. app.config.ts에 SDK 키를 고정하지 말 것(SDK 업그레이드 시 낡은 값 회귀 위험)
 - **EAS Build/Submit:** `eas.json`에 build(development/preview/production) 및 submit(production/preview) 프로필 정의. Android 프로덕션 빌드는 `image: "latest"` 명시.
 - **프로덕션 배포 체크리스트 및 EAS Secrets:** [docs/deployment/production-deployment.md](docs/deployment/production-deployment.md).
-- **EAS Workflows:** `.eas/workflows/android-production.yml`(main push 자동 — docs/·`*.md`만 변경 시 제외)·`ios-production.yml`(수동 전용) — production 빌드 후 스토어 제출. **main 머지 = Android 배포**이며, 빌드 전 **checks job**(sync check·typecheck·jest)이 실패하면 빌드·제출이 중단됨. 제출 크레덴셜(Google Service Account·ASC API 키)은 **EAS 서버 저장** 방식 — eas.json에 로컬 키 경로를 넣으면 클라우드 제출이 실패함. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.
+- **EAS Workflows:** `.eas/workflows/android-production.yml`(main push 자동 — docs/·`*.md`(루트 포함)·`.github/`·`.eas/`만 변경 시 제외)·`ios-production.yml`(수동 전용) — production 빌드 후 스토어 제출. **paths 필터 주의:** EAS 매처는 `!**/*.md`가 루트 파일과 매치되지 않으므로 `!*.md` 병기 필수 — 제거 금지(2026-07-28 문서 push 오배포 사고). **main 머지 = Android 배포**이며, 빌드 전 **checks job**(sync check·typecheck·jest)이 실패하면 빌드·제출이 중단됨. 제출 크레덴셜(Google Service Account·ASC API 키)은 **EAS 서버 저장** 방식 — eas.json에 로컬 키 경로를 넣으면 클라우드 제출이 실패함. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.
