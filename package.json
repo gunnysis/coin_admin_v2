@@ -1,6 +1,6 @@
 {
   "name": "coin-admin",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "main": "index.tsx",
   "engines": {
     "node": ">=22.13.0"
@@ -39,7 +39,7 @@
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.1",
     "expo-updates": "~57.0.10",
-    "nativewind": "^4.2.1",
+    "nativewind": "^4.2.6",
     "phosphor-react-native": "^3.0.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -60,7 +60,6 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~57.0.0",
     "jest": "^30.2.0",
-    "react-native-css-interop": "^0.2.1",
     "ts-jest": "^29.4.12",
     "typescript": "~6.0.3"
   },

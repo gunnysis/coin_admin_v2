@@ -6,7 +6,8 @@
 
 - **버전:** 새 스토어 빌드 전 [app.config.ts](../../app.config.ts) 상단 `MARKETING_VERSION`을 갱신하고 **`npm run sync:version`을 실행**한 뒤 커밋(CNG라 네이티브 버전은 prebuild가 app.config에서 생성 — 스크립트는 package.json 전파와 `runtimeVersion` 연결·로컬 생성물 정합을 검사). CI와 EAS 워크플로 checks job의 `sync:version:check`가 누락을 차단한다. 상세: [버전·설정 동기화 설계](../development/config-sync.md).
 - **테스트:** `npm test` 통과. (선택) `npm run test:e2e:run` 통과(웹 서버 기동 후 실행).
-- **EAS Secrets:** 프로덕션 빌드에서 Sentry를 사용할 경우, Expo 대시보드 → 프로젝트 → Secrets에 `EXPO_PUBLIC_SENTRY_DSN`을 설정한다. EAS Build 시 자동 주입된다. **production 프로필은 EAS Secrets에 의존**하며, `eas.json`의 production env에 DSN을 직접 넣지 말 것(보안).
+- **네이티브 릴리스 스모크(필수):** 단위 테스트·웹 E2E는 네이티브 런타임을 실행하지 않는다. 네이티브 의존성/SDK가 바뀐 배포는 반드시 `npx expo run:android --variant release`로 릴리스 변형을 에뮬레이터/실기기에서 실행해 **앱이 켜지고 유지되는지** 확인한다(2026-07-28 시작 크래시 사고 — [트러블슈팅 #4](../development/troubleshooting.md#4-릴리스-앱-시작-즉시-크래시-appearancesetcolorscheme-npe-2026-07-28-사고)). main push 시 [android-smoke.yml](../../.github/workflows/android-smoke.yml)이 동일 검증을 CI에서 수행하지만 **EAS 배포를 차단하지 못하는 조기 경보**이므로 로컬 스모크가 1차 방어선이다.
+- **Sentry DSN(필수):** 프로덕션 크래시 가시성의 유일한 창구다. `npx eas-cli env:list --environment production`에 `EXPO_PUBLIC_SENTRY_DSN`이 있어야 한다 — 없으면 [src/lib/errorReporting.ts](../../src/lib/errorReporting.ts)가 no-op이 되어 프로덕션 크래시가 어디에도 보고되지 않는다(2026-07-28 사고에서 실제 발생). 설정: Sentry에서 coin-admin 프로젝트(react-native) 생성 → DSN 발급 → `npx eas-cli env:create --environment production --name EXPO_PUBLIC_SENTRY_DSN --value <DSN> --visibility plaintext`. DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이어도 무방하며, `eas.json`에 직접 넣지는 말 것.
 - **CI:** main push 시 GitHub Actions 등으로 테스트를 먼저 돌린다면, CI 통과 후 EAS 워크플로(빌드/제출)가 진행되도록 운영한다.
 - **스토어 정책:** Play targetSdk 요건(2026-08-31부터 API 36)·Apple Xcode 26 요건(2026-04-28~) 등 정책 기한과 SDK 업그레이드 계획은 [업그레이드·현대화 설계](../planning/upgrade-modernization.md) 참고.
 

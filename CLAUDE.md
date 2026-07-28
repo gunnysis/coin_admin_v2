@@ -26,7 +26,7 @@ npm run test:e2e   # E2E: starts web server on port 8082 (web:e2e) + Playwright.
 npm run test:e2e:run  # E2E: run only (no server). Use after `npm run web` in another terminal. Override: E2E_BASE_URL=http://localhost:8082
 ```
 
-**CI:** `.github/workflows/ci.yml` — main push·PR 시 Test job(sync check·typecheck·jest)과 E2E job(Playwright, 웹)을 실행 (EAS 빌드 전 사전 검증). Node는 `.nvmrc` 핀을 `node-version-file`로 참조.
+**CI:** `.github/workflows/ci.yml` — main push·PR 시 Test job(sync check·typecheck·jest)과 E2E job(Playwright, 웹)을 실행 (EAS 빌드 전 사전 검증). Node는 `.nvmrc` 핀을 `node-version-file`로 참조. `.github/workflows/android-smoke.yml` — main push(코드 변경) 시 release APK 빌드 + 에뮬레이터 시작 크래시 검사(조기 경보 — EAS 배포를 차단하지는 못하므로, 네이티브 변경 배포 전 로컬 릴리스 스모크가 필수. 2026-07-28 시작 크래시 사고 참고: docs/development/troubleshooting.md #4).
 
 ## Architecture
 

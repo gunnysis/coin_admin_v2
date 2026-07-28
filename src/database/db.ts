@@ -395,7 +395,7 @@ export const getVariableMonthExpenses = async (
     const params: (string | number)[] = [];
     
     if (month) {
-      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      query += " WHERE strftime('%Y-%m', spent_date) = ?";
       params.push(month);
     }
     
@@ -418,7 +418,7 @@ export const getVariableMonthExpensesCount = async (month?: string): Promise<num
     const params: string[] = [];
     
     if (month) {
-      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      query += " WHERE strftime('%Y-%m', spent_date) = ?";
       params.push(month);
     }
     
@@ -438,7 +438,7 @@ export const getVariableMonthExpensesTotal = async (month?: string): Promise<num
     const params: string[] = [];
     
     if (month) {
-      query += ' WHERE strftime("%Y-%m", spent_date) = ?';
+      query += " WHERE strftime('%Y-%m', spent_date) = ?";
       params.push(month);
     }
     
@@ -545,9 +545,6 @@ export const updateVariableMonthExpense = async (
   category?: string,
   memo?: string
 ): Promise<void> => {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'db.ts:540',message:'updateVariableMonthExpense called',data:{id,name,amount,spent_date,category,memo},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
-  // #endregion
   try {
     const db = await getDatabase();
     await db.runAsync(
@@ -589,9 +586,9 @@ export const getVariableExpensesMonthlyStats = async (year: string, month: strin
     
     // 총액 및 개수
     const totalResult = await db.getFirstAsync<{ total: number | null; count: number }>(
-      `SELECT SUM(amount) as total, COUNT(*) as count 
-       FROM variable_month_expenses 
-       WHERE strftime("%Y-%m", spent_date) = ?`,
+      `SELECT SUM(amount) as total, COUNT(*) as count
+       FROM variable_month_expenses
+       WHERE strftime('%Y-%m', spent_date) = ?`,
       [monthStr]
     );
     
@@ -601,8 +598,8 @@ export const getVariableExpensesMonthlyStats = async (year: string, month: strin
         COALESCE(category, '미분류') as category,
         SUM(amount) as total,
         COUNT(*) as count
-       FROM variable_month_expenses 
-       WHERE strftime("%Y-%m", spent_date) = ?
+       FROM variable_month_expenses
+       WHERE strftime('%Y-%m', spent_date) = ?
        GROUP BY category
        ORDER BY total DESC`,
       [monthStr]
