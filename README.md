@@ -48,7 +48,7 @@ npm run web       # 웹 (기본 http://localhost:8081)
 
 ## 📋 사전 요구사항
 
-- Node.js **22.13 이상** (권장: 24 Active LTS — `.nvmrc`·package.json `engines` 기준. Node 18·20은 EOL)
+- Node.js — **`.nvmrc`의 정확 핀 버전 사용 권장**(`nvm use`). CI·EAS 빌드가 같은 버전으로 고정되어 있어, 다른 버전(특히 다른 npm)을 쓰면 lockfile 검증이 갈라질 수 있다. 하한은 package.json `engines`(>=22.13.0)
 - npm 또는 yarn
 - Android Studio (Android 개발용)
 - Xcode (iOS 개발용, macOS만)
@@ -77,8 +77,7 @@ coin-admin/
 │   └── utils/            # 도메인 유틸 (금액·날짜 포맷, 검증, 반응형, test-utils getTestProps)
 ├── docs/                 # 상세 문서
 ├── e2e/                  # Playwright E2E 스펙
-├── android/              # Android 네이티브
-├── app.config.ts         # Expo·EAS 설정 (버전: 2.2.2)
+├── app.config.ts         # Expo·EAS 설정 (MARKETING_VERSION 단일 소스)
 ├── package.json
 └── tsconfig.json
 ```
@@ -139,8 +138,8 @@ coin-admin/
 - `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout` 사용
 
 ### 버전 관리
-- `app.config.ts`의 `MARKETING_VERSION`(현재 2.2.2) 업데이트
-- 프로덕션 빌드 전 버전 업데이트 권장
+- `app.config.ts`의 `MARKETING_VERSION`이 단일 소스 — 배포 전 갱신 후 `npm run sync:version` 실행 (상세: [docs/development/config-sync.md](docs/development/config-sync.md))
+- 네이티브 프로젝트(`android/`·`ios/`)는 저장소에 없고 prebuild가 생성한다(CNG) — 버전·설정은 app.config.ts에서만 관리
 
 ## 🧪 테스트
 
@@ -150,7 +149,7 @@ coin-admin/
 
 ### E2E 테스트 (Playwright)
 - **대상**: Expo 웹 빌드 (`npm run web` → localhost:8081)
-- **선택자**: `accessibilityLabel`(aria-label/role) 및 보조로 `getTestProps(id)`의 `data-testid`(웹)/`testID`(네이티브) 사용 가능
+- **선택자**: `accessibilityLabel`(aria-label/role) 및 보조로 `getTestProps(id)`의 `testID` 사용 가능 (전 플랫폼 `testID` — 웹은 react-native-web이 `data-testid`로 매핑)
 - **최초 1회**: `npx playwright install`(또는 `npx playwright install chromium`) 로 브라우저 설치
 - **실행**
   - **방법 A (수동)**: 터미널 1에서 `npm run web` 또는 `npm run web:clear` → 터미널 2에서 `npm run test:e2e:run`
@@ -169,17 +168,19 @@ coin-admin/
 npx expo export -c
 
 # 의존성 재설치 (Windows PowerShell)
-Remove-Item -Recurse -Force node_modules; Remove-Item -Force package-lock.json
+Remove-Item -Recurse -Force node_modules
 npm cache clean --force
-npm install
+npm ci
 ```
 
 Unix/macOS:
 ```bash
-rm -rf node_modules package-lock.json
+rm -rf node_modules
 npm cache clean --force
-npm install
+npm ci
 ```
+
+> **주의:** `package-lock.json`은 삭제·재생성하지 않는다. lockfile은 `.nvmrc` Node의 내장 npm 기준으로만 갱신한다 — npm 버전이 다르면 CI에서만 `npm ci` 검증이 실패할 수 있다(상세: [docs/development/config-sync.md](docs/development/config-sync.md)의 lockfile 규칙).
 
 ## 📝 주요 기능 상세
 
@@ -196,15 +197,16 @@ npm install
 
 ## 🚀 배포
 
-- **앱 버전**: `app.config.ts`의 `MARKETING_VERSION`(현재 2.2.2)에서 관리
+- **앱 버전**: `app.config.ts`의 `MARKETING_VERSION`에서 관리 (갱신 후 `npm run sync:version`)
 - **환경**: development / preview / production (각각 별도 번들 ID)
+- **자동 배포**: `main` push 시 EAS Workflows가 checks(검사 게이트) → Android production 빌드 → Play Store 제출까지 자동 실행 (docs/·`*.md`만 변경 시 제외) — [docs/deployment/eas-android-workflows.md](docs/deployment/eas-android-workflows.md)
 - **EAS Update**: `checkAutomatically: "ON_LOAD"` 로 OTA 업데이트 지원
-- **Android**: minSdk 24, targetSdk 34
+- **Android**: minSdk 24, target/compileSdk 36 (RN 버전 카탈로그 기본값)
 
 ## 🔒 접근성
 
 - 인터랙티브 요소에 `accessibilityLabel` 추가 (웹에서는 `aria-label`로 매핑)
-- E2E/테스트용 식별자: `src/utils/test-utils.ts`의 `getTestProps(id)`로 웹 `data-testid`/네이티브 `testID` 부여
+- E2E/테스트용 식별자: `src/utils/test-utils.ts`의 `getTestProps(id)`로 전 플랫폼 `testID` 부여 (웹은 react-native-web이 `data-testid`로 매핑)
 - 스크린 리더·키보드 네비게이션 지원
 
 ## 📄 추가 문서

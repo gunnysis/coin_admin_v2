@@ -15,7 +15,7 @@
 - **자동:** `main` 브랜치 push 시 [.eas/workflows/android-production.yml](../../.eas/workflows/android-production.yml)이 실행된다(checks → 빌드 → Play Store 제출. docs/·`*.md`만 변경된 push는 제외). Expo 대시보드에서 GitHub 저장소가 연결되어 있어야 한다.
 - **제출 크레덴셜:** Google Service Account 키는 **EAS 서버에 업로드**되어 있어야 한다(`npx eas-cli credentials -p android`). eas.json에 로컬 키 경로를 넣지 말 것 — 클라우드 제출이 실패한다. 상세: [eas-android-workflows](eas-android-workflows.md).
 - **수동:** `eas build --platform android --profile production` 후, 빌드 완료 시 `eas submit --latest --platform android --profile production`으로 Play Store에 제출. 채널은 `production`.
-- **빌드 상태 확인:** [Expo 대시보드](https://expo.dev) → 프로젝트 → Builds에서 진행 중/완료 확인.
+- **빌드 상태 확인:** [Expo 대시보드](https://expo.dev) → 프로젝트 → Builds, 또는 CLI(`workflow:runs`·`workflow:view`·`workflow:logs`·`build:list`). 런이 진행 없이 매달리면 [eas-android-workflows의 운영·트러블슈팅](eas-android-workflows.md#운영-모니터링트러블슈팅) 절차를 따른다.
 
 ## 3. iOS
 

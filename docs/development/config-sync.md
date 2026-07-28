@@ -58,3 +58,4 @@
 - **2026-07-27 (bare 시절 전수 점검):** versionName 2.0.0≠2.5.0(Play 표기 오류), `screenOrientation="portrait"` 고정(태블릿 가로 도달 불가), statusBar 사장 설정, locale `[object Object]` 리소스 등 발견·수정. 당시의 네이티브 파일 검사 8건이 이 게이트의 원형.
 - **2026-07-27 (SDK 57 + CNG 전환):** android/ 저장소 제거로 드리프트 부류 자체를 소멸시키고, 게이트를 "저장소 검사 + 로컬 생성물 조건부 검사"로 재편.
 - **2026-07-27 (npm ci EUSAGE 사고):** 로컬·CI npm 마이너 차이로 lockfile 검증이 갈라져 CI만 실패. Node 정확 핀(.nvmrc 단일 소스) + Node 버전 정합 검사를 게이트에 추가.
+- **2026-07-28 (실전 검증 완료):** 핀 체제에서 GitHub CI(Test·E2E)와 EAS 워크플로 전 구간(checks → CNG 빌드 45·2.6.0 → Play 제출)이 처음 끝까지 통과 — 게이트·핀·CNG 체계가 프로덕션 배포로 검증됨.

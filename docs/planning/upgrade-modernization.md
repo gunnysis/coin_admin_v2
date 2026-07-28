@@ -7,7 +7,7 @@
 
 - ✅ **Play 정책(2026-08-31, API 36) — 해소 확인 (2026-07-27)**: bare 워크플로에서 실제 빌드는 RN 버전 카탈로그의 **targetSdk 36**을 이미 사용 중이었음. app.config.ts의 `targetSdkVersion: 34`는 빌드에 적용되지 않는 죽은 설정이라 제거 (§2.1)
 - 🚨 **Apple 정책 시행 중** (2026-04-28~): iOS 제출은 Xcode 26/iOS 26 SDK 빌드 필수 — iOS 배포 재개 전 SDK 업그레이드가 사실상 선행 조건 (§2.2)
-- ⚠️ **운영 리스크**: main push 시 **Android·iOS 두 워크플로 모두** production 빌드+스토어 제출을 자동 실행 (`.eas/workflows/android-production.yml`, `ios-production.yml`) — 업그레이드 작업의 **머지가 곧 배포**이며, Apple 요건 미충족 상태에서는 iOS 제출이 자동으로 시도·거부될 수 있음 (§7)
+- ⚠️ **운영 리스크 (완화 적용됨, 2026-07-27):** main push 시 자동 배포는 **Android만** 실행된다(`.eas/workflows/android-production.yml` — docs/·`*.md`만 변경 시 제외, pre-build checks job이 게이트). **iOS 워크플로는 수동 실행 전용으로 전환**(Apple Xcode 26 요건 미충족 중 push마다 실패하던 문제 해소). 여전히 **머지가 곧 Android 배포**라는 점은 유효 (§7)
 - ✅ **Expo SDK 54 → 57 업그레이드 완료 (2026-07-27)**: 55→56→57 순차 진행, 단계별 커밋 분리. RN 0.86 / React 19.2.3 / TS 6.0 / Reanimated 4.5 / Sentry 8.20. `android/`는 SDK 57 템플릿으로 prebuild 재생성(edge-to-edge 상시·상태바 투명·MARKETING_VERSION 2.6.0). 검증: tsc 0오류·Jest 36/36·Playwright E2E 13/13·expo-doctor 19/20(잔여 1건은 non-CNG 정보성)·로컬 gradle 빌드. 잔여: EAS 빌드·실기기 검증(§8 매트릭스) (§4)
 - New Architecture는 이미 `newArchEnabled: true`로 대응 완료 — 아키텍처 리스크 낮음 (§3)
 - NativeWind v4 + Tailwind v3.4 조합 **유지** — Tailwind v4는 NativeWind v5 stable 이후 별도 트랙 (§5.2)
@@ -61,7 +61,7 @@
 
 **잔여 작업:**
 
-1. ~~app.config.ts SDK 버전 변경~~ → 죽은 설정 제거로 완료. 차기 스토어 제출 빌드의 Play Console 표기 targetSdk가 36인지 확인
+1. ~~app.config.ts SDK 버전 변경~~ → 죽은 설정 제거로 완료. ~~차기 스토어 제출 빌드 확인~~ → **2026-07-28 빌드 45(SDK 57, target/compileSdk 36) Play 제출 완료** — Play Console의 API 레벨 경고 해소 표기 확인만 잔여
 2. **Edge-to-edge 영향 검증:** targetSdk 35+에서 Android는 edge-to-edge를 강제한다. 현재 `statusBar.translucent: false` 설정과 충돌 여부를 실기기/에뮬레이터에서 확인 — [Safe Area 정책](../development/safe-area-device-ui.md)의 SafeAreaView/insets 처리가 방어선. (SDK 55+에서는 `edgeToEdgeEnabled` 옵션 자체가 제거되고 항상 활성)
 3. EAS production 빌드 → 내부 테스트 트랙 검증 → **단계적 출시(staged rollout)**로 제출 ([production-deployment](../deployment/production-deployment.md) 체크리스트 준수)
 
@@ -70,7 +70,7 @@
 - 신규 제출·업데이트 모두 **Xcode 26 + iOS 26 SDK** 빌드 필수 (구기기 실행에는 영향 없음)
 - SDK 54(RN 0.81)의 Xcode 26 빌드 호환은 보장되지 않음 — **iOS 스토어 배포를 재개하려면 SDK 55+ 업그레이드(§4)가 사실상 선행 조건**
 - eas.json에는 iOS submit 프로필(ascAppId 등)이 **이미 구성**되어 있어 App Store Connect 앱이 존재한다 — iOS 업데이트를 제출하는 순간 본 요건이 즉시 적용된다
-- ⚠️ **`.eas/workflows/ios-production.yml`도 main push 시 자동 실행** 구성이다(Expo 대시보드 저장소 연결 시). SDK 54 빌드가 Xcode 26 요건을 충족하지 못하는 동안에는 main push마다 iOS 빌드·제출이 자동 시도되어 실패할 수 있다 — **요건 충족(§6 7단계) 전까지 iOS 워크플로 트리거를 수동 전환하거나 실행 결과를 모니터링**할 것
+- ✅ **`.eas/workflows/ios-production.yml`은 수동 실행 전용으로 전환됨** (2026-07-27 — SDK 54 시절 push마다 iOS 제출이 자동 시도·실패하던 문제 해소). 현재는 SDK 57(RN 0.86)이라 Xcode 26 빌드 자체는 가능할 것으로 예상되나, **iOS 배포 재개는 §6 7단계(빌드 검증) 후 결정** — 재개 시 수동 실행: `npx eas-cli@latest workflow:run .eas/workflows/ios-production.yml`
 
 ---
 
@@ -92,7 +92,7 @@
 | # | 블로커 | 근거 | 대응 |
 |---|--------|------|------|
 | 1 | `expo-file-system/legacy` 의존 ([src/lib/backup/](../../src/lib/backup/)) | SDK 54 변경사항에서 SDK 55 제거 예고. 최신 SDK에도 아직 존재하나 deprecated — 제거 시점 미보장 | 신규 `File`/`Directory`/`Paths` API로 백업·복구 마이그레이션 (§4.2) |
-| 2 | Node 버전 | SDK 55+: ^20.19.4 / ^22.13 / ^24.3 이상, SDK 57: **Node 22.13+**. CI가 쓰던 **Node 20은 2026-03 EOL** ([nodejs.org](https://nodejs.org/en/about/previous-releases)) | ✅ **완료 (2026-07-27):** CI `node-version: "24"`(Active LTS)로 상향, `.nvmrc`(24)·package.json `engines`(>=22.13.0) 추가, Node 24에서 전체 테스트 통과 확인. 로컬 v24.11.1 충족. EAS는 `image: "latest"`의 기본 Node **22.23.1**로 충족(공식 인프라 문서 확인) — 필요 시 eas.json `node` 필드로 고정 가능하나 기본값이 요구를 충족하므로 미설정 유지 |
+| 2 | Node 버전 | SDK 55+: ^20.19.4 / ^22.13 / ^24.3 이상, SDK 57: **Node 22.13+**. CI가 쓰던 **Node 20은 2026-03 EOL** ([nodejs.org](https://nodejs.org/en/about/previous-releases)) | ✅ **완료 (2026-07-27):** CI Node 24(Active LTS)로 상향, `.nvmrc`·package.json `engines`(>=22.13.0) 추가, Node 24에서 전체 테스트 통과 확인. **이후 npm ci EUSAGE 사고로 `.nvmrc` 정확 핀(예: 24.18.0) 단일 소스 체제로 전환** — CI는 `node-version-file` 참조, EAS 워크플로 `tools.node` 동일 값, sync 게이트가 정합 검사 ([config-sync](../development/config-sync.md)) |
 | 3 | iOS 빌드 도구 | SDK 55+: Xcode 26+ (Apple 정책과도 일치 — §2.2) | eas.json production·preview iOS 프로필에 `image: "latest"` 설정 확인됨 ✅. **개발 머신(Windows)에서는 Xcode 실행 불가 — iOS 빌드·검증은 전적으로 EAS 클라우드 경유** |
 | 4 | `newArchEnabled` 키 | SDK 55에서 옵션 제거 | app.config.ts에서 키 삭제 |
 | 5 | Sentry SDK 57 호환 | §1.2 — 검증 진행 중 이슈 | 업그레이드 착수 시점에 재확인. 미해소면 56에서 대기 |
@@ -166,6 +166,7 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 - [x] **5.** SDK 54 → 55 업그레이드 완료 (2026-07-27) — newArchEnabled 키 제거, plugins에 expo-font·expo-sharing 추가 (§4.3)
 - [x] **6-1.** CNG 전환 완료 (2026-07-27) — android/ 저장소 제거, EAS 빌드 시 자동 prebuild([공식](https://docs.expo.dev/workflow/continuous-native-generation/)). bare 드리프트 부류 근본 해결 + EAS 워크플로 pre-build checks job·CI 웹 E2E 추가. 상세: [config-sync](../development/config-sync.md)
 - [x] **6.** SDK 55 → 56 → 57 순차 업그레이드 완료 (2026-07-27) — 56: TS 6.0 전환(tsconfig baseUrl 제거·types 명시·ts-jest 상향), 57: Sentry 8.20([getsentry#6384](https://github.com/getsentry/sentry-react-native/issues/6384) closed 확인)·exclude 정리·datetimepicker 9.1. android/ prebuild 재생성(edge-to-edge 상시, statusBar 설정 사장 → app.config에서 제거, sync 스크립트 검사 교체). E2E에서 발견된 RNW data-testid 회귀는 testID 단일화로 근본 수정. 잔여: EAS preview 빌드 실기기 검증(§8), 특히 datetimepicker 9 네이티브 UI·edge-to-edge·백업/복구 (§4.3, §1.2)
+- [x] **6-2.** EAS 파이프라인 전 구간 검증 완료 (2026-07-28) — 재설계된 워크플로(checks 게이트 → CNG 자동 prebuild 빌드 → EAS 저장 키 Play 제출)가 **빌드 45(versionName 2.6.0, SDK 57, targetSdk 36)** 로 처음 끝까지 성공. GitHub CI(Test·E2E)도 `.nvmrc` 핀 체제에서 green. 잔여: Play Console 게시·API 36 경고 해소 표기 확인, 실기기 검증(§8)
 - [ ] **7.** (iOS 배포 재개 시) Xcode 26 빌드 검증 + App Store 제출 (§2.2)
 - [ ] **8.** (NativeWind v5 stable 이후) Tailwind v4 트랙 (§5.2)
 
@@ -177,7 +178,7 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 
 | 리스크 | 내용 | 완화 |
 |--------|------|------|
-| **main 머지 = 자동 배포 (양 플랫폼)** | `.eas/workflows/`의 `android-production.yml`·`ios-production.yml` **둘 다** main push 시 production 빌드+스토어 제출을 자동 실행 | 업그레이드 작업은 전 단계를 **별도 브랜치에서 완결 검증 후** 머지. 머지 시점 = 배포 의사결정 시점임을 PR에 명시. iOS는 Xcode 26 요건 충족(§2.2) 전까지 트리거 수동 전환 권장 |
+| **main 머지 = Android 자동 배포** | `android-production.yml`이 main push 시 production 빌드+Play 제출을 자동 실행 (docs/·`*.md`만 변경 시 제외). iOS는 수동 전용으로 전환됨(2026-07-27) | pre-build **checks job**(sync check·typecheck·jest)이 실패 시 빌드·제출을 중단하는 게이트. 업그레이드 작업은 전 단계를 **별도 브랜치에서 완결 검증 후** 머지하고, 머지 시점 = 배포 의사결정 시점임을 PR에 명시 |
 | 스토어 출시 사고 | targetSdk·SDK 업그레이드 빌드의 미발견 회귀 | Play **단계적 출시(staged rollout)** 사용, 내부 테스트 트랙 선행. 문제 시 출시 중단(halt) 후 이전 빌드 유지 |
 | OTA 오배포 | 새 SDK 번들이 구 런타임에 배포되는 사고 | `runtimeVersion` = MARKETING_VERSION 정책이 방어선 — 업그레이드 빌드는 **반드시 버전 상승 동반** (§4.3). 잘못된 OTA는 EAS Update 롤백(재발행)으로 회수 |
 | 백업 데이터 호환 | file-system 마이그레이션(§4.2) 후 기존 백업 파일 복구 실패 | 마이그레이션 전 생성한 백업 파일로 복구 회귀 테스트 필수 (스냅샷 포맷은 저장 계층과 무관하므로 포맷 변경 금지) |

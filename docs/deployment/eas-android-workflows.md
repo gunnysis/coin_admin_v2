@@ -16,8 +16,9 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 2. **수동 실행**  
    로컬에서 다음 명령으로 워크플로만 실행할 수 있다.
    ```bash
-   npx eas-cli@latest workflow:run android-production.yml
+   npx eas-cli@latest workflow:run .eas/workflows/android-production.yml --ref main
    ```
+   `--ref`가 없으면 **로컬 프로젝트 디렉터리 전체를 패키징·업로드**해 실행한다 — 저장소 커밋 상태 그대로 실행하려면 `--ref main`(또는 커밋 SHA)을 지정한다.
 
 ## 전제 조건
 
@@ -38,6 +39,30 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 
 - **채널·브랜치 매핑(권장):** `main` 브랜치 → production 빌드/제출 시 `production` 채널 사용. 기능 브랜치에서 preview 빌드 시 `preview` 채널 사용.
 - **OTA 푸시:** `eas update --branch main --channel production` (또는 `--channel preview`)로 해당 채널을 바라보는 앱에 업데이트 배포. 자세한 옵션은 [Expo EAS Update 문서](https://docs.expo.dev/eas-update/introduction/) 참고.
+
+## 운영: 모니터링·트러블슈팅
+
+### 상태 확인 명령 (CLI)
+
+```bash
+npx eas-cli@latest workflow:runs --json               # 최근 런 목록 (전체 UUID 확보)
+npx eas-cli@latest workflow:view <run-UUID>           # 런 상세 + job별 상태 (짧은 ID 불가 — 전체 UUID 필요)
+npx eas-cli@latest workflow:logs <run-또는-job-UUID> --all-steps --non-interactive   # 로그
+npx eas-cli@latest workflow:cancel <run-UUID> --non-interactive                      # 런 취소
+npx eas-cli@latest build:list --platform android --limit 1 --json --non-interactive  # 빌드 산출물 확인
+```
+
+### 런이 진행 없이 매달릴 때 (stuck job)
+
+job이 장시간 `IN_PROGRESS`인데 `workflow:logs`가 **"No logs found"** 를 반환하면 러너에 배정되지 못한 EAS 쪽 stuck job이다(2026-07-27 실제 발생 — checks job이 로그 0줄로 18시간 정체). 대응:
+
+1. [status.expo.dev](https://status.expo.dev)에서 플랫폼 장애 여부 확인
+2. 장애가 아니면 `workflow:cancel <run-UUID>` 후 `workflow:run ... --ref main`으로 재실행 — 같은 커밋 재실행으로 해결됨(설정 문제 아님)
+3. 정상 소요 시간 참고: checks 대기~완료 약 1.5시간(러너 큐 포함), 빌드 약 2시간, 제출까지 총 5시간 안팎도 정상 범위
+
+### 검증 이력
+
+- **2026-07-28: 재설계 후 첫 전 구간 성공** — checks(sync check·typecheck·jest, `tools.node` 핀) → CNG 자동 prebuild 빌드(**빌드 45**, versionName 2.6.0, SDK 57, targetSdk 36) → **EAS 저장 키로 Play 제출 성공**(빌드 43 제출 실패의 재발 없음). concurrency에 의한 구 런 취소, docs 제외 paths 필터도 동작 확인.
 
 ## 참고
 

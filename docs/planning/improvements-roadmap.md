@@ -38,6 +38,7 @@
 - **완료:** 에러 리포팅(Sentry), Pull-to-refresh 실패 Alert, E2E 확장(웹 날짜 입력·저장 플로우), 단위 테스트 확대(date 등), 스와이프 월 변경, 월 전환 배너, 스켈레톤 로딩, 월별 비교 카드(전월 비율 막대), 통화 Segmented Control, 금액 필드 포커스, 다크 모드(라이트/다크/시스템), 총액 카운팅 애니메이션, EAS Update 채널·웹 배포 문서.
 - **완료(2026-07-27 추가):** 다크 모드 전면 적용 — ThemeContext ↔ NativeWind `colorScheme.set()` 연동, 전 화면 `dark:` variant, Typography `useTheme()` 전환, StatusBar 동적화. (이전에는 팔레트·설정 UI만 존재하고 앱 본체는 라이트 고정이었음)
 - **미구현(선택):** Bottom Sheet 모달(현재 Modal 유지), 하단 시트 월 선택, 월별 통계 리포트.
+- **완료(2026-07-28 추가):** CI/CD 재설계 전 구간 검증 — main push 자동 파이프라인(pre-build checks 게이트 → CNG 빌드 → EAS 저장 키 Play 제출)이 2.6.0(빌드 45)으로 첫 완주. Node 버전 `.nvmrc` 정확 핀 단일 소스 체제 포함. 상세: [config-sync](../development/config-sync.md)·[eas-android-workflows](../deployment/eas-android-workflows.md).
 - **완료(2026-07-27 추가):** 타입 부채 전체 해소 — `tsc --noEmit` 오류 55 → **0** (InfiniteQuery 제네릭 정정, SQLite 바인드 파라미터 타입, React 19 `useRef` 초기값 등). `npm run typecheck` 스크립트 신설, **CI에 타입 체크 단계 추가**(main push 시 타입 회귀 차단).
 
 ## 4. 관련 문서

@@ -6,15 +6,18 @@
 
 ## [Unreleased]
 
+(없음)
+
+## [2.6.0] - 2026-07-27 (스토어 릴리스: 빌드 45, 2026-07-28 Play 제출)
+
+**릴리스 검증:** 재설계된 EAS Workflows 파이프라인의 첫 전 구간 완주로 배포 — pre-build checks 게이트 통과 → CNG 자동 prebuild 빌드(versionCode 45, targetSdk 36) → EAS 저장 키 기반 Play Store 제출 성공.
+
 - **CI npm ci EUSAGE 실패 디버깅·근본 해결 + 재발 방지 설계:** 원인 — CI가 `node-version: "24"`(메이저만)로 최신 마이너(Node 24.18, npm 11.16)를 받는 동안 로컬은 npm 11.6이어서, npm 11.16의 강화된 lockfile 검증(optional 패키지 peerDependencies 기록 요구)이 로컬 재현 불가한 실패를 유발. 해결 — CI와 동일 npm으로 재현 후 lockfile 재생성(`@emnapi/*` 최상위 항목 추가), npm 11.6/11.16/12 3중 검증. 예방 — **Node 버전 단일 소스를 `.nvmrc` 정확 핀(24.18.0)으로 통일**: GitHub CI는 `node-version-file` 참조, EAS 워크플로 `tools.node`는 동일 값, `sync:version:check` 게이트에 Node 버전 정합 검사 4종 추가(핀 형식·CI 파일 참조·EAS 값 일치·engines 하한)
 - **CI/CD 점검·개선:** ① **워크플로 제출 실패 근본 원인 해결** — eas.json이 gitignore된 로컬 키 경로(serviceAccountKeyPath·ascApiKeyPath)를 지정해 클라우드 제출이 파일 부재로 실패(빌드 43 제출 실패의 원인). 경로 제거로 EAS 서버 저장 크레덴셜 사용(공식 방식) ② Android 워크플로에 paths 필터(docs·md 제외)와 concurrency(구 런 취소) ③ GitHub CI에 pull_request 트리거(머지 전 검증)·concurrency·권한 최소화(contents: read)·timeout-minutes
 - **CNG(prebuild) 전환 — bare 드리프트 부류의 근본 해결:** `android/`를 저장소에서 제거(.gitignore `/android` `/ios`), 네이티브는 app.config.ts 단일 소스에서 생성(EAS 빌드 시 자동 prebuild). versionName 불일치·portrait 고정·statusBar 사장 설정·locale 오염 같은 "선언 ≠ 네이티브" 문제 부류가 구조적으로 소멸. dev/preview의 Android packageName 접미사도 이제 적용(동시 설치 가능). sync 스크립트를 "저장소 검사 + 로컬 생성물 조건부 검사"로 재편(+`[object Object]` 오염 검사)
 - **배포 안전장치 — push=무검증 배포 해소:** EAS 워크플로(android·ios)에 pre-build checks job(sync check·typecheck·jest) 추가 — 검사 실패 시 빌드·스토어 제출 중단
 - **CI에 웹 E2E job 추가:** Playwright(Chromium)로 Metro 웹 번들·런타임 회귀 검출(이번 업그레이드에서 실회귀 2건을 잡은 검증 체계의 상시화), 실패 시 리포트 아티팩트 업로드
 - `expo.install.exclude` 잔여 3건(Sentry 8.x·jest 30 트랙)의 유지 사유를 실측·문서화 (docs/development/config-sync.md)
-
-## [2.6.0] - 2026-07-27
-
 - **Expo SDK 54 → 57 업그레이드 (RN 0.86, React 19.2.3):** 55→56→57 순차 진행·단계별 커밋. 주요 동반 변경 — TypeScript 6.0(tsconfig baseUrl 제거·`types` 명시·`*.css` 모듈 선언·ts-jest 상향), Reanimated 4.5·worklets 0.10, Sentry 8.20(SDK 57 지원 확인), datetimepicker 9.1, expo-system-ui 추가(Android 다크 모드 userInterfaceStyle), `expo.install.exclude` 정리(구버전을 붙잡던 3건 제거)
 - **android/ SDK 57 템플릿 재생성(prebuild --clean):** edge-to-edge 상시 활성(상태바·내비게이션바 투명) — 사장된 app.config `statusBar` 설정 제거, sync 스크립트 검사를 "상태바 투명 유지"로 교체
 - **버그 수정(E2E):** react-native-web 0.21에서 웹 분기 `data-testid` 임의 prop이 DOM에 전달되지 않아 날짜 입력 E2E 실패 → 전 플랫폼 `testID` 단일화(RNW가 data-testid로 매핑, 공식 경로)
