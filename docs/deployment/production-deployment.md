@@ -21,7 +21,7 @@
   2. 이상 없으면 **Play Console → 프로덕션 → 출시 확대**로 비율 상향(최종 100%). 100% 전에는 완전 배포 상태가 아님을 유의
   3. 크래시 발견 시 같은 화면에서 **출시 중단(halt)** 후 수정 버전 준비
   4. 롤아웃 진행 중 다음 버전을 제출하면 기존 롤아웃을 대체함 — 첫 실사용에서 동작 확인해 이 문서에 반영
-- **배포 후 확인(첫 Sentry 유효 빌드):** 빌드 47(2.6.1)부터 `EXPO_PUBLIC_SENTRY_DSN`이 주입된 첫 빌드다. 배포 후 Sentry에서 이벤트가 수신되는지, release가 `com.gunny.coinadmin.android@<버전>+<빌드번호>` 형식으로 자동 태깅되는지 1회 실측 확인한다(미수신이면 EAS env 주입·DSN 유효성 재점검). **Sentry 프로젝트는 `gunnys/coin-admin`**(2026-07-28 rename — 생성 시 기본 슬러그 `react-native`였음. DSN은 숫자 ID 기반이라 rename 무영향). 심사 승인 직후 실측(2026-07-28): DSN 수집 경로는 검증 이벤트(`2.6.1-verification`)로 확인됨, 빌드 47 release는 사용자 세션 도달 전이라 미생성 — 롤아웃 진행 후 재확인.
+- **배포 후 확인(첫 Sentry 유효 빌드):** 빌드 47(2.6.1)부터 `EXPO_PUBLIC_SENTRY_DSN`이 주입된 첫 빌드다. 배포 후 Sentry에서 이벤트가 수신되는지, release가 `com.gunny.coinadmin.android@<버전>+<빌드번호>` 형식으로 자동 태깅되는지 1회 실측 확인한다(미수신이면 EAS env 주입·DSN 유효성 재점검). **Sentry 프로젝트는 `gunnys/coin-admin`(ID 4511812698767360, 2026-07-28 wizard로 신규 생성)** — 이전에 EAS에 등록됐던 DSN은 실수로 gns-hermit-comm 프로젝트의 것이었고 같은 날 새 DSN으로 교체·검증 완료(HTTP 200). **과도기 주의: 빌드 47은 구 DSN이 빌드에 인라인돼 있어 롤아웃 기간 동안 `gunnys/gns-hermit-comm` 프로젝트로 보고됨** — 모니터링은 그 프로젝트에서 release `com.gunny.coinadmin.android@2.6.1+47` 필터로 수행하고, 새 DSN은 다음 빌드(2.6.2)부터 유효.
 - **빌드 상태 확인:** [Expo 대시보드](https://expo.dev) → 프로젝트 → Builds, 또는 CLI(`workflow:runs`·`workflow:view`·`workflow:logs`·`build:list`). 런이 진행 없이 매달리면 [eas-android-workflows의 운영·트러블슈팅](eas-android-workflows.md#운영-모니터링트러블슈팅) 절차를 따른다.
 
 ## 3. iOS
