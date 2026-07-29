@@ -92,14 +92,14 @@ async-storage 3.x, gesture-handler 3.x, tailwind 4 + NativeWind v5, TypeScript 7
 빌드 47부터 DSN이 유효하다(EAS env 등록·수신 검증 완료). 남은 격차:
 
 1. **(P0→검증만) 릴리스 태깅 — 추가 작업 불필요(팩트체크로 권장 철회)**: `@sentry/react-native`의 기본 통합 `nativeReleaseIntegration`이 release 미지정 시 **네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 파생**하고 dist도 빌드 번호로 채운다(실측: 설치본 `dist/js/integrations/release.js` — `event.release = ${id}@${version}+${build}`). 즉 빌드 47 이벤트는 자동으로 `com.gunny.coinadmin.android@2.6.1+47`로 태깅된다. `EXPO_PUBLIC_APP_VERSION`을 설정하면 오히려 **빌드 번호 없는 약한 release로 덮어써 악화**되므로 설정하지 말 것. 남는 작업: ① 빌드 47 첫 이벤트에서 release/dist 필드 실측 확인, ② (선택) errorReporting.ts의 `EXPO_PUBLIC_APP_VERSION`/`SENTRY_RELEASE` 수동 release 로직은 잉여이므로 제거해 단순화.
-2. **(P1) 소스맵·네이티브 심볼 업로드**: [Sentry Expo 공식 문서](https://docs.sentry.io/platforms/react-native/manual-setup/expo/) — `@sentry/react-native/expo` config 플러그인은 빌드 시 소스맵·디버그 심볼 자동 업로드용(네이티브 크래시 캡처 자체는 JS `Sentry.init`으로 네이티브 SDK가 함께 초기화되므로 플러그인 없이도 동작). 없으면 JS 스택이 난독 상태로 옴 — 조사 효율 문제이지 수신 문제는 아님.
+2. **(P1) 소스맵·네이티브 심볼 업로드 — ✅ 완료(2026-07-28, 빌드 48)**: 플러그인 머지·EAS 빌드에서 첫 업로드 실측 성공(artifact bundle이 release `…@2.6.2+48`·dist 48로 연계 — [production-deployment.md](../deployment/production-deployment.md) §5 참고). 이하 도입 절차는 이력. [Sentry Expo 공식 문서](https://docs.sentry.io/platforms/react-native/manual-setup/expo/) — `@sentry/react-native/expo` config 플러그인은 빌드 시 소스맵·디버그 심볼 자동 업로드용(네이티브 크래시 캡처 자체는 JS `Sentry.init`으로 네이티브 SDK가 함께 초기화되므로 플러그인 없이도 동작). 없으면 JS 스택이 난독 상태로 옴 — 조사 효율 문제이지 수신 문제는 아님.
    **도입 절차(v1.4 갱신 — 슬러그 실측 확정으로 잔여 사용자 입력은 1건):**
    1. ~~조직 slug·프로젝트 slug 확인~~ **완료(v1.5 정정)**: org `gunnys` / project `coin-admin` — **2026-07-28 wizard로 신규 생성된 전용 프로젝트(ID 4511812698767360)**. DSN `…af4f7bed…/4511812698767360`이 EAS production에 등록·검증됨
    2. **(사용자) Auth Token 발급**(Settings → Auth Tokens, `project:releases`·`org:read` 스코프) → `npx eas-cli env:set`으로 environment `production`, name `SENTRY_AUTH_TOKEN`, visibility **secret** 등록
    3. ~~코드 변경~~ **준비 완료**: 브랜치 `post-rollout/sentry-sourcemaps-hardening`(커밋 b4fefca, push 안 함) — app.config.ts 플러그인 + metro.config.js `getSentryExpoConfig`(wasm assetExts 유지 실측) + uuid override. 검증: npm 11.16 lockfile 양쪽 `ci --dry-run` OK, typecheck·jest 36/36, Android prebuild OK.
    **머지 게이트(순서 엄수):** ⓐ 롤아웃 100% 완료 → ⓑ `SENTRY_AUTH_TOKEN` EAS 등록 확인 → ⓒ MARKETING_VERSION 범프(2.6.2) + `npm run sync:version` → ⓓ main 머지·push. **토큰 없이 플러그인이 main에 먼저 들어가면 EAS 빌드의 소스맵 업로드 단계가 빌드를 실패시킬 수 있음**([sentry-react-native #4961](https://github.com/getsentry/sentry-react-native/issues/4961) 등 실사례). 로컬 릴리스 스모크는 `.env.sentry-build-plugin`에 토큰을 두거나 `SENTRY_DISABLE_AUTO_UPLOAD=true`로 우회.
 3. **(P1) 크래시 알림 — 실측 완료(추가 작업 선택)**: 기본 이슈 알림 룰 "Send a notification for high priority issues"(활성, 이메일→issue owners/전체 멤버 폴백, 빈도 30분)가 이미 존재 — 신규 크래시 이슈는 high priority로 분류되므로 기본 커버됨. (선택, UI) crash-free rate 메트릭 알림 추가.
-4. **(해소, v1.5 정정) DSN 오등록**: v1.4에서 "타 앱 이벤트 유입(오염)"으로 기록했던 것은 오판 — 실제로는 **EAS에 등록됐던 DSN 자체가 gns-hermit-comm 프로젝트의 것**(사용자가 coin-admin DSN을 몰라 실수 등록)이었고, 그 이벤트들은 해당 프로젝트 자신의 것이었다. 조치: 전용 프로젝트 `gunnys/coin-admin` 신규 생성 + EAS DSN 교체(완료). **과도기 주의**: 빌드 47(롤아웃 중)은 구 DSN이 인라인돼 있어 **gns-hermit-comm 프로젝트로 계속 보고됨** — 롤아웃 모니터링은 그 프로젝트에서 release `com.gunny.coinadmin.android@2.6.1+47` 필터로 수행. 새 DSN은 다음 빌드(2.6.2)부터 유효.
+4. **(해소, v1.5 정정) DSN 오등록**: v1.4에서 "타 앱 이벤트 유입(오염)"으로 기록했던 것은 오판 — 실제로는 **EAS에 등록됐던 DSN 자체가 gns-hermit-comm 프로젝트의 것**(사용자가 coin-admin DSN을 몰라 실수 등록)이었고, 그 이벤트들은 해당 프로젝트 자신의 것이었다. 조치: 전용 프로젝트 `gunnys/coin-admin` 신규 생성 + EAS DSN 교체(완료). **과도기(2026-07-29 갱신)**: 빌드 48(2.6.2)부터 새 DSN이 인라인돼 `gunnys/coin-admin`으로 보고됨. 빌드 47(20% 롤아웃분) 잔여 사용자만 업데이트 전까지 gns-hermit-comm에 release `com.gunny.coinadmin.android@2.6.1+47`로 보고.
 
 ### 3-3. iOS — 크래시 무관, 버전 격차 해소 항목으로 재분류 (P2)
 
@@ -125,7 +125,7 @@ EAS iOS 빌드 이력 실측(2026-07-28): 마지막 **성공** 배포는 **1.0.6
 | 2 | Sentry release/dist 자동 태깅 실측 검증(3-2-1) + (선택) errorReporting 잉여 release 로직 제거 | 빌드 47 첫 이벤트의 release=`…@2.6.1+47`·dist 확인; 코드 수정 시 jest·typecheck |
 | 3 | SDK 비관리 마이너 업데이트 일괄(2-2) + CI 감사 경고 스텝(1-4) | 전체 테스트 + 릴리스 스모크 |
 | 4 | (선택) uuid override(1-3) — **브랜치 준비 완료**(prod audit 13→0, prebuild·테스트 게이트 통과) | ~~prebuild·audit~~ 완료 · 머지 후 CI android-smoke가 릴리스 빌드 최종 검증 |
-| 5 | Sentry 소스맵 플러그인(3-2-2) — **브랜치 준비 완료**, iOS SDK 57 배포(3-3 — Xcode 26 요건 해소 확인) | 머지 게이트(3-2-2): 롤아웃 100% → SENTRY_AUTH_TOKEN → 버전 범프 → push |
+| 5 | Sentry 소스맵 플러그인(3-2-2) — **✅ 완료(2026-07-28 빌드 48, 롤아웃 100% 게이트는 사용자 지시로 면제)**. 잔여: iOS SDK 57 배포(3-3 — Xcode 26 요건 해소 확인) | 빌드 48 첫 이벤트에서 난독 해제 스택 실측(잔여 검증) |
 
 ## 5. 결정 사항 (v1.2에서 권장안대로 실행 완료)
 

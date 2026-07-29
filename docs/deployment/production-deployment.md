@@ -20,8 +20,8 @@
   1. 심사 승인 후 Sentry 신규 이슈·Play Vitals 크래시율을 확인(최소 수 시간~1일 권장)
   2. 이상 없으면 **Play Console → 프로덕션 → 출시 확대**로 비율 상향(최종 100%). 100% 전에는 완전 배포 상태가 아님을 유의
   3. 크래시 발견 시 같은 화면에서 **출시 중단(halt)** 후 수정 버전 준비
-  4. 롤아웃 진행 중 다음 버전을 제출하면 기존 롤아웃을 대체함 — 첫 실사용에서 동작 확인해 이 문서에 반영
-- **배포 후 확인(첫 Sentry 유효 빌드):** 빌드 47(2.6.1)부터 `EXPO_PUBLIC_SENTRY_DSN`이 주입된 첫 빌드다. 배포 후 Sentry에서 이벤트가 수신되는지, release가 `com.gunny.coinadmin.android@<버전>+<빌드번호>` 형식으로 자동 태깅되는지 1회 실측 확인한다(미수신이면 EAS env 주입·DSN 유효성 재점검). **Sentry 프로젝트는 `gunnys/coin-admin`(ID 4511812698767360, 2026-07-28 wizard로 신규 생성)** — 이전에 EAS에 등록됐던 DSN은 실수로 gns-hermit-comm 프로젝트의 것이었고 같은 날 새 DSN으로 교체·검증 완료(HTTP 200). **과도기 주의: 빌드 47은 구 DSN이 빌드에 인라인돼 있어 롤아웃 기간 동안 `gunnys/gns-hermit-comm` 프로젝트로 보고됨** — 모니터링은 그 프로젝트에서 release `com.gunny.coinadmin.android@2.6.1+47` 필터로 수행하고, 새 DSN은 다음 빌드(2.6.2)부터 유효.
+  4. 롤아웃 진행 중 다음 버전을 제출하면 기존 롤아웃을 대체함 — 2026-07-28 빌드 47(20% 진행 중) 위로 빌드 48 제출이 Play API에서 정상 수리됨(대체 반영·심사 상태는 Play Console에서 확인)
+- **배포 후 확인(Sentry):** 배포 후 Sentry에서 이벤트가 수신되는지, release가 `com.gunny.coinadmin.android@<버전>+<빌드번호>` 형식으로 자동 태깅되는지, 스택이 난독 해제되는지 확인한다(미수신이면 EAS env 주입·DSN 유효성 재점검). **Sentry 프로젝트는 `gunnys/coin-admin`(ID 4511812698767360, 2026-07-28 wizard로 신규 생성)** — 이전에 EAS에 등록됐던 DSN은 실수로 gns-hermit-comm 프로젝트의 것이었고 같은 날 새 DSN으로 교체·검증 완료(HTTP 200). **빌드 48(2.6.2)부터 새 DSN이 빌드에 인라인돼 `gunnys/coin-admin`으로 보고된다.** 과도기 잔여: 빌드 47(2.6.1, 20% 롤아웃분)은 구 DSN 인라인이라 업데이트 전까지 `gunnys/gns-hermit-comm`에 release `…@2.6.1+47` 필터로 보고됨.
 - **빌드 상태 확인:** [Expo 대시보드](https://expo.dev) → 프로젝트 → Builds, 또는 CLI(`workflow:runs`·`workflow:view`·`workflow:logs`·`build:list`). 런이 진행 없이 매달리면 [eas-android-workflows의 운영·트러블슈팅](eas-android-workflows.md#운영-모니터링트러블슈팅) 절차를 따른다.
 
 ## 3. iOS
@@ -38,7 +38,7 @@
 ## 5. 문제 시
 
 - **스토어 롤백:** 이전 버전을 스토어에서 다시 배포하는 등 팀 정책에 따른 롤백 절차를 따른다.
-- **디버깅:** Sentry 대시보드 및 앱 로그를 확인한다. 이벤트의 release/dist는 SDK가 네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 태깅한다 — 환경 변수로 release를 수동 지정하지 말 것(빌드 번호가 빠져 오히려 약해짐, [security-and-hardening-review.md 3-2](../planning/security-and-hardening-review.md) 참고). 소스맵 업로드(난독 해제)는 `@sentry/react-native/expo` 플러그인 + `SENTRY_AUTH_TOKEN` EAS secret 도입 시 활성화된다(미도입 상태).
+- **디버깅:** Sentry 대시보드 및 앱 로그를 확인한다. 이벤트의 release/dist는 SDK가 네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 태깅한다 — 환경 변수로 release를 수동 지정하지 말 것(빌드 번호가 빠져 오히려 약해짐, [security-and-hardening-review.md 3-2](../planning/security-and-hardening-review.md) 참고). 소스맵 업로드(난독 해제)는 `@sentry/react-native/expo` 플러그인 + `SENTRY_AUTH_TOKEN`(EAS production secret)으로 **활성화됨** — 2026-07-28 빌드 48 EAS 빌드에서 첫 업로드 실측 확인(artifact bundle이 release `…@2.6.2+48`·dist 48로 연계). Debug ID 방식이라 release 이름 매칭 없이도 심볼리케이션된다(공식 문서: debug-ids). 참고: 로컬 릴리스 빌드도 토큰이 있으면 업로드하는데 로컬 prebuild는 versionCode 1이라 `…+1` 번들이 생김 — 무해(Debug ID로 구분)하나 혼동 방지를 위해 로컬 빌드는 `SENTRY_DISABLE_AUTO_UPLOAD=true` 권장.
 
 ## 6. 스토어 정책·개인정보(선택)
 

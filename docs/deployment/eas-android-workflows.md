@@ -28,7 +28,7 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 - **크레덴셜 (EAS 서버 저장 필수)**  
   Play 제출용 Google Service Account 키(JSON)는 **EAS 서버에 업로드**해 둔다: `npx eas-cli credentials -p android` → 프로필 선택 → *Google Service Account* → 키 업로드(로컬 `.key/` 파일 사용). 워크플로(클라우드) 제출은 EAS 저장 키로 인증한다 — eas.json에 gitignore된 로컬 경로(`serviceAccountKeyPath`)를 지정하면 **클라우드 제출이 파일 부재로 실패**한다(2026-07-27 빌드 43 제출 실패의 근본 원인, 경로 제거로 해결). 가이드: [Expo - Submit to Google Play](https://docs.expo.dev/submit/android/).
 - **Sentry(프로덕션 빌드)**  
-  `EXPO_PUBLIC_SENTRY_DSN`이 EAS production 환경변수로 등록되어 있어 빌드 시 자동 주입된다(`npx eas-cli env:list --environment production`으로 확인). 현재 값은 **전용 프로젝트 `gunnys/coin-admin`(ID 4511812698767360)의 DSN**(2026-07-28 교체 — 이전 값은 실수로 gns-hermit-comm 프로젝트의 DSN이었고, 그 DSN이 인라인된 빌드 47은 롤아웃 기간 동안 gns-hermit-comm 프로젝트로 보고됨. [production-deployment.md](production-deployment.md) 과도기 주의 참고). DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이며, `eas.json`에 직접 넣지는 말 것.
+  `EXPO_PUBLIC_SENTRY_DSN`이 EAS production 환경변수로 등록되어 있어 빌드 시 자동 주입된다(`npx eas-cli env:list --environment production`으로 확인). 현재 값은 **전용 프로젝트 `gunnys/coin-admin`(ID 4511812698767360)의 DSN**(2026-07-28 교체, **빌드 48부터 유효** — 이전 값은 실수로 gns-hermit-comm 프로젝트의 DSN이었고, 그 DSN이 인라인된 빌드 47 잔여 사용자는 업데이트 전까지 gns-hermit-comm으로 보고됨. [production-deployment.md](production-deployment.md) 참고). DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이며, `eas.json`에 직접 넣지는 말 것.
 
 ## EAS Update 채널
 
@@ -62,6 +62,7 @@ job이 장시간 `IN_PROGRESS`인데 `workflow:logs`가 **"No logs found"** 를 
 
 ### 검증 이력
 
+- **2026-07-28: 빌드 48(2.6.2) 전 구간 성공 + 첫 소스맵 업로드** — checks가 로그 0줄로 약 50분 큐 대기 후 자연 진행(문서의 "1.5h까지 정상" 기준 실측 재확인 — 성급한 cancel 불필요). 빌드(1h42m)에서 `SENTRY_AUTH_TOKEN` secret으로 소스맵 업로드 성공(artifact bundle release `…@2.6.2+48`·dist 48 연계), Play 제출 성공(20% staged, 진행 중이던 빌드 47 롤아웃 대체). 총 소요 약 4h43m.
 - **2026-07-28: paths 필터 루트 md 미적용 사고** — 문서 전용 커밋(README·CHANGELOG·docs/)이 필터를 통과해 빌드 46(fingerprint는 빌드 45와 동일)이 빌드·제출됨. 원인: EAS 매처에서 `**/*.md`가 루트 파일과 미매치. 조치: `!*.md`·`!.eas/**` 추가. 사용자 영향 없음(동일 코드) — versionCode 1개·심사 1회 낭비.
 - **2026-07-28: 재설계 후 첫 전 구간 성공** — checks(sync check·typecheck·jest, `tools.node` 핀) → CNG 자동 prebuild 빌드(**빌드 45**, versionName 2.6.0, SDK 57, targetSdk 36) → **EAS 저장 키로 Play 제출 성공**(빌드 43 제출 실패의 재발 없음). concurrency에 의한 구 런 취소, docs 제외 paths 필터도 동작 확인.
 
