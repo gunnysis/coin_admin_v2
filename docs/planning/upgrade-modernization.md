@@ -206,6 +206,8 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 > iOS 열은 EAS 클라우드 빌드 산출물(preview 프로필, internal 배포)로 실기기 검증한다 — 개발 머신(Windows)에서 Xcode·시뮬레이터 사용 불가 (§4.1-3). Android는 로컬 Android Studio 에뮬레이터 + EAS 빌드 병행.
 >
 > **2026-07-28 사고 교훈(필수 게이트 2종 추가 배경):** SDK 57 업그레이드 배포(2.6.0)가 실기기에서 시작 즉시 크래시 — nativewind가 정확 고정한 중첩 `react-native-css-interop@0.2.1`이 RN 0.86의 non-null API에 null을 전달. 단위 테스트·웹 E2E·typecheck·expo-doctor 전부 통과 상태로 스토어까지 나갔다. 위 두 게이트(단일 버전 확인·릴리스 스모크)는 이 부류를 배포 전에 잡기 위한 것. 상세: [security-and-hardening-review.md](security-and-hardening-review.md)·[트러블슈팅 #4](../development/troubleshooting.md).
+>
+> **Gradle 10 deprecation 경고(2026-07-29 실측 — 현재 조치 불가·불필요, SDK 업그레이드 시 재확인):** SDK 57/RN 0.86(Gradle 9.3.1) 릴리스 빌드를 `--warning-mode all`로 전수 실측한 결과 경고 83건은 전부 **앱 비소유 파일**에서 발생 — ① Expo prebuild 템플릿(`android/build.gradle`·`app/build.gradle`)과 `@expo/log-box`의 Groovy space-assignment 구문 78건, ② RN gradle-plugin의 legacy `Usage` attribute 2건, ③ lint/aapt2 multi-string 표기 3건. 모두 "Gradle 10에서 오류화" 예고이며, Gradle 메이저는 RN/Expo SDK 업그레이드로만 바뀌고 그때 상류 템플릿이 함께 갱신된다. CNG 원칙상 생성물 직접 수정은 금지(다음 prebuild에서 소실)이므로 앱 레벨 조치 없음. **체크 항목:** SDK 업그레이드로 Gradle 버전이 바뀌면 `./gradlew :app:assembleRelease --warning-mode all`을 재실측해 오류화 여부 확인.
 
 ---
 

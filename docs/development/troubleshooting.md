@@ -116,3 +116,30 @@ npx -y npm@11.16.0 ci --dry-run && npm ci --dry-run
 ```
 
 근본 해결은 nvm-windows 등으로 로컬 Node를 24.18.0에 고정하는 것. 상세 배경: [config-sync.md](config-sync.md).
+
+---
+
+## 6. 로컬·GUI 릴리스 빌드가 Sentry에 소스맵을 업로드하던 문제 (2026-07-29 근본 수정)
+
+### 증상
+
+로컬 릴리스 스모크 빌드가 Sentry에 `…@2.6.2+1` 소스맵 번들(artifact bundle)을 업로드 — 로컬 prebuild는 versionCode 1이라 스토어 릴리스와 무관한 번들이 대시보드에 쌓임(Debug ID 방식이라 심볼리케이션 오염은 없으나 혼동 유발).
+
+### 근본 원인 (실측)
+
+`SENTRY_AUTH_TOKEN`이 **Windows 사용자(User) 환경변수 스코프에 상주** — 셸·Expo CLI·gradle·Android Studio까지 모든 프로세스가 상속한다. `@sentry/react-native`의 `sentry.gradle.kts`는 env 토큰이 보이면 릴리스 빌드에서 무조건 업로드하므로, "빌드 시 `SENTRY_DISABLE_AUTO_UPLOAD=true`를 셸에서 붙이는 습관"으로는 Android Studio GUI 빌드를 못 막는다.
+
+### 해결 (app.config.ts에 기계적으로 봉인)
+
+Sentry 공식 플러그인 옵션 `disableAutoUpload`를 조건부 적용 — [공식 문서](https://docs.sentry.io/platforms/react-native/guides/expo/sourcemaps/#disable-automatic-upload)가 "GUI 빌드처럼 env가 없는 환경까지 prebuild 시 네이티브에 구워진다"고 명시한 메커니즘:
+
+```ts
+// app.config.ts — EAS 워커(EAS_BUILD=true, 빌드 스텝 노출 변수)에서만 업로드 활성
+disableAutoUpload: process.env.EAS_BUILD !== "true",
+```
+
+prebuild 결과 `android/app/build.gradle`에 `project.ext.shouldSentryAutoUploadGeneral = { -> return false }`가 생성되어(실측) 로컬·CI의 모든 gradle 실행에서 업로드 태스크가 SKIPPED된다. EAS 빌드는 `EAS_BUILD=true`가 설정된 워커에서 prebuild하므로 업로드가 유지된다.
+
+### 검증 (2026-07-29)
+
+User 스코프 토큰이 존재하고 우회 env가 없는 최악 조건에서 `./gradlew :app:assembleRelease` 실행 → `createBundleReleaseJsAndAssets_SentryUpload_… SKIPPED`, BUILD SUCCESSFUL(6m27s), Sentry artifact bundle 수 증가 없음(API 교차 확인). CI(android-smoke)의 `SENTRY_DISABLE_AUTO_UPLOAD=true` env는 이 수정으로 잉여가 됐으나 설정 회귀 시 2차 방어로 유지.

@@ -133,16 +133,20 @@ export default () => {
       "expo-sqlite",
       "expo-font",
       "expo-sharing",
-      // 릴리스 빌드 시 소스맵을 Sentry에 업로드(난독 해제). 빌드 환경에 SENTRY_AUTH_TOKEN
-      // (EAS secret) 필수 — 없으면 업로드 단계가 빌드를 실패시킬 수 있음. 로컬 릴리스 스모크는
-      // .env.sentry-build-plugin에 토큰을 두거나 SENTRY_DISABLE_AUTO_UPLOAD=true로 우회
-      // (docs/planning/security-and-hardening-review.md 3-2-2)
+      // 릴리스 빌드 시 소스맵을 Sentry에 업로드(난독 해제). 업로드는 EAS 빌드 전용 —
+      // SENTRY_AUTH_TOKEN(EAS secret)이 있어야 하며, 없으면 업로드 단계가 빌드를 실패시킴.
+      // disableAutoUpload: EAS 워커의 prebuild(EAS_BUILD=true, 빌드 스텝 노출 변수)에서만 업로드
+      // 활성. 로컬·CI prebuild에서는 비활성이 build.gradle에 구워져(shouldSentryAutoUploadGeneral)
+      // 이 머신의 User 스코프 SENTRY_AUTH_TOKEN으로도 업로드되지 않음(Android Studio GUI 빌드 포함
+      // — 2026-07-29 로컬 스모크가 `…+1` 소스맵 번들을 올린 사고의 근본 수정).
+      // 참고: docs.sentry.io/platforms/react-native/guides/expo/sourcemaps #disable-automatic-upload
       [
         "@sentry/react-native/expo",
         {
           url: "https://sentry.io/",
           organization: "gunnys",
           project: "coin-admin",
+          disableAutoUpload: process.env.EAS_BUILD !== "true",
         },
       ],
     ],

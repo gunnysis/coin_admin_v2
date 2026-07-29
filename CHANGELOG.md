@@ -4,6 +4,11 @@
 
 형식은 [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/)를 따른다.
 
+## [미출시]
+
+- **fix(sentry): 로컬·GUI 릴리스 빌드의 소스맵 업로드 기계적 차단** — `SENTRY_AUTH_TOKEN`이 OS 사용자 환경변수에 상주해 로컬 스모크 빌드가 무관한 `…+1` 번들을 업로드하던 문제(2026-07-29 실측). app.config.ts에 `disableAutoUpload: process.env.EAS_BUILD !== "true"` 적용 — 비-EAS prebuild에서 build.gradle에 비활성이 구워져 Android Studio GUI 빌드까지 차단, EAS 빌드만 업로드 유지. 검증: 토큰 존재 조건에서 업로드 태스크 SKIPPED·번들 수 불변. 상세: 트러블슈팅 #6
+- **docs: Gradle 10 deprecation 경고 전수 실측·분류** — `--warning-mode all` 83건 전부 앱 비소유 파일(Expo prebuild 템플릿·@expo/log-box·RN gradle-plugin) 발생 확인, 앱 레벨 조치 불가·불필요. SDK 업그레이드 시 재실측 체크 항목화(upgrade-modernization §8)
+
 ## [2.6.2] - 2026-07-28 (스토어 릴리스: 빌드 48 — 관측성 완성 릴리스. 2.6.1 20% 롤아웃을 대체 배포)
 
 크래시 조사 효율을 완성하는 릴리스. 전용 Sentry 프로젝트(`gunnys/coin-admin`) 신설·DSN 교체(2.6.1까지는 실수로 gns-hermit-comm 프로젝트의 DSN이 사용됨)와 소스맵 자동 업로드를 도입한다.

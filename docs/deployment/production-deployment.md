@@ -38,7 +38,7 @@
 ## 5. 문제 시
 
 - **스토어 롤백:** 이전 버전을 스토어에서 다시 배포하는 등 팀 정책에 따른 롤백 절차를 따른다.
-- **디버깅:** Sentry 대시보드 및 앱 로그를 확인한다. 이벤트의 release/dist는 SDK가 네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 태깅한다 — 환경 변수로 release를 수동 지정하지 말 것(빌드 번호가 빠져 오히려 약해짐, [security-and-hardening-review.md 3-2](../planning/security-and-hardening-review.md) 참고). 소스맵 업로드(난독 해제)는 `@sentry/react-native/expo` 플러그인 + `SENTRY_AUTH_TOKEN`(EAS production secret)으로 **활성화됨** — 2026-07-28 빌드 48 EAS 빌드에서 첫 업로드 실측 확인(artifact bundle이 release `…@2.6.2+48`·dist 48로 연계). Debug ID 방식이라 release 이름 매칭 없이도 심볼리케이션된다(공식 문서: debug-ids). 참고: 로컬 릴리스 빌드도 토큰이 있으면 업로드하는데 로컬 prebuild는 versionCode 1이라 `…+1` 번들이 생김 — 무해(Debug ID로 구분)하나 혼동 방지를 위해 로컬 빌드는 `SENTRY_DISABLE_AUTO_UPLOAD=true` 권장.
+- **디버깅:** Sentry 대시보드 및 앱 로그를 확인한다. 이벤트의 release/dist는 SDK가 네이티브 앱 정보에서 `bundleId@version+build` 형식으로 자동 태깅한다 — 환경 변수로 release를 수동 지정하지 말 것(빌드 번호가 빠져 오히려 약해짐, [security-and-hardening-review.md 3-2](../planning/security-and-hardening-review.md) 참고). 소스맵 업로드(난독 해제)는 `@sentry/react-native/expo` 플러그인 + `SENTRY_AUTH_TOKEN`(EAS production secret)으로 **활성화됨** — 2026-07-28 빌드 48 EAS 빌드에서 첫 업로드 실측 확인(artifact bundle이 release `…@2.6.2+48`·dist 48로 연계). Debug ID 방식이라 release 이름 매칭 없이도 심볼리케이션된다(공식 문서: debug-ids). 로컬·CI·Android Studio 빌드는 app.config.ts의 조건부 `disableAutoUpload`(비-EAS prebuild에서 build.gradle에 구워짐)로 업로드가 기계적으로 차단된다 — 셸 env 습관 불필요([트러블슈팅 #6](../development/troubleshooting.md) 참고).
 
 ## 6. 스토어 정책·개인정보(선택)
 

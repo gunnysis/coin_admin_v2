@@ -77,9 +77,9 @@ jobs:
       - name: Raise Gradle JVM memory
         run: printf '\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n' >> android/gradle.properties
 
-      # CI에는 SENTRY_AUTH_TOKEN이 없어 소스맵 업로드 태스크가 빌드를 실패시킴
-      # (2026-07-28 run 30359802853 실측: "Auth token is required"). 스모크 목적은
-      # 시작 크래시 검출이므로 업로드는 비활성 — 실제 업로드는 EAS 빌드(secret 보유)가 수행
+      # 1차 방어는 app.config.ts의 disableAutoUpload(비-EAS prebuild가 build.gradle에 구움 —
+      # 트러블슈팅 #6). 이 env는 그 조건이 회귀해도 CI 빌드가 안 깨지게 하는 2차 방어
+      # (토큰 없는 러너에서 업로드 태스크는 빌드 실패: 2026-07-28 run 30359802853 "Auth token is required")
       - name: Build release APK
         run: cd android && chmod +x gradlew && ./gradlew :app:assembleRelease --no-daemon
         env:
