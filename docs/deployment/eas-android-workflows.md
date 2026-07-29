@@ -23,12 +23,13 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 ## 전제 조건
 
 - **eas.json**  
-  - `build.production`: Android AAB, `image: "latest"`, `channel: "production"`  
+  - `build.production`: Android AAB, `image: "latest"`, `channel: "production"` — versionCode는 EAS 원격 관리(`appVersionSource: "remote"` + production `autoIncrement: true`)  
   - `submit.production.android`: `track`, `releaseStatus: "inProgress"` + `rollout: 0.2` — **단계적 출시(초기 20%)**, 확대·중단 절차는 [production-deployment.md](production-deployment.md) (서비스 계정 키 **경로는 넣지 않는다** — 아래 크레덴셜 참고)
 - **크레덴셜 (EAS 서버 저장 필수)**  
   Play 제출용 Google Service Account 키(JSON)는 **EAS 서버에 업로드**해 둔다: `npx eas-cli credentials -p android` → 프로필 선택 → *Google Service Account* → 키 업로드(로컬 `.key/` 파일 사용). 워크플로(클라우드) 제출은 EAS 저장 키로 인증한다 — eas.json에 gitignore된 로컬 경로(`serviceAccountKeyPath`)를 지정하면 **클라우드 제출이 파일 부재로 실패**한다(2026-07-27 빌드 43 제출 실패의 근본 원인, 경로 제거로 해결). 가이드: [Expo - Submit to Google Play](https://docs.expo.dev/submit/android/).
 - **Sentry(프로덕션 빌드)**  
-  `EXPO_PUBLIC_SENTRY_DSN`이 EAS production 환경변수로 등록되어 있어 빌드 시 자동 주입된다(`npx eas-cli env:list --environment production`으로 확인). 현재 값은 **전용 프로젝트 `gunnys/coin-admin`(ID 4511812698767360)의 DSN**(2026-07-28 교체, **빌드 48부터 유효** — 이전 값은 실수로 gns-hermit-comm 프로젝트의 DSN이었고, 그 DSN이 인라인된 빌드 47 잔여 사용자는 업데이트 전까지 gns-hermit-comm으로 보고됨. [production-deployment.md](production-deployment.md) 참고). DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이며, `eas.json`에 직접 넣지는 말 것.
+  `EXPO_PUBLIC_SENTRY_DSN`이 EAS production 환경변수로 등록되어 있어 빌드 시 자동 주입된다(`npx eas-cli env:list --environment production`으로 확인). 현재 값은 **전용 프로젝트 `gunnys/coin-admin`(ID 4511812698767360)의 DSN**(2026-07-28 교체, **빌드 48부터 유효** — 이전 값은 실수로 gns-hermit-comm 프로젝트의 DSN이었고, 그 DSN이 인라인된 빌드 47 잔여 사용자는 업데이트 전까지 gns-hermit-comm으로 보고됨. [production-deployment.md](production-deployment.md) 참고). DSN은 클라이언트 번들에 포함되는 값이라 plaintext 가시성이며, `eas.json`에 직접 넣지는 말 것.  
+  또한 소스맵 업로드용 EAS secret **`SENTRY_AUTH_TOKEN`**(production 환경)이 등록돼 있어야 한다 — app.config.ts의 조건부 `disableAutoUpload`로 업로드는 EAS 빌드에서만 활성이며, **토큰이 없거나 만료되면 업로드 단계가 production 빌드를 실패시킨다**(빌드 차단 전제 조건).
 
 ## EAS Update 채널
 
@@ -38,7 +39,7 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
 | `production`  | `production` | 스토어 제출 빌드(AAB). 프로덕션 OTA 업데이트용. |
 
 - **채널·브랜치 매핑(권장):** `main` 브랜치 → production 빌드/제출 시 `production` 채널 사용. 기능 브랜치에서 preview 빌드 시 `preview` 채널 사용.
-- **OTA 푸시:** `eas update --branch main --channel production` (또는 `--channel preview`)로 해당 채널을 바라보는 앱에 업데이트 배포. 자세한 옵션은 [Expo EAS Update 문서](https://docs.expo.dev/eas-update/introduction/) 참고.
+- **OTA 푸시:** `eas update --channel production -m "<메시지>"` (또는 `--channel preview`)로 해당 채널을 바라보는 앱에 업데이트 배포 — 채널이 매핑된 브랜치로 발행되며, **`--branch`와 `--channel`은 동시 지정 불가**(eas-cli가 "Cannot specify both --channel and --branch"로 거부, 2026-07-29 실측). 자세한 옵션은 [Expo EAS Update 문서](https://docs.expo.dev/eas-update/introduction/) 참고.
 
 ## 운영: 모니터링·트러블슈팅
 

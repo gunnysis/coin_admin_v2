@@ -4,7 +4,7 @@
 
 | 문서 | 설명 |
 |------|------|
-| [production-deployment.md](production-deployment.md) | 프로덕션 배포 체크리스트, Android/iOS/OTA, EAS Secrets, 롤백 |
+| [production-deployment.md](production-deployment.md) | 프로덕션 배포 체크리스트, Android/iOS/OTA, Sentry·EAS 환경변수, 롤백 |
 | [eas-android-workflows.md](eas-android-workflows.md) | Android EAS Workflows(빌드·Play Store 제출 자동화), 트리거·수동 실행, EAS Update 채널 |
 | [deploy-web.md](deploy-web.md) | 웹 프로덕션 배포 절차, Nginx 예시, COOP/COEP |
 

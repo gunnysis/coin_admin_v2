@@ -8,6 +8,8 @@
 
 - **fix(sentry): 로컬·GUI 릴리스 빌드의 소스맵 업로드 기계적 차단** — `SENTRY_AUTH_TOKEN`이 OS 사용자 환경변수에 상주해 로컬 스모크 빌드가 무관한 `…+1` 번들을 업로드하던 문제(2026-07-29 실측). app.config.ts에 `disableAutoUpload: process.env.EAS_BUILD !== "true"` 적용 — 비-EAS prebuild에서 build.gradle에 비활성이 구워져 Android Studio GUI 빌드까지 차단, EAS 빌드만 업로드 유지. 검증: 토큰 존재 조건에서 업로드 태스크 SKIPPED·번들 수 불변. 상세: 트러블슈팅 #6
 - **docs: Gradle 10 deprecation 경고 전수 실측·분류** — `--warning-mode all` 83건 전부 앱 비소유 파일(Expo prebuild 템플릿·@expo/log-box·RN gradle-plugin) 발생 확인, 앱 레벨 조치 불가·불필요. SDK 업그레이드 시 재실측 체크 항목화(upgrade-modernization §8)
+- **docs: 전 문서 코드 대조 펙트체크·최신화(2026-07-29)** — 문서 25종+CLAUDE.md·README를 실제 코드/설정과 전수 대조해 낡은 서술 교정. 주요 교정: Jest 30 플래그(`--testPathPatterns`), 전역 쿼리 캐시 실값(staleTime 5분/gcTime 10분 — 1시간은 환율 쿼리만), 삭제된 `QUERY_KEYS` 서술 제거, `ExchangeRateHint` 미배선 사실화(cbe37be에서 의도적 UI 제거), 백업 save 경로(document 디렉터리)·웹 지원 반영, `test:e2e` 포트(8082), 월 화살표 상시 활성 FAQ, edge-to-edge 현행화(구 `statusBar.translucent` 서술 제거), CI↔EAS 독립 실행 관계, EAS paths 필터 전체 목록, `SENTRY_AUTH_TOKEN` 빌드 차단 전제 명시, **`eas update`는 `--branch`·`--channel` 동시 지정 불가**(CLI 소스 실측 — 기존 문서 예시 명령이 실행 불가였음), upgrade-modernization §1.2 버전표·CNG 전환 반영
+- **chore(e2e/scripts): 디버그 계측 잔재 제거** — `e2e/smoke.spec.ts`·`scripts/clean-android-build.ps1`의 `127.0.0.1:7xxx/ingest` POST 블록(과거 디버깅 세션 유입 — 2.6.1의 db.ts 잔재 제거와 동일 부류)
 
 ## [2.6.2] - 2026-07-28 (스토어 릴리스: 빌드 48 — 관측성 완성 릴리스. 2.6.1 20% 롤아웃을 대체 배포)
 

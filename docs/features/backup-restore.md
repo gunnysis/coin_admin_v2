@@ -11,7 +11,7 @@
   - 백업은 JSON 파일로 생성 후 공유 시트를 통해 사용자가 저장 위치(기기, 클라우드 등)를 선택.
   - 복구는 사용자가 선택한 백업 JSON 파일을 불러와 DB를 덮어쓰기.
 - **범위**
-  - 플랫폼: Android / iOS (expo-file-system, expo-sharing, expo-document-picker 사용). 웹은 제한적.
+  - 플랫폼: Android / iOS (expo-file-system, expo-sharing, expo-document-picker 사용). **웹도 지원** — 백업은 Blob + 다운로드 앵커로 즉시 다운로드, 복구는 blob/http URI 읽기(LocalBackupAdapter 내 웹 분기).
   - 데이터:
     - SQLite DB: 고정비(`fixed_month_costs`), 유동비(`variable_month_expenses`).
     - 앱 설정: 기본 통화 등 (필요 시 확장).
@@ -49,7 +49,7 @@
 ### 3.1 LocalBackupAdapter
 
 - 위치: `src/lib/backup/localBackupAdapter.ts`
-- **save**: 캐시 디렉터리에 JSON 저장 후 `expo-sharing`으로 공유 시트 표시. 사용자가 저장 위치 선택.
+- **save**: **문서(document) 디렉터리**에 JSON 저장 후 `expo-sharing`으로 공유 시트 표시(캐시 디렉터리는 일부 Android 기기에서 공유 실패해 document 사용 — 코드 주석 참고). 사용자가 저장 위치 선택. 웹은 Blob 다운로드.
 - **load**: `location.id`(파일 URI)를 `expo-file-system`으로 읽어 JSON 파싱 후 검증.
 - **listRecent**: 미구현. 복구는 항상 파일 선택(expo-document-picker)으로만 수행.
 

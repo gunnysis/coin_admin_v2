@@ -3,23 +3,6 @@
 
 Write-Host "=== Android Build Cleanup Script ===" -ForegroundColor Cyan
 
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:8"
-    message = "Script started"
-    data = @{
-        timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "A"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
-
 $projectRoot = $PSScriptRoot + "\.."
 $androidDir = Join-Path $projectRoot "android"
 $nodeModulesDir = Join-Path $projectRoot "node_modules"
@@ -41,24 +24,6 @@ foreach ($dir in $buildDirs) {
     }
 }
 
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:42"
-    message = "Android build dirs cleaned"
-    data = @{
-        cleanedDirs = $buildDirs.Count
-        dirsRemoved = ($buildDirs | Where-Object { -not (Test-Path $_) }).Count
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "B"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
-
 Write-Host "`n2. Cleaning CMake build caches (.cxx directories)..." -ForegroundColor Yellow
 
 # Clean app-level .cxx directory (critical for JSON parsing errors)
@@ -78,24 +43,6 @@ foreach ($cxxDir in $cxxDirs) {
     Remove-Item -Path $cxxDir.FullName -Recurse -Force -ErrorAction SilentlyContinue
     $cxxCount++
 }
-
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:55"
-    message = "CMake caches cleaned"
-    data = @{
-        cxxDirsFound = $cxxDirs.Count
-        cxxDirsRemoved = $cxxCount
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "C"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
 
 Write-Host "`n3. Checking for specific problematic modules..." -ForegroundColor Yellow
 
@@ -127,23 +74,6 @@ foreach ($module in $problemModules) {
     }
 }
 
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:85"
-    message = "Problem modules checked"
-    data = @{
-        modulesChecked = $problemModules.Count
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "D"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
-
 Write-Host "`n4. Cleaning Gradle cache..." -ForegroundColor Yellow
 
 # Clean Gradle cache
@@ -156,23 +86,6 @@ if (Test-Path $gradleCache) {
     $buildCache = Join-Path $gradleCache "build-cache-*"
     Get-ChildItem -Path $buildCache -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 }
-
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:103"
-    message = "Gradle cache cleaned"
-    data = @{
-        gradleCachePath = $gradleCache
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "E"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
 
 Write-Host "`n5. Cleaning corrupted Android SDK package.xml files..." -ForegroundColor Yellow
 
@@ -259,26 +172,6 @@ if (Test-Path $emulatorPath) {
 } else {
     Write-Host "  Android SDK emulator path not found: $emulatorPath" -ForegroundColor Gray
 }
-
-# #region agent log
-$logData = @{
-    location = "clean-android-build.ps1:250"
-    message = "Android SDK package.xml cleanup completed"
-    data = @{
-        sdkPath = $sdkPath
-        corruptedPackagesRemoved = $corruptedPackages
-        inconsistentDirsFound = $inconsistentDirs
-        inconsistentDirsRemoved = $removedInconsistentDirs
-    }
-    timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-    sessionId = "debug-session"
-    runId = "run1"
-    hypothesisId = "G"
-}
-try {
-    Invoke-WebRequest -Uri "http://127.0.0.1:7242/ingest/c0d30d1e-7653-4b2c-a6b3-fcec8440b435" -Method POST -Headers @{"Content-Type"="application/json"} -Body ($logData | ConvertTo-Json -Compress) -ErrorAction SilentlyContinue | Out-Null
-} catch {}
-# #endregion
 
 if ($corruptedPackages -gt 0) {
     Write-Host "  Removed $corruptedPackages corrupted package.xml file(s)" -ForegroundColor Green

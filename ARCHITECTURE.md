@@ -1,5 +1,7 @@
 # 아키텍처 문서
 
+> 개요 문서. 폴더 역할·에러 처리의 상세 기준은 [docs/development/architecture.md](docs/development/architecture.md), 전체 문서 색인은 [docs/README.md](docs/README.md) 참고.
+
 ## 프로젝트 구조
 
 ```
@@ -18,7 +20,8 @@ src/
 ├── database/         # 데이터베이스 로직
 ├── features/         # Feature 기반 구조
 │   ├── fixed-expenses/
-│   └── variable-expenses/
+│   ├── variable-expenses/
+│   └── settings/
 ├── hooks/           # 커스텀 훅
 ├── lib/              # 라이브러리 유틸리티
 │   ├── errors.ts
@@ -82,7 +85,7 @@ src/
 - 최신 Hooks 패턴
 - 성능 최적화 기능
 
-### TypeScript 5.9
+### TypeScript 6.0
 - 엄격한 타입 체크
 - 제네릭 활용
 

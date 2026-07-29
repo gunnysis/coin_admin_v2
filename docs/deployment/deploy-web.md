@@ -8,13 +8,13 @@ Expo 웹 앱을 정적 빌드해 호스팅하는 절차와 서버 설정 요약.
    ```bash
    npx expo export --platform web
    ```
-   출력 디렉터리는 Expo 설정에 따름(기본 `dist/` 등). 프로젝트 루트 또는 [Expo 문서](https://docs.expo.dev/guides/customizing-metro/)에서 확인.
+   출력 디렉터리는 프로젝트 루트의 **`dist/`**(expo export 기본값 — 이 저장소는 출력 경로 오버라이드 없음; `eas update`의 `--input-dir` 기본값도 `dist`).
 
 2. **업로드**  
-   생성된 파일 전체를 웹 서버 또는 CDN의 배포 루트(예: `/var/www/app`, S3 버킷 prefix)에 업로드.
+   생성된 파일 전체를 웹 서버 또는 CDN의 배포 루트(예: `/var/www/coin-admin`, S3 버킷 prefix)에 업로드.
 
 3. **SPA 라우팅**  
-   클라이언트 라우팅을 쓰는 경우, 모든 경로를 `index.html`로 fallback 하도록 서버를 설정한다(아래 Nginx 예).
+   이 앱은 `web.output: "single"`(SPA — app.config.ts)이므로 모든 경로를 `index.html`로 fallback 하는 서버 설정이 **필수**다(아래 Nginx 예).
 
 ## 2. Nginx 예시
 

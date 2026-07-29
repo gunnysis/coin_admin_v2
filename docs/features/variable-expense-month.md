@@ -63,7 +63,7 @@
 - **헤더**: VariableTotalAmountCard 상단 — 선택 월 표시, 좌우 화살표, 현재 월 배지
 
 ### 2. 월 전환 감지 및 알림
-- 앱 실행/포그라운드 시 현재 월과 저장 월 비교, 월 변경 시 배너 알림(선택)
+- 월 변경 시 배너 알림(MonthTransitionBanner) — **월 선택이 바뀔 때만** 동작(초기 마운트 제외). 앱 실행/포그라운드 복귀 시 자동 감지(AppState 리스너)는 **미구현**(선택 과제)
 
 ### 3. 월별 비교
 - 이전 달 총액, 증감액·증감률, 시각적 인디케이터. (선택) 막대 차트, 카테고리별 비교
@@ -77,7 +77,7 @@
 - AppContext 월 선택, 월 유틸, MonthSelector(기본), 데이터 조회 월 파라미터, useMonthNavigation
 
 ### Phase 2: UX 개선 (완료 — 하단 시트 제외)
-- 스와이프 월 변경(MonthSelector Pan 제스처), 월 전환 배너(MonthTransitionBanner), 스켈레톤(SkeletonCard/SkeletonList). 하단 시트 월 선택은 미구현(선택 과제).
+- 스와이프 월 변경(MonthSelector Pan 제스처), 월 전환 배너(MonthTransitionBanner — 월 선택 변경 시; 포그라운드 자동 감지는 §2 참고, 미구현), 스켈레톤(SkeletonCard/SkeletonList). 하단 시트 월 선택은 미구현(선택 과제).
 
 ### Phase 3: 고급 (부분 완료)
 - 월별 비교(완료): useMonthComparison + VariableTotalAmountCard의 전월/이번 달 비율 막대. 통계 리포트는 미구현.

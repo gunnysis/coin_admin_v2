@@ -18,7 +18,7 @@ npm run web        # Run on web
 npm run web:clear  # Web with cleared Metro cache
 npm run web:e2e    # Web on port 8082 (pair with E2E_BASE_URL for test:e2e:run)
 npm test           # Run all Jest tests
-npx jest --testPathPattern="amount" # Run a single test file
+npx jest --testPathPatterns=amount # Run a single test file (Jest 30: 구 --testPathPattern은 제거됨)
 npm run typecheck  # tsc --noEmit (CI/EAS checks 게이트와 동일)
 npm run sync:version        # MARKETING_VERSION 전파 + 드리프트 수정
 npm run sync:version:check  # 드리프트 검사만 (CI·EAS checks 게이트)
@@ -26,7 +26,7 @@ npm run test:e2e   # E2E: starts web server on port 8082 (web:e2e) + Playwright.
 npm run test:e2e:run  # E2E: run only (no server). Use after `npm run web` in another terminal. Override: E2E_BASE_URL=http://localhost:8082
 ```
 
-**CI:** `.github/workflows/ci.yml` — main push·PR 시 Test job(sync check·typecheck·jest)과 E2E job(Playwright, 웹)을 실행 (EAS 빌드 전 사전 검증). Node는 `.nvmrc` 핀을 `node-version-file`로 참조. `.github/workflows/android-smoke.yml` — main push(코드 변경) 시 release APK 빌드 + 에뮬레이터 시작 크래시 검사(조기 경보 — EAS 배포를 차단하지는 못하므로, 네이티브 변경 배포 전 로컬 릴리스 스모크가 필수. 2026-07-28 시작 크래시 사고 참고: docs/development/troubleshooting.md #4).
+**CI:** `.github/workflows/ci.yml` — main push·PR 시 Test job(sync check·typecheck·jest + 비차단 expo-doctor·npm audit high+)과 E2E job(Playwright, 웹)을 실행 (EAS 빌드 전 사전 검증). Node는 `.nvmrc` 핀을 `node-version-file`로 참조. `.github/workflows/android-smoke.yml` — main push(코드 변경) 시 release APK 빌드 + 에뮬레이터 시작 크래시 검사(조기 경보 — EAS 배포를 차단하지는 못하므로, 네이티브 변경 배포 전 로컬 릴리스 스모크가 필수. 2026-07-28 시작 크래시 사고 참고: docs/development/troubleshooting.md #4).
 
 ## Architecture
 
@@ -43,11 +43,11 @@ Entry point is root `index.tsx` (not expo-router): `initErrorReporting()` runs f
 ### State Management
 - **Global UI state:** React Context (`AppContext`) for modals, selections, loading flags
 - **Theme:** `ThemeProvider`/`useTheme()` in `src/contexts/ThemeContext.tsx` — mode `light | dark | system`, persisted via `Storage` (key `app_theme`); resolves to `COLORS` / `COLORS_DARK` from `src/constants/theme.ts`. Use `useTheme().colors` for dynamic colors instead of importing `COLORS` directly in themed UI. ThemeContext syncs NativeWind via `colorScheme.set()` (tailwind.config `darkMode: 'class'`) — className styles MUST pair light classes with `dark:` variants (e.g. `bg-white dark:bg-slate-800`, `bg-slate-50 dark:bg-slate-900`, `border-slate-200 dark:border-slate-700`). Static `COLORS.*` in style props is only OK for mode-invariant tokens (primary/expense/income/overlay). StatusBar: `style={isDark ? 'light' : 'dark'}`.
-- **Server/async state:** TanStack React Query v5 with infinite scroll pagination (`useInfiniteQuery`, page size 10, staleTime/gcTime 1hr)
+- **Server/async state:** TanStack React Query v5 with infinite scroll pagination (`useInfiniteQuery`, page size 10). Global defaults in `src/config/queryClient.ts`: staleTime 5min / gcTime 10min; exchange rate query overrides to 1hr (`useExchangeRate`), DB-init query uses `Infinity`.
 - **Component state:** useState/useReducer for local concerns
 
 ### Currency & Amount Handling
-All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection`, `ExchangeRateHint`. Full design/UX/API: see `docs/features/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
+All amounts are stored as **KRW integers** in the database. Users can input in KRW (default) or USD. USD amounts are converted via the Frankfurter API (free, no key). Fallback rate: 1,400 KRW/USD. Key hooks: `useExchangeRate()`, `useAmountWithCurrency()`. Shared UI: `AmountInputSection` (환율 힌트 UI는 의도적으로 미표시 — `ExchangeRateHint`는 정의만 있고 미배선, 변환은 저장 시에만). Full design/UX/API: see `docs/features/amount-currency.md`. Optional override: `EXPO_PUBLIC_EXCHANGE_RATE_URL` for staging/tests.
 
 ### Responsive Layouts
 Three layout components in `src/components/layouts/`: `PhoneLayout`, `TabletPortraitLayout`, `TabletLandscapeLayout`. Device detection via `useDeviceDimensions()` hook in `App.tsx`. **Padding:** horizontal padding is applied once at the layout container (`getContainerStyle(device)`); feature roots do not re-apply it. Content area has `marginTop: SPACING.md` below the tab bar; between total-amount card and list use `SPACING.lg`. Theme spacing: `src/constants/theme.ts` (SPACING, RADIUS, SHADOWS).
@@ -63,7 +63,7 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Key Constants
 
-- **Query keys:** `src/config/queryKeys.ts` — factory: `databaseKeys`, `expenseKeys`, `exchangeRateKeys`. Legacy `QUERY_KEYS` re-exported from `src/constants/index.ts`.
+- **Query keys:** `src/config/queryKeys.ts` — factory: `databaseKeys`, `expenseKeys`, `exchangeRateKeys`. Consumers import directly from `@/config/queryKeys` (no re-export via constants).
 - **Categories:** `EXPENSE_CATEGORIES` in `src/constants/index.ts` — 7 predefined Korean categories (식비, 교통비, 쇼핑, 의료, 교육, 오락, 기타)
 - **Config:** `src/config/constants.ts` — pagination, date format, animation, timing, error/success messages, exchange rate settings
 - **Theme/design:** `src/constants/theme.ts` — SPACING (8pt grid), COLORS (primary, expense/danger, income, slate), RADIUS, SHADOWS, ICON_SIZES. UI: Card, Button, Typography, InputField, SkeletonCard/SkeletonList (loading placeholders) in `src/components/ui/`. Count-up amount animation: `useCountUpAmount` (used by total-amount cards). Use theme constants instead of hardcoded px/colors. **Touch targets:** minimum 44pt for interactive elements (e.g. header settings, close, tabs, action buttons). **App chrome:** main header and settings header use `bg-white dark:bg-slate-800` + `border-b border-slate-200 dark:border-slate-700`; settings close and main "설정" use Pressable + Phosphor icon (X, Gear) and 44pt hit area.
@@ -87,7 +87,7 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Documentation
 
-- **Index:** `docs/README.md` — topic folders, each with its own `README.md` index (per GitLab docs folder-structure guide): `user/` (guides), `development/` (architecture, safe-area-device-ui, troubleshooting), `features/` (amount-currency, variable-expense-month, backup-restore), `testing/` (e2e-testing), `deployment/` (production-deployment, eas-android-workflows, deploy-web), `planning/` (plans, improvements-roadmap, upgrade-modernization), `archive/` (past-implementations). File names: lowercase-with-dashes.
+- **Index:** `docs/README.md` — topic folders, each with its own `README.md` index (per GitLab docs folder-structure guide): `user/` (guides), `development/` (architecture, config-sync, safe-area-device-ui, troubleshooting), `features/` (amount-currency, variable-expense-month, backup-restore), `testing/` (e2e-testing), `deployment/` (production-deployment, eas-android-workflows, deploy-web), `planning/` (plans, improvements-roadmap, upgrade-modernization, security-and-hardening-review), `archive/` (past-implementations). File names: lowercase-with-dashes.
 
 ## Deployment
 
@@ -98,6 +98,6 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 - Three environments: development, preview, production (each with distinct bundle IDs)
 - EAS Update enabled with `checkAutomatically: "ON_LOAD"`
 - Android: minSdk 24, target/compileSdk **36** — RN 버전 카탈로그(`react-native/gradle/libs.versions.toml`)가 공급하는 기본값 사용. app.config.ts에 SDK 키를 고정하지 말 것(SDK 업그레이드 시 낡은 값 회귀 위험)
-- **EAS Build/Submit:** `eas.json`에 build(development/preview/production) 및 submit(production/preview) 프로필 정의. Android 프로덕션 빌드는 `image: "latest"` 명시.
+- **EAS Build/Submit:** `eas.json`에 build(development/development-simulator/preview/production) 및 submit(production/preview) 프로필 정의. Android 프로덕션 빌드는 `image: "latest"` 명시.
 - **프로덕션 배포 체크리스트 및 EAS Secrets:** [docs/deployment/production-deployment.md](docs/deployment/production-deployment.md).
 - **EAS Workflows:** `.eas/workflows/android-production.yml`(main push 자동 — docs/·`*.md`(루트 포함)·`.github/`·`.eas/`만 변경 시 제외)·`ios-production.yml`(수동 전용) — production 빌드 후 스토어 제출. **paths 필터 주의:** EAS 매처는 `!**/*.md`가 루트 파일과 매치되지 않으므로 `!*.md` 병기 필수 — 제거 금지(2026-07-28 문서 push 오배포 사고). **main 머지 = Android 배포**이며, 빌드 전 **checks job**(sync check·typecheck·jest)이 실패하면 빌드·제출이 중단됨. 제출 크레덴셜(Google Service Account·ASC API 키)은 **EAS 서버 저장** 방식 — eas.json에 로컬 키 경로를 넣으면 클라우드 제출이 실패함. 수동 실행: `npx eas-cli@latest workflow:run <file>`. 상세: `docs/deployment/eas-android-workflows.md` (EAS Update 채널·브랜치 매핑 포함). 웹 배포(COOP/COEP·정적 빌드): `docs/deployment/deploy-web.md`. 개선 로드맵: `docs/planning/improvements-roadmap.md`. SDK·스토어 정책 업그레이드 계획: `docs/planning/upgrade-modernization.md`.

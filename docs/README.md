@@ -14,11 +14,11 @@
 | 폴더 | 설명 | 문서 |
 |------|------|------|
 | [user/](user/README.md) | 앱 사용 방법·FAQ | guides |
-| [development/](development/README.md) | 아키텍처·UI 정책·트러블슈팅 | architecture, safe-area-device-ui, troubleshooting |
+| [development/](development/README.md) | 아키텍처·UI 정책·트러블슈팅 | architecture, config-sync, safe-area-device-ui, troubleshooting |
 | [features/](features/README.md) | 기능별 설계·구현 | amount-currency, variable-expense-month, backup-restore |
 | [testing/](testing/README.md) | 테스트 전략·실행 | e2e-testing |
 | [deployment/](deployment/README.md) | 스토어·OTA·웹 배포 | production-deployment, eas-android-workflows, deploy-web |
-| [planning/](planning/README.md) | 설계·계획·로드맵 | plans, improvements-roadmap, upgrade-modernization |
+| [planning/](planning/README.md) | 설계·계획·로드맵 | plans, improvements-roadmap, upgrade-modernization, security-and-hardening-review |
 | [archive/](archive/README.md) | 과거 구현 기록(참고용) | past-implementations |
 
 ---

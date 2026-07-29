@@ -40,12 +40,12 @@
 
 | 패키지 | 현재 | 상태 (2026-07) | 대응 |
 |--------|------|------|------|
-| `@sentry/react-native` | ^8.1.0 | 최신 8.17.x. **SDK 57 호환 검증 진행 중** ([getsentry#6384](https://github.com/getsentry/sentry-react-native/issues/6384)) | SDK 업그레이드 시점에 이슈 해소 여부 확인 후 최신 8.x로 상향. 미해소 시 SDK 56에서 대기 |
+| `@sentry/react-native` | ^8.20.0 | SDK 57 호환 이슈 해소 — 8.20 채택 완료(§6-6). `expo.install.exclude`로 expo install 다운그레이드 방지 | SDK 업그레이드 시 최신 8.x 재확인 |
 | `@tanstack/react-query` | ^5.59 | v5 유지, JS-only | 낮은 리스크 — minor 상향만 |
 | `nativewind` / `tailwindcss` | 4.2 / 3.4 | §5.2 | 현 조합 유지 |
 | `phosphor-react-native` | ^3.0.3 | `react-native-svg` peer | svg 버전이 SDK와 함께 상승하므로 동작 확인 |
-| `jest`·`ts-jest`·`@playwright/test` | 30 / 29.4 / 1.58 | devDeps, SDK와 독립 | 통상 갱신 주기 |
-| `react-native-worklets`, `react-native-css-interop` | devDeps | NativeWind v4 동반 의존성 | NativeWind 트랙(§5.2)에서 함께 검토. devDependencies 위치가 적절한지 감사 |
+| `jest`·`ts-jest`·`@playwright/test` | 30 / 29.4 / 1.62 | devDeps, SDK와 독립 | 통상 갱신 주기 |
+| `react-native-worklets` | dependencies (런타임 — Reanimated 4 요구) | SDK 관리 대상 | SDK 트랙에서 함께 상향. (`react-native-css-interop`은 2.6.1에서 직접 의존성 제거 — nativewind의 전이 의존성으로만 존재) |
 
 ---
 
@@ -57,12 +57,12 @@
 - 기존 앱 노출 유지: API 35 이상 (미충족 시 Android 16+ 기기 신규 사용자에게 검색 미노출)
 - 연장 신청 시 2026-11-01까지 유예 가능
 
-**✅ 해소 확인 (2026-07-27, 팩트체크):** 본 프로젝트는 `android/` 디렉터리가 체크인된 **bare 워크플로**라 app.config.ts의 android SDK 키는 빌드에 적용되지 않는다. 실제 값은 `expo-root-project` gradle 플러그인이 RN 버전 카탈로그(`node_modules/react-native/gradle/libs.versions.toml`)에서 읽으며, RN 0.81 카탈로그는 **minSdk 24 / target·compileSdk 36** — 즉 현재 빌드는 이미 API 36이다 (`android/gradle.properties`에 오버라이드 없음 확인). app.config.ts의 `targetSdkVersion: 34` 죽은 설정은 prebuild 재실행 시 34로 되돌릴 위험만 있어 **제거 완료**.
+**✅ 해소 확인 (2026-07-27, 팩트체크):** 당시 본 프로젝트는 `android/` 디렉터리가 체크인된 **bare 워크플로**였고(같은 날 CNG 전환 완료 — §6-1, 현재 android/는 미체크인·prebuild 생성) app.config.ts의 android SDK 키는 빌드에 적용되지 않았다. 실제 값은 `expo-root-project` gradle 플러그인이 RN 버전 카탈로그(`node_modules/react-native/gradle/libs.versions.toml`)에서 읽으며, 당시 RN 0.81 카탈로그와 현행 RN 0.86 카탈로그 모두 **minSdk 24 / target·compileSdk 36** — 즉 빌드는 이미 API 36이다. app.config.ts의 `targetSdkVersion: 34` 죽은 설정은 prebuild 재실행 시 34로 되돌릴 위험만 있어 **제거 완료**.
 
 **잔여 작업:**
 
 1. ~~app.config.ts SDK 버전 변경~~ → 죽은 설정 제거로 완료. ~~차기 스토어 제출 빌드 확인~~ → **2026-07-28 빌드 45(SDK 57, target/compileSdk 36) Play 제출 완료** — Play Console의 API 레벨 경고 해소 표기 확인만 잔여
-2. **Edge-to-edge 영향 검증:** targetSdk 35+에서 Android는 edge-to-edge를 강제한다. 현재 `statusBar.translucent: false` 설정과 충돌 여부를 실기기/에뮬레이터에서 확인 — [Safe Area 정책](../development/safe-area-device-ui.md)의 SafeAreaView/insets 처리가 방어선. (SDK 55+에서는 `edgeToEdgeEnabled` 옵션 자체가 제거되고 항상 활성)
+2. **Edge-to-edge 영향 검증:** targetSdk 35+에서 Android는 edge-to-edge를 강제한다(SDK 55+에서는 `edgeToEdgeEnabled` 옵션·app.config `statusBar` 설정 자체가 제거되고 항상 활성 — 구 `statusBar.translucent` 설정은 존재하지 않음). [Safe Area 정책](../development/safe-area-device-ui.md)의 SafeAreaView/insets 처리가 방어선 — 빌드 45+ 릴리스 스모크·배포에서 겹침 이상 미보고.
 3. EAS production 빌드 → 내부 테스트 트랙 검증 → **단계적 출시(staged rollout)**로 제출 ([production-deployment](../deployment/production-deployment.md) 체크리스트 준수)
 
 ### 2.2 Apple App Store: Xcode 26 / iOS 26 SDK (2026-04-28부터 시행 중)
@@ -151,8 +151,8 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 
 ### 5.3 기타 개선 (기회 항목)
 
-- **테스트 커버리지 확대:** jest coverage 대상이 `utils/amount.ts`·`validation.ts`뿐 — 백업 마이그레이션(§4.2) 시 `src/lib/backup/` 커버리지 포함
-- **CI 강화:** `.github/workflows/ci.yml`에 `npx expo-doctor` 단계 추가 → 의존성 호환성 회귀를 PR 단계에서 검출. (Node 버전은 24로 상향 완료 — §4.1-2)
+- **테스트 커버리지 확대:** jest coverage 대상이 `utils/amount.ts`·`validation.ts`뿐 — 백업 마이그레이션(§4.2)은 완료됐으나 `src/lib/backup/` 커버리지 포함은 **미실행(잔여 과제)**
+- **CI 강화(완료 — §6-4):** `.github/workflows/ci.yml`에 `npx expo-doctor` 단계 추가됨(non-blocking) — 의존성 호환성 회귀를 PR 단계에서 검출. (Node 버전은 24로 상향 완료 — §4.1-2)
 - **의존성 정기 점검:** SDK 릴리스 주기에 맞춰 §1 표를 갱신하고 지원 창(최신 4개 SDK / RN 3개 minor) 이탈 전에 업그레이드. SDK 57부터 릴리스 주기가 빨라지고 업그레이드 비용이 낮아지는 방향이므로 "작게 자주" 전략이 유리
 
 ---

@@ -65,12 +65,13 @@ coin-admin/
 │   │   ├── layouts/      # 반응형 레이아웃 (Phone, TabletPortrait, TabletLandscape)
 │   │   └── ...           # 기능별 컴포넌트
 │   ├── config/           # 앱 설정 (상수, queryKeys.ts React Query Key Factory)
-│   ├── constants/        # 상수·테마 (QUERY_KEYS re-export)
+│   ├── constants/        # 상수·테마 (EXPENSE_CATEGORIES, config/constants 별칭 re-export)
 │   ├── contexts/         # React Context (AppContext 등)
 │   ├── database/         # SQLite·DB 로직
 │   ├── features/         # 도메인별 기능
 │   │   ├── fixed-expenses/
-│   │   └── variable-expenses/
+│   │   ├── variable-expenses/
+│   │   └── settings/
 │   ├── hooks/            # 커스텀 훅
 │   ├── lib/              # 인프라 유틸 (에러, 로거, 스토리지, react-query 헬퍼)
 │   ├── types/            # TypeScript 타입
@@ -91,7 +92,7 @@ coin-admin/
 | `npm run ios` | iOS 시뮬레이터 실행 (macOS) |
 | `npm run web` | 웹 빌드 실행 (기본 8081) |
 | `npm test` | Jest 단위 테스트 실행 |
-| `npm run test:e2e` | E2E: 웹 서버 자동 기동 후 Playwright 실행 (포트 8081 비어 있어야 함, 최대 약 3분) |
+| `npm run test:e2e` | E2E: 웹 서버를 **8082**로 자동 기동 후 Playwright 실행 (8081 사용 중이어도 무방, 최대 약 3분) |
 | `npm run test:e2e:run` | E2E: 서버 없이 테스트만 실행 (`npm run web` 또는 `npm run web:clear` 실행 중인 터미널이 있을 때). 포트 변경 시 `E2E_BASE_URL=http://localhost:8082` 등으로 지정 |
 
 ## 🎨 주요 컴포넌트
@@ -101,8 +102,8 @@ coin-admin/
 - `Button` — 버튼 (Primary/Income/Expense 시맨틱 컬러, scale 애니메이션)
 - `Card` — 카드 (Flat & shadow-sm, border-slate-100, rounded-2xl)
 - `InputField` — 입력 필드 (rounded-lg, slate 팔레트)
-- `AmountInputSection` — 금액 입력 Dumb 컴포넌트. amount/currency/onChangeAmount/onToggleCurrency만 받음. 원 | 달러 Segmented Control로 통화 전환, 달러 선택 시 `ExchangeRateHint`로 환율 안내. 환율·검증은 상위(훅/모달)에서 처리
-- `ExchangeRateHint` — 환율 안내 (필요 시 재사용)
+- `AmountInputSection` — 금액 입력 Dumb 컴포넌트. amount/currency/onChangeAmount/onToggleCurrency만 받음. 원 | 달러 Segmented Control로 통화 전환(환율 힌트 UI 없음 — 변환은 저장 시에만). 환율·검증은 상위(훅/모달)에서 처리
+- `ExchangeRateHint` — 환율 안내 (**현재 미배선·미사용** — 재사용 대비 잔존)
 - `EmptyState` — 빈 상태 표시
 
 ### 기능 컴포넌트
@@ -153,7 +154,7 @@ coin-admin/
 - **최초 1회**: `npx playwright install`(또는 `npx playwright install chromium`) 로 브라우저 설치
 - **실행**
   - **방법 A (수동)**: 터미널 1에서 `npm run web` 또는 `npm run web:clear` → 터미널 2에서 `npm run test:e2e:run`
-  - **방법 B (한 번에)**: `npm run test:e2e` — 웹 서버 자동 기동 후 Playwright 실행 (포트 8081 비어 있어야 함)
+  - **방법 B (한 번에)**: `npm run test:e2e` — 웹 서버를 **8082**로 자동 기동 후 Playwright 실행 (8081 사용 중이어도 무방)
 - **다른 포트 사용 시**: `E2E_BASE_URL=http://localhost:<포트> npm run test:e2e:run`
 - **상세**: [docs/testing/e2e-testing.md](docs/testing/e2e-testing.md) — 시나리오, testID 가이드, 제한 사항(웹 날짜 선택 등), 실패 시 체크리스트
 
@@ -199,7 +200,7 @@ npm ci
 
 - **앱 버전**: `app.config.ts`의 `MARKETING_VERSION`에서 관리 (갱신 후 `npm run sync:version`)
 - **환경**: development / preview / production (각각 별도 번들 ID)
-- **자동 배포**: `main` push 시 EAS Workflows가 checks(검사 게이트) → Android production 빌드 → Play Store 제출까지 자동 실행 (docs/·`*.md`만 변경 시 제외) — [docs/deployment/eas-android-workflows.md](docs/deployment/eas-android-workflows.md)
+- **자동 배포**: `main` push 시 EAS Workflows가 checks(검사 게이트) → Android production 빌드 → Play Store 제출까지 자동 실행 (docs/·`*.md`·`.github/`·`.eas/`만 변경 시 제외) — [docs/deployment/eas-android-workflows.md](docs/deployment/eas-android-workflows.md)
 - **EAS Update**: `checkAutomatically: "ON_LOAD"` 로 OTA 업데이트 지원
 - **Android**: minSdk 24, target/compileSdk 36 (RN 버전 카탈로그 기본값)
 
@@ -215,7 +216,7 @@ npm ci
 
 - [사용 가이드](docs/user/guides.md) — 지난달 유동비 보기, 월 선택 FAQ
 - [개발 가이드](docs/development/architecture.md) — 아키텍처(lib/utils/config), 에러 처리
-- [트러블슈팅](docs/development/troubleshooting.md) — PowerShell npx 오류, Metro 캐시
+- [트러블슈팅](docs/development/troubleshooting.md) — PowerShell npx, Metro 캐시, 릴리스 시작 크래시, lockfile 규칙, Sentry 소스맵 업로드 봉인
 - [금액·통화 기능](docs/features/amount-currency.md) — 원/달러 입력, 환율 API
 - [유동비 월별 관리](docs/features/variable-expense-month.md) — 월 선택·캐싱 설계
 - [E2E 테스트](docs/testing/e2e-testing.md) — Playwright, testID, 실행 방법

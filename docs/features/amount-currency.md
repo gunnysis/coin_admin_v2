@@ -6,7 +6,7 @@
 
 고정비·유동비 입력 시 **원(KRW)** 또는 **달러(USD)** 로 금액을 입력할 수 있으며, 달러 입력 시 **실시간 환율 API**로 원화로 변환한 뒤 DB에는 항상 **원(KRW) 정수**로만 저장됩니다.
 
-**설계 원칙**: 기본 통화는 **원(한국 원화)**. **금액 입력이 주인공**이고, 통화는 **원 | 달러 Segmented Control**로 전환. 달러 선택 시 `ExchangeRateHint`가 현재 환율(예: "1 USD ≈ 1,350원", fallback 시 "기본 환율" 안내)을 표시하고, 저장 시 원화로 변환. 수정 시에도 달러 입력 가능하며, 추가와 동일하게 원화 변환하여 저장.
+**설계 원칙**: 기본 통화는 **원(한국 원화)**. **금액 입력이 주인공**이고, 통화는 **원 | 달러 Segmented Control**로 전환. 달러 선택 시 저장 시점에 원화로 변환. 수정 시에도 달러 입력 가능하며, 추가와 동일하게 원화 변환하여 저장. **환율 힌트 UI는 표시하지 않는다** — "변환은 저장 시에만" 원칙으로 UI 노출을 의도적으로 제거했다(커밋 cbe37be, 2026-02-17). `ExchangeRateHint` 컴포넌트는 재사용 대비로 정의만 남아 있고 **현재 어디에도 배선되지 않음**.
 
 **에러·안정성**: 금액 검증(빈 값/NaN/0 이하), 달러 제출 시 환율 로딩 차단, API 실패 시 fallback 환율 사용으로 저장 실패를 막음. 타입(AmountCurrency, number)과 단일 책임(훅/UI/검증 분리)으로 일관된 동작을 유지.
 
@@ -18,8 +18,8 @@
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  AmountInputSection (공통) — 한 블록 그룹핑                    │ │
 │  │  ├── InputField (금액) — 기본 원화, 입력 우선                 │ │
-│  │  ├── 원 | 달러 Segmented Control (통화 전환)                  │ │
-│  │  └── ExchangeRateHint — 달러 선택 시 환율/기본 환율 안내       │ │
+│  │  └── 원 | 달러 Segmented Control (통화 전환)                  │ │
+│  │  (환율 힌트 UI 없음 — 변환은 저장 시에만, cbe37be에서 제거)    │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 │  useAmountWithCurrency()  useExchangeRate()                        │
 └─────────────────────────────────────────────────────────────────┘
@@ -53,12 +53,12 @@
 | `src/hooks/useExchangeRate.ts` | 환율 조회 훅 |
 | `src/hooks/useAmountWithCurrency.ts` | 금액·통화 상태, `getAmountInKrw(rate)` |
 | `src/components/ui/AmountInputSection.tsx` | 금액 입력 + 원/달러 Segmented Control |
-| `src/components/ui/ExchangeRateHint.tsx` | 달러 선택 시 환율 안내(로딩/환율/기본 환율) |
+| `src/components/ui/ExchangeRateHint.tsx` | 환율 안내 컴포넌트 — **현재 미배선(미사용)**. cbe37be에서 UI 노출 제거 후 잔존 |
 
 ## UX/UI 정리
 
 - **기본**: 금액 입력 필드가 주인공. 기본 통화 원(KRW). 통화 전환은 원 | 달러 Segmented Control, 44pt 터치 영역, 햅틱. 모달 오픈 시 금액 필드 자동 포커스.
-- **환율 표시**: 달러 선택 시에만 `ExchangeRateHint` 노출(로딩 중 / "1 USD ≈ n원" / fallback 시 "기본 환율"). 저장 시 변환에 사용. 수정 모드도 동일.
+- **환율 표시**: 하지 않음 — 달러 선택 시에도 환율 안내 없이 저장 시 변환만 수행. 환율 로딩 중 달러 제출은 알림으로 차단, API 실패 시 fallback(1,400원)으로 저장. **fallback 사용 여부도 UI에 표시되지 않음**(모달이 `isFallback` 값을 받아서 사용하지 않음 — 표시가 필요해지면 `ExchangeRateHint` 재배선 검토).
 
 ## API 사양
 

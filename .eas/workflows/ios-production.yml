@@ -1,7 +1,8 @@
 # iOS 프로덕션 빌드 후 App Store Connect 제출
 # 수동 실행 전용: npx eas-cli@latest workflow:run ios-production.yml
-# (main push 자동 트리거는 2026-07 비활성화 — SDK 54가 Apple Xcode 26 제출 요건을 충족하지 못해
-#  push마다 빌드 실패가 반복됨. SDK 55+ 업그레이드 후 재활성화: docs/planning/upgrade-modernization.md §2.2)
+# (main push 자동 트리거는 2026-07 비활성화 — 당시 SDK 54가 Apple Xcode 26 제출 요건을 충족하지 못해
+#  push마다 빌드 실패가 반복됨. 현재는 SDK 57 + EAS latest 이미지(Xcode 26.6)로 요건 해소 —
+#  Android 안정화 후 수동 실행으로 검증 뒤 재활성화 판단: docs/planning/upgrade-modernization.md §2.2)
 # 전제: Apple App Store Connect API 키 등 iOS 제출 크레덴셜이 Expo 대시보드에 연결되어 있어야 함
 name: iOS Production Build and Submit
 

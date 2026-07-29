@@ -73,7 +73,7 @@ async-storage 3.x, gesture-handler 3.x, tailwind 4 + NativeWind v5, TypeScript 7
 
 ### 3-1. Play 단계적 출시(staged rollout) — P0 권장
 
-현재 `eas.json` submit은 `releaseStatus: "completed"`(즉시 100%)라 2.6.0 사고처럼 결함 빌드가 전 사용자에게 즉시 도달한다. [eas.json 공식 스키마](https://docs.expo.dev/eas/json/) 확인: `rollout`(0~1)은 `releaseStatus: "inProgress"`와 조합해 초기 노출 비율을 제한한다.
+적용 전 `eas.json` submit은 `releaseStatus: "completed"`(즉시 100%)라 2.6.0 사고처럼 결함 빌드가 전 사용자에게 즉시 도달했다. [eas.json 공식 스키마](https://docs.expo.dev/eas/json/) 확인: `rollout`(0~1)은 `releaseStatus: "inProgress"`와 조합해 초기 노출 비율을 제한한다. **2026-07-28 적용 완료(개정 이력 v1.2)** — 현재 eas.json은 아래 상태다.
 
 ```jsonc
 "submit": { "production": { "android": {
