@@ -20,6 +20,9 @@ Android 앱의 프로덕션 빌드 및 Play Store 제출을 EAS Workflows로 자
    ```
    `--ref`가 없으면 **로컬 프로젝트 디렉터리 전체를 패키징·업로드**해 실행한다 — 저장소 커밋 상태 그대로 실행하려면 `--ref main`(또는 커밋 SHA)을 지정한다.
 
+3. **배포 없이 push (커밋 메시지 스킵 마커)**  
+   코드 변경을 origin에 백업만 하고 배포는 미루고 싶을 때(예: 진행 중인 단계적 출시·심사를 유지), push의 HEAD 커밋 메시지에 **`[skip eas]`**(또는 `[eas skip]`, `[no eas]`)를 넣으면 push 트리거 워크플로 실행이 스킵된다([공식 문서](https://docs.expo.dev/eas/workflows/syntax/)). 빈 커밋(`git commit --allow-empty`)에 마커를 담아 올리는 방식이 간편하다. GitHub Actions(ci·android-smoke)는 이 마커의 영향을 받지 않고 그대로 실행된다(조기 경보 유지). **주의:** 이후 마커 없는 push(릴리스 범프 등)가 오면 스킵됐던 변경들이 그 빌드에 함께 포함되어 나간다. 2026-07-29 실측: 코드 변경 3커밋 + `[skip eas]` 빈 커밋 push → EAS 런 미생성, GitHub CI·스모크만 실행 확인.
+
 ## 전제 조건
 
 - **eas.json**  
