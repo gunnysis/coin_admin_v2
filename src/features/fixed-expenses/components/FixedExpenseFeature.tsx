@@ -25,7 +25,6 @@ interface FixedExpenseFeatureProps {
   onLoadMore: () => void;
   refreshError?: Error | null;
   bottomInset: number;
-  containerStyle: { paddingHorizontal: number };
 }
 
 /**
@@ -45,7 +44,6 @@ export const FixedExpenseFeature = React.memo<FixedExpenseFeatureProps>(({
   onLoadMore,
   refreshError,
   bottomInset,
-  containerStyle,
 }) => {
   useEffect(() => {
     if (refreshError) {

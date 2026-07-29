@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
 import { formatCurrency } from '../utils/format';
+import { getTestProps } from '../utils/test-utils';
 import { VariableMonthExpense } from '../types';
 import { Card } from './ui/Card';
 import { Typography } from './ui/Typography';
@@ -159,7 +160,8 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
             tabularNums
             className="mb-1"
             style={{ fontSize: adjustedTotalSize }}
-            accessibilityLabel={`총액 ${formatCurrency(totalAmount)}원`}
+            accessibilityLabel={`총액 ${formatCurrency(totalAmount)}`}
+            {...getTestProps('variable-total-amount')}
           >
             {formatCurrency(displayAmount)}
           </Typography>
@@ -184,7 +186,7 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
                   backgroundColor: colors.gray200,
                   marginBottom: SPACING.xs,
                 }}
-                accessibilityLabel={`전월 ${formatCurrency(previousTotal)}원, 이번 달 ${formatCurrency(totalAmount)}원`}
+                accessibilityLabel={`전월 ${formatCurrency(previousTotal)}, 이번 달 ${formatCurrency(totalAmount)}`}
               >
                 <View
                   style={{
@@ -203,9 +205,9 @@ export const VariableTotalAmountCard = React.memo<VariableTotalAmountCardProps>(
                 <Typography
                   variant="caption"
                   style={{ color: comparison.isIncrease ? colors.expense : colors.income }}
-                  accessibilityLabel={`전월 대비 ${comparison.diff >= 0 ? '+' : ''}${formatCurrency(comparison.diff)}원, ${comparison.percentage}%`}
+                  accessibilityLabel={`전월 대비 ${comparison.diff >= 0 ? '+' : ''}${formatCurrency(comparison.diff)}, ${comparison.percentage}%`}
                 >
-                  전월 대비 {comparison.diff >= 0 ? '+' : ''}{formatCurrency(comparison.diff)}원 ({comparison.percentage >= 0 ? '+' : ''}{comparison.percentage}%)
+                  전월 대비 {comparison.diff >= 0 ? '+' : ''}{formatCurrency(comparison.diff)} ({comparison.percentage >= 0 ? '+' : ''}{comparison.percentage}%)
                 </Typography>
               )}
             </View>

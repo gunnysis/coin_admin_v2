@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, TouchableOpacity, Animated, LayoutAnimation } from 'react-native';
 import { formatCurrency } from '../utils/format';
+import { getTestProps } from '../utils/test-utils';
 import { ExpenseVisualization } from './ExpenseVisualization';
 import { FixedMonthCost } from '../types';
 import { Card } from './ui/Card';
@@ -132,7 +133,8 @@ export const TotalAmountCard = React.memo<TotalAmountCardProps>(({
             tabularNums
             className="mb-1"
             style={{ fontSize: adjustedTotalSize }}
-            accessibilityLabel={`총액 ${formatCurrency(totalAmount)}원`}
+            accessibilityLabel={`총액 ${formatCurrency(totalAmount)}`}
+            {...getTestProps('fixed-total-amount')}
           >
             {formatCurrency(displayAmount)}
           </Typography>

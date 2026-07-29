@@ -151,7 +151,7 @@ grep 검증 결과 (src/·e2e/ 전체, 2026-07-27):
 
 ### 5.3 기타 개선 (기회 항목)
 
-- **테스트 커버리지 확대:** jest coverage 대상이 `utils/amount.ts`·`validation.ts`뿐 — 백업 마이그레이션(§4.2)은 완료됐으나 `src/lib/backup/` 커버리지 포함은 **미실행(잔여 과제)**
+- **테스트 커버리지 확대(완료 — 2026-07-29):** `src/lib/backup/**`을 coverage 대상에 포함 — backupService 100%(복구 트랜잭션 커밋/롤백 경로 포함), LocalBackupAdapter는 expo 모듈 mock 기반 80%(웹 save DOM 경로만 잔여 — jsdom 필요)
 - **CI 강화(완료 — §6-4):** `.github/workflows/ci.yml`에 `npx expo-doctor` 단계 추가됨(non-blocking) — 의존성 호환성 회귀를 PR 단계에서 검출. (Node 버전은 24로 상향 완료 — §4.1-2)
 - **의존성 정기 점검:** SDK 릴리스 주기에 맞춰 §1 표를 갱신하고 지원 창(최신 4개 SDK / RN 3개 minor) 이탈 전에 업그레이드. SDK 57부터 릴리스 주기가 빨라지고 업그레이드 비용이 낮아지는 방향이므로 "작게 자주" 전략이 유리
 

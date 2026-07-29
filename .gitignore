@@ -68,3 +68,6 @@ test-results/
 
 # IDE personal settings (JetBrains)
 .idea/
+
+# Jest coverage output
+coverage/

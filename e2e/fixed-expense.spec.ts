@@ -30,12 +30,20 @@ test.describe('고정비 추가', () => {
     await expect(submitBtn).toBeEnabled({ timeout: 10000 });
   });
 
-  test('항목을 추가하면 모달이 닫힌다 (저장 검증)', async ({ page }) => {
+  test('항목을 추가하면 모달이 닫히고 목록·총액에 반영된다 (저장 검증)', async ({ page }) => {
     await page.goToApp();
     await page.getByRole('button', { name: '고정비 탭' }).click();
-    await page.getByRole('button', { name: '항목 추가' }).click();
 
-    await page.getByLabel('이름 입력').fill('e2e 저장 테스트');
+    // 총액 카드의 aria-label은 카운트업 애니메이션과 무관한 최종값("총액 N원")
+    const total = page.getByTestId('fixed-total-amount');
+    await expect(total).toBeVisible({ timeout: 15000 });
+    const beforeLabel = (await total.getAttribute('aria-label')) ?? '';
+    const beforeAmount = Number(beforeLabel.replace(/[^0-9]/g, '') || '0');
+
+    // 실행 간 데이터 누적/중복 대비 고유 이름 사용
+    const name = `e2e 저장 ${Date.now()}`;
+    await page.getByRole('button', { name: '항목 추가' }).click();
+    await page.getByLabel('이름 입력').fill(name);
     await page.getByLabel('금액 입력').fill('5000');
     await page.getByLabel('금액 입력').blur();
 
@@ -45,6 +53,11 @@ test.describe('고정비 추가', () => {
 
     // 저장이 완료되고 모달이 닫혀야 함
     await expect(page.getByRole('heading', { name: /월 고정비 추가/ })).not.toBeVisible({ timeout: 10000 });
+    // 목록 반영: 고정비 목록은 id DESC라 새 항목이 최상단에 노출됨
+    await expect(page.getByText(name)).toBeVisible({ timeout: 10000 });
+    // 총액 반영: 기존 총액 + 5,000
+    const expectedLabel = `총액 ${(beforeAmount + 5000).toLocaleString('ko-KR')}원`;
+    await expect(total).toHaveAttribute('aria-label', expectedLabel, { timeout: 10000 });
   });
 
   test('결제일 입력 후 저장하면 모달이 닫힌다 (웹 날짜 입력)', async ({

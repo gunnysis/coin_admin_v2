@@ -57,7 +57,6 @@ export const PhoneLayout = React.memo<PhoneLayoutProps>(({
               onLoadMore={fixedExpenseData.onLoadMore}
               refreshError={fixedExpenseData.refreshError}
               bottomInset={bottomInset}
-              containerStyle={containerStyle}
             />
           ) : (
             <VariableExpenseFeature
@@ -73,7 +72,6 @@ export const PhoneLayout = React.memo<PhoneLayoutProps>(({
               onLoadMore={variableExpenseData.onLoadMore}
               refreshError={variableExpenseData.refreshError}
               bottomInset={bottomInset}
-              containerStyle={containerStyle}
             />
           )}
         </View>

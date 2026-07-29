@@ -26,7 +26,6 @@ interface VariableExpenseFeatureProps {
   onLoadMore: () => void;
   refreshError?: Error | null;
   bottomInset: number;
-  containerStyle: { paddingHorizontal: number };
 }
 
 /**
@@ -46,7 +45,6 @@ export const VariableExpenseFeature = React.memo<VariableExpenseFeatureProps>(({
   onLoadMore,
   refreshError,
   bottomInset,
-  containerStyle,
 }) => {
   useEffect(() => {
     if (refreshError) {

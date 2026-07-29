@@ -76,8 +76,8 @@ SQLite via expo-sqlite for offline persistence. React Query handles caching and 
 
 ## Testing
 
-- **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts` and `src/utils/validation.ts`.
-- **testID:** `src/utils/test-utils.ts` — `getTestProps(id)`는 전 플랫폼 `testID` 반환 (react-native-web이 DOM `data-testid`로 매핑 — 웹 분기로 'data-testid'를 직접 넘기면 RNW 0.21+에서 DOM에 전달되지 않으므로 금지). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton.
+- **Unit:** Jest with `ts-jest` preset. Tests in `src/utils/__tests__/` and `src/lib/__tests__/`. Coverage configured for `src/utils/amount.ts`, `src/utils/validation.ts`, and `src/lib/backup/**` (backupService 100%; localBackupAdapter는 expo 모듈 mock 기반 — 웹 save DOM 경로만 제외).
+- **testID:** `src/utils/test-utils.ts` — `getTestProps(id)`는 전 플랫폼 `testID` 반환 (react-native-web이 DOM `data-testid`로 매핑 — 웹 분기로 'data-testid'를 직접 넘기면 RNW 0.21+에서 DOM에 전달되지 않으므로 금지). Used on AmountInputSection, modals, TabNavigation, MonthSelector, AddButton, total-amount cards (`fixed-total-amount`/`variable-total-amount` — aria-label "총액 N원"은 카운트업 애니메이션 무관 최종값이라 E2E 총액 검증에 사용).
 - **E2E:** Playwright against **Expo web** (`npm run web` → localhost:8081). Specs in `e2e/` (smoke, fixed-expense, variable-expense, amount-currency). Use `accessibilityLabel` → `aria-label` / `getByRole`, `getByLabelText`, and testID where needed. Config: `playwright.config.ts` (starts server on port 8082); `playwright.run.config.ts` (run-only, uses `E2E_BASE_URL`, default 8081). Web only; date input renders as a text field (`YYYY-MM-DD`, testID `date-picker`) so the full save flow is testable. See `docs/testing/e2e-testing.md`.
 
 ## Settings & Backup UI

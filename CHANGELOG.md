@@ -10,6 +10,9 @@
 - **docs: Gradle 10 deprecation 경고 전수 실측·분류** — `--warning-mode all` 83건 전부 앱 비소유 파일(Expo prebuild 템플릿·@expo/log-box·RN gradle-plugin) 발생 확인, 앱 레벨 조치 불가·불필요. SDK 업그레이드 시 재실측 체크 항목화(upgrade-modernization §8)
 - **docs: 전 문서 코드 대조 펙트체크·최신화(2026-07-29)** — 문서 25종+CLAUDE.md·README를 실제 코드/설정과 전수 대조해 낡은 서술 교정. 주요 교정: Jest 30 플래그(`--testPathPatterns`), 전역 쿼리 캐시 실값(staleTime 5분/gcTime 10분 — 1시간은 환율 쿼리만), 삭제된 `QUERY_KEYS` 서술 제거, `ExchangeRateHint` 미배선 사실화(cbe37be에서 의도적 UI 제거), 백업 save 경로(document 디렉터리)·웹 지원 반영, `test:e2e` 포트(8082), 월 화살표 상시 활성 FAQ, edge-to-edge 현행화(구 `statusBar.translucent` 서술 제거), CI↔EAS 독립 실행 관계, EAS paths 필터 전체 목록, `SENTRY_AUTH_TOKEN` 빌드 차단 전제 명시, **`eas update`는 `--branch`·`--channel` 동시 지정 불가**(CLI 소스 실측 — 기존 문서 예시 명령이 실행 불가였음), upgrade-modernization §1.2 버전표·CNG 전환 반영
 - **chore(e2e/scripts): 디버그 계측 잔재 제거** — `e2e/smoke.spec.ts`·`scripts/clean-android-build.ps1`의 `127.0.0.1:7xxx/ingest` POST 블록(과거 디버깅 세션 유입 — 2.6.1의 db.ts 잔재 제거와 동일 부류)
+- **fix(ui): 총액 접근성 라벨·전월 대비 문구의 "원원" 중복 수정** — `formatCurrency`가 이미 "원"을 붙이는데 템플릿에서 "원"을 재차 병기(총액 카드 aria-label 2곳, 유동비 비교 바 라벨 2곳, **사용자에게 보이는 "전월 대비 +N원원" 텍스트 1곳**)
+- **refactor: 죽은 코드 제거** — ① `containerStyle` prop의 레이아웃→Feature 전달 경로 제거(레이아웃 컨테이너에서 1회 적용이 유일한 사용처 — Feature는 받기만 하고 미사용) ② 미사용 `src/lib/validation.ts` 삭제(전 export 소비처 0건 실측) — `utils/validation.ts`와의 `ValidationResult` 중복 정의 근본 해소
+- **test: 백업 모듈 커버리지 확대 + E2E 저장 검증 강화** — jest coverage에 `src/lib/backup/**` 포함, backupService 100%(복구 트랜잭션 커밋 순서·null 바인딩·롤백 경로), LocalBackupAdapter 80%(expo 모듈 mock — 파일명 규칙·공유 분기·load URI 방어/파싱/검증). E2E 고정비/유동비 저장 테스트에 **목록 반영(고유 이름)·총액 반영(기존+입력 금액 정확 비교)** 어서션 추가 — 총액 카드에 `fixed/variable-total-amount` testID 배선(aria-label은 카운트업 애니메이션 무관 최종값). 실측: Jest 49/49, Playwright 13/13
 
 ## [2.6.2] - 2026-07-28 (스토어 릴리스: 빌드 48 — 관측성 완성 릴리스. 2.6.1 20% 롤아웃을 대체 배포)
 
